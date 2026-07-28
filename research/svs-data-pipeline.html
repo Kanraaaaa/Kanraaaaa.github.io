@@ -104,13 +104,13 @@ a:hover{text-decoration:underline}
   <div class="meta">
     <span><span class="badge">5 个处理环节</span></span>
     <span><span class="badge">30+ 开源项目</span></span>
-    <span><span class="badge">8 种旋律表征方式</span></span>
+    <span><span class="badge">14 种旋律表征方式</span></span>
     <span><span class="badge">2026.07</span></span>
   </div>
   <div class="stats-row">
     <div class="stat"><div class="num">5</div><div class="label">处理环节</div></div>
     <div class="stat"><div class="num">30+</div><div class="label">开源项目</div></div>
-    <div class="stat"><div class="num">8</div><div class="label">旋律表征方式</div></div>
+    <div class="stat"><div class="num">14</div><div class="label">旋律表征方式</div></div>
     <div class="stat"><div class="num">10+</div><div class="label">数据集</div></div>
   </div>
 </div>
@@ -474,6 +474,155 @@ a:hover{text-decoration:underline}
     </div>
   </div>
 
+  <!-- Approach 9 -->
+  <div class="approach-card" style="border-color: rgba(94,106,210,0.3);">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.3);">9</div>
+      <div>
+        <h3>旋律链式思维（Melody Chain-of-Thought）</h3>
+        <div class="sub">先规划旋律 token 再生成完整歌曲，两阶段 CoT</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>将旋律生成拆分为两阶段——先用 Melody-CoT 机制规划旋律 token（melody planning），
+      再基于旋律计划生成完整歌曲。<strong>Qwen-Music</strong>（arXiv 2607.11699）提出这一方法。
+      系统包含三部分：Qwen-Music-Tokenizer 将音频压缩为 25Hz 单码本 Music Semantic Tokens（保留语义和旋律信息）→
+      Qwen-Music-LLM 基于这些 token 做自回归建模，Melody-CoT 在完整歌曲生成前先规划旋律 →
+      Qwen-Music-Render 做生成式立体声渲染。
+      <br><strong>优点：</strong>旋律规划与音频生成解耦，提升创造力、音乐性和结构连贯性；支持参考音频旋律克隆。
+      <br><strong>关键创新：</strong>melody-token-based chain-of-thought——不直接从歌词到音频，而是先"想"旋律再"唱"出来。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>Qwen-Music</strong>（arXiv 2607.11699）：Melody-CoT + 25Hz Music Semantic Tokens + 500万小时训练</div>
+    </div>
+  </div>
+
+  <!-- Approach 10 -->
+  <div class="approach-card" style="border-color: rgba(94,106,210,0.3);">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.3);">10</div>
+      <div>
+        <h3>参考旋律离散化引导（Discretized Melody Cues from Reference）</h3>
+        <div class="sub">从参考音频提取旋律线索，离散化为旋律 token 用于引导生成</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>对于翻唱生成（Cover Song Generation），从参考音频中提取旋律线索，
+      将其离散化为旋律 token，作为条件引导新歌曲的生成，保持原始旋律内容。
+      <br><strong>Pushing the Frontier</strong>（arXiv 2607.20253）提出两级旋律模块（two-level melody module）：
+      第一级提取参考音频的 F0 轨迹，第二级将 F0 离散化为旋律 token 序列。
+      系统架构：semantic-aware tokenizer（8-codebook RVQ）→ hybird-LM 分层自回归 → FullDiT 流匹配渲染。
+      <br><strong>Seed-Music</strong>（arXiv 2409.09214，字节跳动）也支持类似机制：
+      从音频参考中提取旋律特征，结合风格描述、曲谱、语音提示等多模态输入控制生成。
+      <br><strong>优点：</strong>翻唱时精确保留原曲旋律，同时改变音色和风格。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>Pushing the Frontier</strong>（arXiv 2607.20253）：two-level melody module + 8-codebook RVQ + FullDiT</div>
+      <div class="example"><strong>Seed-Music</strong>（arXiv 2409.09214）：字节跳动，多模态输入控制 + 旋律编辑</div>
+    </div>
+  </div>
+
+  <!-- Approach 11 -->
+  <div class="approach-card" style="border-color: rgba(167,139,250,0.3);">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);">11</div>
+      <div>
+        <h3>分层音频 token 表示（Hierarchical Audio Token Representation）</h3>
+        <div class="sub">混合 token → 分轨 token 的分层建模，语义规划与声学精修分离</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>将歌曲表示为分层 token 结构——先预测混合 token（人声+伴奏混合，语义规划），
+      再分轨预测（人声 token + 伴奏 token 并行，声学精修）。
+      <br><strong>LeVo 2</strong>（arXiv 2606.30642）提出：LeLM 先预测 mixed tokens 做语义规划，
+      再并行预测 vocal 和 accompaniment tokens 做分轨精修，最后 diffusion-based Music Codec 重建波形。
+      在预训练阶段用音乐审美评估框架分配 musicality-tier 条件。
+      <br><strong>SketchSong</strong>（arXiv 2606.03169）提出 sketch tokens：
+      从压缩音频表示中提取高层素描 token，先做歌曲级编排规划（coarse-to-fine），
+      再生成音频 token。同时显式建模四轨（人声/贝斯/鼓/其他乐器）。
+      <br><strong>优点：</strong>解决混合 token 与分轨 token 的结构权衡——混合 token 保持协调性但模糊细节，
+      分轨 token 精度高但序列长。分层建模兼两者之长。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>LeVo 2</strong>（arXiv 2606.30642）：分层 LeLM（mixed→vocal+accompaniment）+ 审美引导训练</div>
+      <div class="example"><strong>SketchSong</strong>（arXiv 2606.03169）：sketch tokens + 四轨建模（人声/贝斯/鼓/其他）</div>
+    </div>
+  </div>
+
+  <!-- Approach 12 -->
+  <div class="approach-card" style="border-color: rgba(251,191,36,0.3);">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);">12</div>
+      <div>
+        <h3>小节级符号曲谱（Bar-Level Symbolic Notation）</h3>
+        <div class="sub">人类可编辑的小节级符号曲谱作为中间表示</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>不直接从原始音频学习音乐理论，而是使用人类可编辑的小节级符号曲谱作为中间表示。
+      <strong>BACH（Via Score to Performance）</strong>（arXiv 2508.01394）提出 tokenization 策略和
+      符号生成流程，专为分层歌曲结构设计。小模型即超越 Suno 等商业系统。
+      <br><strong>HNote</strong>（arXiv 2509.25694）提出十六进制编码系统：
+      在固定 32 单位小节框架内编码音高和时长，确保对齐、减少歧义，直接兼容 LLM 架构。
+      用 LoRA 微调 LLaMA-3.1(8B) 实现符号音乐生成。
+      <br><strong>优点：</strong>中间表示人类可编辑、可解释，不试图从原始音频学习音乐理论（任务过于困难）。
+      <br><strong>关键洞察：</strong>从"端到端音频生成"回归到"符号中间表示+音频渲染"的两阶段范式。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>BACH</strong>（arXiv 2508.01394）：小节级符号曲谱 + tokenization，小模型超越 Suno</div>
+      <div class="example"><strong>HNote</strong>（arXiv 2509.25694）：十六进制编码 + 32 单位小节框架 + LLaMA LoRA</div>
+    </div>
+  </div>
+
+  <!-- Approach 13 -->
+  <div class="approach-card" style="border-color: rgba(34,211,238,0.3);">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);">13</div>
+      <div>
+        <h3>归一化旋律表征（Normalized Melody Representation）</h3>
+        <div class="sub">F0 归一化为相对音高 / MIDI 区间，消除绝对音高偏差</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>将 F0 轨迹归一化为相对音高表示（如 MIDI 音符号差值）或固定区间离散化，
+      消除不同歌手绝对音高偏差的影响。归一化后的旋律表征作为条件输入。
+      <br><strong>Pushing the Frontier</strong> 和 <strong>Qwen-Music</strong> 均采用此方法：
+      先从参考音频提取 F0 → 归一化/离散化 → 作为 melody token 引导生成。
+      <br><strong>Seed-Music</strong> 在多模态输入中也将旋律信息归一化处理，
+      支持 vocal melody 编辑（直接在生成音频中编辑歌词和旋律）。
+      <br><strong>优点：</strong>归一化后旋律可跨歌手迁移，不受音域限制。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>Qwen-Music</strong>：Music Semantic Tokens 保留归一化旋律信息 + Melody-CoT</div>
+      <div class="example"><strong>Pushing the Frontier</strong>：two-level melody module 提取+离散化旋律线索</div>
+      <div class="example"><strong>Seed-Music</strong>：多模态旋律输入 + 旋律编辑功能</div>
+    </div>
+  </div>
+
+  <!-- Approach 14 -->
+  <div class="approach-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);">14</div>
+      <div>
+        <h3>多模态旋律融合（Multi-modal Melody Fusion）</h3>
+        <div class="sub">同时接受曲谱、参考音频、文本描述等多种旋律来源</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>不限定单一旋律输入方式，同时接受多种来源——MIDI 曲谱、参考音频旋律、
+      文本风格描述、语音提示等——并在模型内部融合为统一旋律表征。
+      <br><strong>Seed-Music</strong>（arXiv 2409.09214）是代表：支持 style descriptions、audio references、
+      musical scores、voice prompts 多模态输入控制。用户可以选择输入 MIDI 曲谱精确控制，
+      也可以输入参考音频让模型提取旋律，还可以仅用文本描述让模型自由生成。
+      <br><strong>Qwen-Music</strong> 也支持 Text-to-Music（自由生成）和 Cover Song（旋律克隆）两种模式。
+      <br><strong>优点：</strong>灵活度最高，适配不同用户水平和使用场景。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>Seed-Music</strong>（arXiv 2409.09214）：多模态输入 + 旋律编辑 + 后期制作工具</div>
+      <div class="example"><strong>Qwen-Music</strong>（arXiv 2607.11699）：Text-to-Music + Cover Song 双模式</div>
+    </div>
+  </div>
+
   <!-- Representation comparison table -->
   <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">旋律表征方式对比总表</h3>
   <div class="table-wrap">
@@ -497,6 +646,12 @@ a:hover{text-decoration:underline}
         <tr><td>⑥ 无曲谱</td><td>歌词</td><td class="no">无</td><td class="yes">零</td><td class="yes">低</td><td>YuE, DiffRhythm, Suno</td></tr>
         <tr><td>⑦ 参考旋律</td><td>参考音频</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>YingMusic-Singer</td></tr>
         <tr><td>⑧ 统一模型</td><td>条件门控</td><td class="yes">高(歌声)</td><td class="partial">中</td><td class="partial">中</td><td>UniVoice</td></tr>
+        <tr><td>⑨ 旋律链式思维</td><td>旋律token计划</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>Qwen-Music</td></tr>
+        <tr><td>⑩ 参考旋律离散化</td><td>参考音频→旋律token</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>Pushing Frontier, Seed-Music</td></tr>
+        <tr><td>⑪ 分层音频token</td><td>混合token→分轨token</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>LeVo 2, SketchSong</td></tr>
+        <tr><td>⑫ 小节级符号曲谱</td><td>符号曲谱token</td><td class="yes">高</td><td class="partial">中</td><td class="partial">中</td><td>BACH, HNote</td></tr>
+        <tr><td>⑬ 归一化旋律</td><td>F0归一化token</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>Qwen-Music, Pushing Frontier</td></tr>
+        <tr><td>⑭ 多模态融合</td><td>曲谱+音频+文本</td><td class="yes">高</td><td class="yes">低</td><td class="partial">中</td><td>Seed-Music</td></tr>
       </tbody>
     </table>
   </div>
