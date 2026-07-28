@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歌声合成数据处理流程深度调研 · 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08090a;--panel:#0f1011;--surface:#191a1b;--text:#f7f8f8;--text-2:#d0d6e0;--text-3:#8a8f98;--text-4:#62666d;--accent:#5e6ad2;--accent-bright:#7170ff;--accent-hover:#828fff;--green:#27a644;--emerald:#10b981;--orange:#fb923c;--rose:#fb7185;--cyan:#22d3ee;--amber:#fbbf24;--violet:#a78bfa;--border:rgba(255,255,255,0.08);--border-subtle:rgba(255,255,255,0.05)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Sans SC',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text-2);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+code,.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+.container{max-width:1080px;margin:0 auto;padding:0 24px}
+.hero{padding:100px 0 80px}
+.hero .eyebrow{display:inline-block;font-size:12px;font-weight:500;color:var(--accent-bright);background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.3);padding:4px 10px;border-radius:9999px;margin-bottom:24px}
+.hero h1{font-size:48px;font-weight:600;color:var(--text);letter-spacing:-1px;line-height:1.1;margin-bottom:20px}
+.hero .subtitle{font-size:17px;color:var(--text-3);line-height:1.6;max-width:640px}
+.hero .meta{margin-top:32px;display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--text-4)}
+.hero .meta .badge{padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);color:var(--text-3)}
+section{padding:56px 0}
+.section-title{font-size:30px;font-weight:600;color:var(--text);letter-spacing:-0.6px;margin-bottom:12px}
+.section-desc{font-size:15px;color:var(--text-3);margin-bottom:36px;max-width:720px}
+.divider{height:1px;background:var(--border-subtle);margin:56px 0}
+.callout{background:rgba(94,106,210,0.06);border:1px solid rgba(94,106,210,0.2);border-radius:8px;padding:20px 24px;margin:24px 0;font-size:14px;color:var(--text-2);line-height:1.7}
+.callout strong{color:var(--text)}
+
+/* Pipeline diagram */
+.pipeline-step{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:16px;position:relative}
+.pipeline-step .step-num{position:absolute;top:-10px;left:20px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:3px 12px;border-radius:9999px}
+.pipeline-step h3{font-size:18px;color:var(--text);margin-bottom:12px;margin-top:8px}
+.pipeline-step p{font-size:14px;color:var(--text-3);line-height:1.7;margin-bottom:12px}
+.pipeline-step .tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.pipeline-step .tool{font-size:11px;font-family:'JetBrains Mono',monospace;padding:3px 10px;border-radius:4px;text-decoration:none;transition:all 0.2s}
+.tool-oss{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);color:#6ee7b7}
+.tool-oss:hover{background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4)}
+.tool-paper{background:rgba(94,106,210,0.08);border:1px solid rgba(94,106,210,0.25);color:#818cf8}
+.tool-paper:hover{background:rgba(94,106,210,0.15);border-color:rgba(94,106,210,0.4)}
+.tool-commercial{background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);color:#fdba74}
+
+/* Comparison table */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);margin:16px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--text-3);padding:12px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+td{padding:12px;border-bottom:1px solid var(--border-subtle);color:var(--text-2);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.yes{color:var(--emerald)} .no{color:var(--rose)} .partial{color:var(--amber)}
+.tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:500;margin:1px}
+.tag-green{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981}
+.tag-blue{background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);color:#22d3ee}
+.tag-purple{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);color:#a78bfa}
+.tag-amber{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24}
+.tag-rose{background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);color:#fb7185}
+.tag-gray{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#9ca3af}
+
+/* Card */
+.card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:16px;transition:border-color 0.2s}
+.card:hover{border-color:rgba(255,255,255,0.12)}
+.card h3{font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px}
+.card p{font-size:14px;color:var(--text-3);line-height:1.7}
+.card .card-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-4);margin-top:12px}
+.card .ref-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.card .ref{font-size:11px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);color:var(--text-3);text-decoration:none;transition:all 0.2s}
+.card .ref:hover{background:rgba(94,106,210,0.1);border-color:rgba(94,106,210,0.3);color:var(--accent-hover)}
+
+/* Approach card */
+.approach-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:16px}
+.approach-card .approach-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:16px}
+.approach-card .icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.approach-card h3{font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px}
+.approach-card .sub{font-size:13px;color:var(--text-4)}
+.approach-card p{font-size:14px;color:var(--text-3);line-height:1.7;margin-bottom:12px}
+.approach-card .examples{margin-top:12px}
+.approach-card .example{font-size:13px;color:var(--text-3);padding:4px 0 4px 16px;position:relative}
+.approach-card .example::before{content:'▸';position:absolute;left:0;color:var(--accent-bright)}
+
+/* Stat */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:40px 0}
+@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)} .hero h1{font-size:36px}}
+.stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center}
+.stat .num{font-size:32px;font-weight:700;color:var(--text);letter-spacing:-1px}
+.stat .label{font-size:12px;color:var(--text-4);margin-top:4px}
+
+footer{border-top:1px solid var(--border-subtle);padding:48px 0 32px;text-align:center;color:var(--text-4);font-size:13px}
+footer a{color:var(--text-3);text-decoration:none}
+footer a:hover{color:var(--accent-bright)}
+
+.highlight{color:var(--accent-bright);font-weight:500}
+a{color:var(--accent-hover);text-decoration:none}
+a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- Hero -->
+<div class="hero">
+  <span class="eyebrow">Deep Research · 歌声数据处理流程 · 2026</span>
+  <h1>歌声合成数据处理流程<br>深度调研报告</h1>
+  <p class="subtitle">
+    聚焦歌声合成训练数据的制作全流程：人声分离、歌词对齐、旋律提取、曲谱标注、技巧标注。
+    梳理学术界方法与模型、工业界实践、可复用开源项目，以及旋律表征方式的分类对比。
+  </p>
+  <div class="meta">
+    <span><span class="badge">5 个处理环节</span></span>
+    <span><span class="badge">30+ 开源项目</span></span>
+    <span><span class="badge">8 种旋律表征方式</span></span>
+    <span><span class="badge">2026.07</span></span>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="num">5</div><div class="label">处理环节</div></div>
+    <div class="stat"><div class="num">30+</div><div class="label">开源项目</div></div>
+    <div class="stat"><div class="num">8</div><div class="label">旋律表征方式</div></div>
+    <div class="stat"><div class="num">10+</div><div class="label">数据集</div></div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>核心问题：</strong>曲谱与歌声的成对数据稀缺是 SVS 领域的关键瓶颈。与 TTS 不同，歌声合成需要
+  <strong>音高轮廓（F0）</strong>、<strong>音符边界</strong>、<strong>音符对齐</strong>和<strong>节拍信息</strong>等额外旋律标注。
+  这些信息的获取成本远高于 TTS 的纯文本对齐。本报告系统梳理从原始音频到可训练数据的完整 pipeline。
+</div>
+
+<!-- Pipeline Overview -->
+<section id="pipeline">
+  <h2 class="section-title">数据处理全流程总览</h2>
+  <p class="section-desc">从一首原始歌曲到 SVS 可用的训练数据，需要经过 5 个核心环节。每个环节都有学术界和工业界的不同方案。</p>
+
+  <!-- Step 1: Vocal Separation -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 1</span>
+    <h3>人声分离（Vocal Separation）</h3>
+    <p>
+      从混合歌曲中分离出干净的人声干声（vocal）和伴奏（accompaniment）。这是从"野外"歌曲制作训练数据的第一步。
+      <br><br>
+      <strong>学术界方法：</strong><br>
+      • <span class="highlight">Demucs</span>（Meta）：混合频谱+波形域的混合 Transformer，目前 SOTA。基于 U-Net 结构，4 分支（2 频谱 + 2 波形）。arXiv 2111.12624<br>
+      • <span class="highlight">Spleeter</span>（Deezer）：基于 U-Net 的频谱域分离，轻量快速但精度已被超越<br>
+      • <span class="highlight">MDX-Net / UVR</span>：社区驱动的人声分离模型集合，MDX23D 融合多模型<br>
+      • <span class="highlight">BS-RoFormer</span>：Band-Split Roformer，频带分割 + 旋转位置编码，分离质量极高<br><br>
+      <strong>工业界实践：</strong><br>
+      • <strong>SingNet</strong>（arXiv 2505.09325）：使用 Demucs 从互联网歌曲中分离人声，构建 3000 小时 in-the-wild 数据集<br>
+      • <strong>DeepSinger</strong>（arXiv 2007.04590）：使用 Spleeter 分离网络挖掘的歌声数据<br>
+      • <strong>SongTrans</strong>（arXiv 2409.14619）：优化分离工具，无需预处理直接从混合音频转写<br><br>
+      <strong>关键挑战：</strong>分离质量直接影响后续所有步骤。残留伴奏会干扰 F0 估计和对齐。
+    </p>
+    <div class="tools">
+      <a class="tool tool-oss" href="https://github.com/facebookresearch/demucs" target="_blank">Demucs ⭐10.4K</a>
+      <a class="tool tool-oss" href="https://github.com/deezer/spleeter" target="_blank">Spleeter ⭐28.3K</a>
+      <a class="tool tool-oss" href="https://github.com/Anjok07/ultimatevocalremovergui" target="_blank">UVR-GUI ⭐25.6K</a>
+      <a class="tool tool-oss" href="https://github.com/ZFTurbo/Music-Source-Separation-Training" target="_blank">MSST (BS-RoFormer)</a>
+    </div>
+  </div>
+
+  <!-- Step 2: Lyrics Alignment -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 2</span>
+    <h3>歌词对齐（Lyrics-to-Audio Alignment）</h3>
+    <p>
+      将歌词文本与音频时间轴对齐，得到每个<strong>音素（phoneme）</strong>的起止时间。这是 SVS 训练数据制作的核心步骤。
+      <br><br>
+      <strong>歌声对齐 vs 语音对齐的差异：</strong><br>
+      • 歌声音高变化大，共振峰偏移严重，G2P 规则与语音不同<br>
+      • 长音、颤音、滑音导致音素边界模糊<br>
+      • 歌词可能跨语言，需要多语言 G2P<br>
+      • 音符时长与音素时长耦合，需要同时考虑音乐节拍<br><br>
+      <strong>学术界方法：</strong><br>
+      • <span class="highlight">MFA（Montreal Forced Aligner）</span>：基于 Kaldi 的强制对齐工具，SVS 社区最广泛使用。Opencpop 使用 MFA 进行音素边界标注，但需要用歌声数据重新训练声学模型以适配歌声特性<br>
+      • <span class="highlight">DeepSinger 对齐模型</span>：设计专门的歌词-歌声对齐模型，从粗粒度句子级（基于 DTW）到细粒度音素级（基于 CTC/Attention）逐步对齐，完全避免人工标注<br>
+      • <span class="highlight">SongTrans</span>（arXiv 2409.14619）：统一歌声转写和对齐方法，自回归模块预测歌词+音符时长+音符号，非自回归模块预测音高和时长，同时完成歌词转写和音符对齐<br>
+      • <span class="highlight">STARS</span>（arXiv 2507.06670）：统一框架，同时完成歌声转写、对齐和细化风格标注。分层声学特征处理（帧/词/音素/音符/句），非自回归局部声学编码器<br>
+      • <span class="highlight">VocalParse</span>（arXiv 2605.04613）：基于大音频语言模型（LALM）的统一歌声转写。交错提示建模歌词+旋律+词-音符对应关系，CoT 策略先解码歌词作为语义支架<br>
+      • <span class="highlight">LyricsAlignment-MTL</span>：多任务学习的歌词-音频对齐，深度学习方法<br><br>
+      <strong>工业界实践：</strong><br>
+      • <strong>Opencpop</strong>：MFA 对齐 + 人工校验修正，100 首歌逐一检查<br>
+      • <strong>GTSinger</strong>：专业音乐人员人工标注音素-音频对齐，80.59 小时<br>
+      • <strong>SingNet</strong>：自动化 pipeline，分离后自动对齐 + 质量过滤<br>
+      • <strong>OpenVPI/MakeDiffSinger</strong>：提供 MFA 对齐工具链，含歌声专用声学模型<br>
+      • <strong>Synthesizer V / ACE Studio</strong>：歌手按已知曲谱演唱，曲谱已知只需做时间对齐
+    </p>
+    <div class="tools">
+      <a class="tool tool-oss" href="https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner" target="_blank">MFA ⭐1.9K</a>
+      <a class="tool tool-oss" href="https://github.com/openvpi/MakeDiffSinger" target="_blank">MakeDiffSinger ⭐145</a>
+      <a class="tool tool-oss" href="https://github.com/rupakvignesh/Lyrics-to-Audio-Alignment" target="_blank">Lyrics-to-Audio-Alignment ⭐94</a>
+      <a class="tool tool-oss" href="https://github.com/mikezzb/lyrics-sync" target="_blank">lyrics-sync ⭐74</a>
+      <a class="tool tool-oss" href="https://github.com/jhuang448/LyricsAlignment-MTL" target="_blank">LyricsAlignment-MTL ⭐67</a>
+      <a class="tool tool-oss" href="https://github.com/AlexandaJerry/SingingVoice-Auto-Alignment" target="_blank">SingingVoice-Auto-Alignment</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2507.06670">STARS</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2605.04613">VocalParse</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2409.14619">SongTrans</a>
+    </div>
+  </div>
+
+  <!-- Step 3: Pitch & Melody Extraction -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 3</span>
+    <h3>音高提取与旋律标注（Pitch Extraction & Melody Annotation）</h3>
+    <p>
+      从人声音频中提取旋律信息，生成与歌词对齐的曲谱。这是旋律控制数据的制作核心。
+      <br><br>
+      <strong>旋律信息包含：</strong><br>
+      • <strong>F0 轨迹（pitch contour）</strong>：逐帧基频估计，反映瞬时音高变化<br>
+      • <strong>音符序列（note sequence）</strong>：将连续 F0 量化为离散 MIDI 音符号，含音高和时长<br>
+      • <strong>节拍信息</strong>：BPM 和小节线位置<br>
+      • <strong>力度信息</strong>：音量变化、重音等<br><br>
+      <strong>F0 估计方法（学术界）：</strong><br>
+      • <span class="highlight">PYIN</span>：基于 YIN 的概率扩展，使用半隐藏马尔可夫模型平滑音高轨迹，librosa 内置<br>
+      • <span class="highlight">CREPE</span>（ICASSP 2018）：CNN 模型，从频谱直接预测音高概率分布，6 个层级的精度<br>
+      • <span class="highlight">SPICE</span>（Google）：自监督音高估计，端到端训练<br>
+      • <span class="highlight">FCPE</span>（arXiv 2509.15140）：快速上下文音高估计，Lynx-Net 架构 + 深度可分离卷积，RTF=0.0062，RPA 96.79%<br>
+      • <span class="highlight">RMVPE</span>：鲁棒多尺度音高估计<br><br>
+      <strong>歌声转谱（Singing Transcription）方法：</strong><br>
+      • <span class="highlight">ROSVOT</span>（⭐123）：鲁棒歌声转写和 MIDI 提取，端到端模型<br>
+      • <span class="highlight">VOCANO</span>（⭐72）：复调音乐中歌声音符转写框架<br>
+      • <span class="highlight">Phoneme-Informed</span>（⭐38）：音素信息辅助的音符级歌声转写<br>
+      • <span class="highlight">icassp2022-vocal-transcription</span>（⭐158）：伪标签从帧级到音符级的迁移学习<br>
+      • <span class="highlight">STARS</span>：统一框架自动提取旋律+对齐+风格标注<br>
+      • <span class="highlight">VocalParse</span>：用音频大语言模型实现规模化歌声转写<br><br>
+      <strong>MIDI 提取专用工具：</strong><br>
+      • <span class="highlight">SOME</span>（OpenVPI，⭐702）：Singing-Oriented MIDI Extractor，专门为 SVS 数据制作设计<br>
+      • <span class="highlight">Audio-to-MIDI</span>（⭐62）：人声旋律提取到 MIDI<br>
+      • <span class="highlight">GAME</span>（OpenVPI）：生成式自适应 MIDI 提取器
+    </p>
+    <div class="tools">
+      <a class="tool tool-oss" href="https://github.com/marl/crepe" target="_blank">CREPE ⭐1.4K</a>
+      <a class="tool tool-oss" href="https://github.com/CNChTu/FCPE" target="_blank">FCPE</a>
+      <a class="tool tool-oss" href="https://github.com/RickyL-2000/ROSVOT" target="_blank">ROSVOT ⭐123</a>
+      <a class="tool tool-oss" href="https://github.com/B05901022/VOCANO" target="_blank">VOCANO ⭐72</a>
+      <a class="tool tool-oss" href="https://github.com/openvpi/SOME" target="_blank">SOME ⭐702</a>
+      <a class="tool tool-oss" href="https://github.com/bill317996/Audio-to-midi" target="_blank">Audio-to-MIDI ⭐62</a>
+      <a class="tool tool-oss" href="https://github.com/keums/icassp2022-vocal-transcription" target="_blank">Vocal-Transcription ⭐158</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2509.15140">FCPE paper</a>
+    </div>
+  </div>
+
+  <!-- Step 4: Score Annotation -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 4</span>
+    <h3>曲谱标注与对齐（Score Annotation & Alignment）</h3>
+    <p>
+      将提取的旋律信息与歌词时间对齐，形成可训练的"曲谱"标注。这里存在三种路线（详见下文"旋律表征方式"章节）。
+      <br><br>
+      <strong>三条制作路线：</strong><br><br>
+      <strong>路线 A：人工标注</strong>（高精度，高成本）<br>
+      • 由音乐专家逐音听取并标注 MIDI 音符和边界<br>
+      • <strong>GTSinger</strong>：专业人员标注 80.59 小时，含真实音乐曲谱，6 种技巧标注，4 种语言<br>
+      • <strong>Opencpop</strong>：录音棚录制 + 人工标注音素和音符边界，100 首中文歌<br>
+      • <strong>JVS-MuSiC</strong>：日语多说话人歌声语料，人工标注<br><br>
+      <strong>路线 B：歌声转谱（自动）</strong>（自动，中等精度）<br>
+      • 用算法从音频自动提取旋律：F0 估计 → 音符量化 → 边界检测 → 节拍追踪<br>
+      • <strong>DeepSinger</strong>：完全自动 pipeline，从网络挖掘歌声自动提取曲谱<br>
+      • <strong>SingNet</strong>：Demucs 分离 + 自动对齐 + 质量过滤，3000 小时<br>
+      • <strong>STARS / VocalParse</strong>：最新自动化转写框架<br>
+      • <strong>OpenVPI/MakeDiffSinger</strong>：SOME MIDI 提取 + MFA 对齐，社区工具链<br><br>
+      <strong>路线 C：已有曲谱对齐</strong>（低成本，需要原始曲谱）<br>
+      • 如果原始歌曲有现成的 MIDI/曲谱文件，只需做曲谱-音频时间对齐<br>
+      • <strong>RMSSinger</strong>（arXiv 2305.10686）：使用真实音乐曲谱，消除繁琐的手动音素级 mel-note 对齐<br>
+      • <strong>Synthesizer V / ACE Studio</strong>：歌手按已知曲谱演唱，曲谱已知只需时间对齐<br>
+      • <strong>商业声库制作</strong>：标准做法——让歌手按给定曲谱演唱
+    </p>
+    <div class="tools">
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2409.13832">GTSinger</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2201.07429">Opencpop</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2007.04590">DeepSinger</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2505.09325">SingNet</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2305.10686">RMSSinger</a>
+      <a class="tool tool-oss" href="https://github.com/wenet-e2e/opencpop" target="_blank">Opencpop data ⭐237</a>
+    </div>
+  </div>
+
+  <!-- Step 5: Technique & Style -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 5</span>
+    <h3>演唱技巧与风格标注（Technique & Style Annotation）</h3>
+    <p>
+      高质量 SVS 需要标注演唱技巧（颤音、滑音、气息、真假声等）和风格信息。
+      <br><br>
+      <strong>技巧标注方法：</strong><br>
+      • <strong>GTSinger</strong>：标注 6 种演唱技巧（混声、假声、气声、颤音、滑音、怒音），覆盖 4 种语言<br>
+      • <strong>TechSinger</strong>（arXiv 2502.12572）：开发技巧检测模型自动标注音素级技巧标签，7 种技巧 5 种语言<br>
+      • <strong>STARS</strong>：统一框架自动提取细化风格标注（情感、节奏）<br><br>
+      <strong>风格标注方法：</strong><br>
+      • <strong>StyleSinger</strong>：残差量化模块捕获多样风格特征<br>
+      • <strong>StylePitcher</strong>（arXiv 2510.21685）：生成风格跟随的音高曲线<br>
+      • <strong>BERT 语义嵌入</strong>：引入歌词语义信息增强表达力<br>
+      • <strong>Muse</strong>（arXiv 2601.03973）：116k 合成歌曲自动生成歌词和风格标签
+    </p>
+    <div class="tools">
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2502.12572">TechSinger</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2312.10741">StyleSinger</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2510.21685">StylePitcher</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2601.03973">Muse</a>
+    </div>
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- Melody Representation -->
+<section id="melody-repr">
+  <h2 class="section-title">旋律表征方式分类</h2>
+  <p class="section-desc">
+    不同 SVS 系统对"曲谱"的表示和处理方式存在根本差异。以下梳理 8 种主要旋律表征方式，按控制精度和复杂度排列。
+  </p>
+
+  <!-- Approach 1 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);">1</div>
+      <div>
+        <h3>精细音素级曲谱（Fine-grained Phoneme-level Score）</h3>
+        <div class="sub">MIDI 音符 + 音素对齐 + 手动标注时长</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>每个音素都有对应的 MIDI 音符号和精确时长。需要人工标注音素-音符-音频三重对齐。
+      <br><strong>优点：</strong>控制最精确，音素和音符完全对齐。<br>
+      <strong>缺点：</strong>标注成本极高，破坏音符时长的规则性，不利于作曲。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>XiaoiceSing</strong>（arXiv 2006.06261）：FastSpeech 变体，曲谱编码音素+音高+时长</div>
+      <div class="example"><strong>HiFiSinger</strong>（arXiv 2009.01776）：48kHz 高保真，精细曲谱输入</div>
+      <div class="example"><strong>DiffSinger</strong>（arXiv 2105.02446）：扩散声学模型，曲谱条件输入</div>
+      <div class="example"><strong>Opencpop 基线</strong>：音素边界 + 音符边界人工标注</div>
+    </div>
+  </div>
+
+  <!-- Approach 2 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.3);">2</div>
+      <div>
+        <h3>真实曲谱 / 词级建模（Realistic Music Score / Word-level）</h3>
+        <div class="sub">MIDI 音符 + 词级对齐，无需音素级标注</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>使用基于词（word）而非音素（phoneme）的真实音乐曲谱。音符基于词而非音素，
+      避免耗时的音素时长标注和复杂的音素级 mel-note 对齐。
+      <br><strong>优点：</strong>消除大部分手动标注，保留音符时长规则性，便于作曲。<br>
+      <strong>缺点：</strong>需要模型内部学习词到音素的映射。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>RMSSinger</strong>（arXiv 2305.10686）：首个真实曲谱 SVS 方法，词级建模 + 扩散音高建模</div>
+    </div>
+  </div>
+
+  <!-- Approach 3 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);">3</div>
+      <div>
+        <h3>MIDI 直接输入 + 时长/音高预测</h3>
+        <div class="sub">输入 MIDI 音符序列，模型预测音素时长和音高轨迹</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>输入 MIDI 音符序列（pitch + duration），模型内部预测每个音素的时长对齐和连续音高轨迹。
+      MIDI 音符作为条件，不直接控制帧级音高。
+      <br><strong>优点：</strong>用户只需提供 MIDI，模型自动处理对齐和音高细节。<br>
+      <strong>缺点：</strong>音高细节由模型决定，精细控制需要额外 variance 参数。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>SoulX-Singer</strong>（arXiv 2602.07803）：支持 MIDI score-conditioned 模式</div>
+      <div class="example"><strong>DiffSinger (OpenVPI)</strong>：MIDI 输入 + Variance 模型预测音高/能量/气息</div>
+      <div class="example"><strong>NNSVS</strong>（arXiv 2210.15987）：基于 MIDI 的神经网络 SVS 工具链</div>
+      <div class="example"><strong>Sinsy</strong>（arXiv 2108.02776）：HMM/DNN-based，从 MIDI 和歌词合成歌声</div>
+    </div>
+  </div>
+
+  <!-- Approach 4 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);">4</div>
+      <div>
+        <h3>F0 轮廓直接输入（Melody-conditioned）</h3>
+        <div class="sub">输入连续 F0 轨迹而非离散 MIDI 音符</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>直接输入逐帧 F0 轨迹（pitch contour），而非量化为 MIDI 音符。
+      保留了颤音、滑音等连续音高细节。
+      <br><strong>优点：</strong>保留连续音高信息，精确控制颤音和滑音。<br>
+      <strong>缺点：</strong>需要精确的 F0 提取，用户门槛较高。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>SoulX-Singer</strong>（arXiv 2602.07803）：同时支持 MIDI score-conditioned 和 F0 melody-conditioned 双模式</div>
+      <div class="example"><strong>StylePitcher</strong>（arXiv 2510.21685）：生成风格跟随的 F0 曲线作为输入</div>
+    </div>
+  </div>
+
+  <!-- Approach 5 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);">5</div>
+      <div>
+        <h3>MIDI + 人声音高离散化（Discretized MIDI + Vocal Pitch Token）</h3>
+        <div class="sub">MIDI 音符 + 从人声提取的离散化音高 token</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>将 MIDI 音符和从人声提取的 F0 同时离散化为 token 序列，
+      作为编解码语言模型的输入。MIDI 提供目标音高，人声音高 token 提供实际执行细节。
+      <br><strong>优点：</strong>天然适配编解码 LLM 范式，可零样本克隆。<br>
+      <strong>缺点：</strong>离散化损失信息，训练复杂。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>TokSing</strong>（arXiv 2406.08416）：编解码语言模型，离散 token + 旋律增强</div>
+      <div class="example"><strong>CoMelSinger</strong>（arXiv 2509.19883）：离散 token + 结构化旋律表示，零样本合成</div>
+    </div>
+  </div>
+
+  <!-- Approach 6 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);">6</div>
+      <div>
+        <h3>无曲谱 / 自由生成（Score-Free / Lyrics-to-Song）</h3>
+        <div class="sub">仅输入歌词，模型自行决定旋律</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>不使用任何曲谱/MIDI 输入，模型从歌词自行生成旋律、节奏和音高。
+      <br><strong>优点：</strong>零用户门槛，端到端生成完整歌曲。<br>
+      <strong>缺点：</strong>无法精确控制旋律，音乐性依赖模型能力。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>KaraSinger</strong>（arXiv 2110.04005）：Score-Free，VQ-VAE 从 mel-spectrogram 生成</div>
+      <div class="example"><strong>YuE</strong>（arXiv 2503.08638）：歌词→完整歌曲，LLaMA2 架构</div>
+      <div class="example"><strong>DiffRhythm</strong>（arXiv 2503.01183）：歌词→完整歌曲，潜在扩散</div>
+      <div class="example"><strong>Suno</strong>：歌词+风格描述→完整歌曲</div>
+    </div>
+  </div>
+
+  <!-- Approach 7 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);">7</div>
+      <div>
+        <h3>参考旋律音频引导（Reference Melody Guidance）</h3>
+        <div class="sub">输入参考歌声音频，提取旋律用于引导生成</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>不直接输入 MIDI，而是输入一段参考歌声音频，
+      模型自动提取旋律特征用于引导生成。无需标注，支持"哼唱生成"。
+      <br><strong>优点：</strong>无需 MIDI 知识，用户只需哼唱。<br>
+      <strong>缺点：</strong>旋律控制间接，精度依赖旋律提取质量。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>YingMusic-Singer</strong>（arXiv 2512.04779）：零样本 SVS + 无标注旋律引导</div>
+      <div class="example"><strong>MusicGen</strong>（arXiv 2306.05284）：支持旋律条件输入（melodic conditioning）</div>
+    </div>
+  </div>
+
+  <!-- Approach 8 -->
+  <div class="approach-card">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">8</div>
+      <div>
+        <h3>统一语音/歌声建模（Unified Speech-Singing）</h3>
+        <div class="sub">语音和歌声统一建模，旋律条件强约束歌声但弱约束语音</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>统一模型同时处理语音和歌声。旋律条件在歌声模式下强约束（精确控制音高），
+      在语音模式下弱约束（不影响自然韵律）。通过条件门控实现切换。
+      <br><strong>优点：</strong>一个模型同时服务 TTS 和 SVS，数据互补。<br>
+      <strong>缺点：</strong>训练复杂，需要平衡两种模式。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>UniVoice</strong>（arXiv 2606.05852）：统一语音和歌声合成，旋律条件门控</div>
+    </div>
+  </div>
+
+  <!-- Representation comparison table -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">旋律表征方式对比总表</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>表征方式</th>
+          <th>输入</th>
+          <th>控制精度</th>
+          <th>用户门槛</th>
+          <th>标注成本</th>
+          <th>代表系统</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>① 精细音素级</td><td>MIDI+音素+时长</td><td class="yes">最高</td><td class="no">高</td><td class="no">极高</td><td>XiaoiceSing, DiffSinger</td></tr>
+        <tr><td>② 真实曲谱/词级</td><td>MIDI(词级)</td><td class="yes">高</td><td class="partial">中</td><td class="partial">中</td><td>RMSSinger</td></tr>
+        <tr><td>③ MIDI+预测</td><td>MIDI音符</td><td class="partial">中</td><td class="partial">中</td><td class="yes">低</td><td>SoulX-Singer, NNSVS</td></tr>
+        <tr><td>④ F0直接输入</td><td>F0轨迹</td><td class="yes">高</td><td class="no">高</td><td class="partial">中</td><td>SoulX-Singer, StylePitcher</td></tr>
+        <tr><td>⑤ 离散化token</td><td>MIDI+音高token</td><td class="partial">中</td><td class="partial">中</td><td class="partial">中</td><td>TokSing, CoMelSinger</td></tr>
+        <tr><td>⑥ 无曲谱</td><td>歌词</td><td class="no">无</td><td class="yes">零</td><td class="yes">低</td><td>YuE, DiffRhythm, Suno</td></tr>
+        <tr><td>⑦ 参考旋律</td><td>参考音频</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>YingMusic-Singer</td></tr>
+        <tr><td>⑧ 统一模型</td><td>条件门控</td><td class="yes">高(歌声)</td><td class="partial">中</td><td class="partial">中</td><td>UniVoice</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Open Source Projects -->
+<section id="opensource">
+  <h2 class="section-title">可复用开源项目索引</h2>
+  <p class="section-desc">以下按 pipeline 环节分类整理的开源项目，可直接用于搭建歌声数据处理 pipeline。</p>
+
+  <h3 style="color:var(--text);font-size:20px;margin:24px 0 16px;">人声分离</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项目</th><th>⭐</th><th>说明</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/facebookresearch/demucs" target="_blank">facebookresearch/demucs</a></td><td>10.4K</td><td>混合频谱+波形分离，SOTA 质量</td><td>高质量分离，学术级</td></tr>
+        <tr><td><a href="https://github.com/deezer/spleeter" target="_blank">deezer/spleeter</a></td><td>28.3K</td><td>U-Net 频谱分离，轻量快速</td><td>快速批量处理</td></tr>
+        <tr><td><a href="https://github.com/Anjok07/ultimatevocalremovergui" target="_blank">UVR-GUI</a></td><td>25.6K</td><td>GUI 工具，集成多模型（MDX/MDX23D/BS-RoFormer）</td><td>非编程用户首选</td></tr>
+        <tr><td><a href="https://github.com/ZFTurbo/Music-Source-Separation-Training" target="_blank">MSST</a></td><td>—</td><td>BS-RoFormer 训练框架，分离质量极高</td><td>追求最高分离质量</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:24px 0 16px;">歌词对齐 / 强制对齐</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项目</th><th>⭐</th><th>说明</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner" target="_blank">Montreal-Forced-Aligner</a></td><td>1.9K</td><td>基于 Kaldi 的强制对齐，SVS 社区标准</td><td>音素级对齐（需歌声声学模型）</td></tr>
+        <tr><td><a href="https://github.com/openvpi/MakeDiffSinger" target="_blank">openvpi/MakeDiffSinger</a></td><td>145</td><td>DiffSinger 数据集构建工具链，含 MFA 配置</td><td>端到端数据制作</td></tr>
+        <tr><td><a href="https://github.com/rupakvignesh/Lyrics-to-Audio-Alignment" target="_blank">Lyrics-to-Audio-Alignment</a></td><td>94</td><td>歌词-单声歌声对齐算法</td><td>研究参考</td></tr>
+        <tr><td><a href="https://github.com/mikezzb/lyrics-sync" target="_blank">lyrics-sync</a></td><td>74</td><td>深度学习歌词-音频对齐系统</td><td>歌词同步</td></tr>
+        <tr><td><a href="https://github.com/AlexandaJerry/SingingVoice-Auto-Alignment" target="_blank">SingingVoice-Auto-Alignment</a></td><td>1</td><td>MFA + Praat 自动对齐和标注</td><td>自动化标注</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:24px 0 16px;">音高提取 / F0 估计</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项目</th><th>⭐</th><th>说明</th><th>特点</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/marl/crepe" target="_blank">marl/crepe</a></td><td>1.4K</td><td>CNN 音高估计，ICASSP 2018</td><td>精度高，6 个层级</td></tr>
+        <tr><td><a href="https://github.com/CNChTu/FCPE" target="_blank">CNChTu/FCPE</a></td><td>—</td><td>快速上下文音高估计</td><td>RTF=0.0062，极快</td></tr>
+        <tr><td>librosa.pyin</td><td>—</td><td>librosa 内置 PYIN 实现</td><td>最易使用，python 直接调用</td></tr>
+        <tr><td>RMVPE</td><td>—</td><td>鲁棒多尺度音高估计</td><td>抗噪性强</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:24px 0 16px;">歌声转谱 / MIDI 提取</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项目</th><th>⭐</th><th>说明</th><th>特点</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/openvpi/SOME" target="_blank">openvpi/SOME</a></td><td>702</td><td>Singing-Oriented MIDI Extractor</td><td>专为 SVS 数据制作设计</td></tr>
+        <tr><td><a href="https://github.com/RickyL-2000/ROSVOT" target="_blank">ROSVOT</a></td><td>123</td><td>鲁棒歌声转写和 MIDI 提取</td><td>端到端</td></tr>
+        <tr><td><a href="https://github.com/keums/icassp2022-vocal-transcription" target="_blank">vocal-transcription</a></td><td>158</td><td>伪标签从帧级到音符级迁移</td><td>ICASSP 2022</td></tr>
+        <tr><td><a href="https://github.com/B05901022/VOCANO" target="_blank">VOCANO</a></td><td>72</td><td>复调音乐歌声音符转写</td><td>抗干扰</td></tr>
+        <tr><td><a href="https://github.com/bill317996/Audio-to-midi" target="_blank">Audio-to-midi</a></td><td>62</td><td>人声旋律提取到 MIDI</td><td>轻量</td></tr>
+        <tr><td><a href="https://github.com/gwx314/STARS" target="_blank">STARS</a></td><td>85</td><td>统一歌声转写+对齐+风格标注</td><td>2025 最新框架</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:24px 0 16px;">完整 SVS 工具链 / 数据集构建</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项目</th><th>⭐</th><th>说明</th><th>特点</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/openvpi/DiffSinger" target="_blank">openvpi/DiffSinger</a></td><td>3.2K</td><td>浅扩散 SVS 系统，含完整工具链</td><td>中国 SVS 社区核心</td></tr>
+        <tr><td><a href="https://github.com/openvpi/MakeDiffSinger" target="_blank">openvpi/MakeDiffSinger</a></td><td>145</td><td>DiffSinger 数据集构建 pipeline</td><td>端到端数据制作</td></tr>
+        <tr><td><a href="https://github.com/nnsvs/nnsvs" target="_blank">nnsvs/nnsvs</a></td><td>746</td><td>神经网络 SVS 研究库</td><td>研究友好</td></tr>
+        <tr><td><a href="https://github.com/wenet-e2e/opencpop" target="_blank">wenet-e2e/opencpop</a></td><td>237</td><td>Opencpop 数据集 + 基线</td><td>标准基准数据</td></tr>
+        <tr><td><a href="https://github.com/guan-yuan/Awesome-SVS-SVC" target="_blank">Awesome-SVS-SVC</a></td><td>487</td><td>SVS/SVC 论文和项目列表</td><td>资源索引</td></tr>
+        <tr><td><a href="https://github.com/Soul-AILab/SoulX-Singer" target="_blank">SoulX-Singer</a></td><td>838</td><td>零样本 SVS，MIDI+F0 双模式</td><td>42K 小时训练数据</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:24px 0 16px;">数据集</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>数据集</th><th>规模</th><th>曲谱来源</th><th>语言</th><th>制作方式</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/wenet-e2e/opencpop">Opencpop</a></td><td>100首/3.6h</td><td>人工标注</td><td>中文</td><td>录音棚+MFA+人工校验</td></tr>
+        <tr><td>GTSinger</td><td>80.59h</td><td>真实曲谱</td><td>9种语言</td><td>专业录制+人工全标注</td></tr>
+        <tr><td>DeepSinger</td><td>多语言/大规模</td><td>歌声转谱(自动)</td><td>3种</td><td>网络挖掘+全自动pipeline</td></tr>
+        <tr><td>SingNet</td><td>3000h</td><td>歌声转谱(自动)</td><td>多语言</td><td>网络+Demucs分离+自动标注</td></tr>
+        <tr><td>SLEEPING-DISCO 9M</td><td>大规模</td><td>—</td><td>多语言</td><td>真实流行歌曲+标注</td></tr>
+        <tr><td>JVS-MuSiC</td><td>日语</td><td>人工标注</td><td>日语</td><td>录音棚+人工标注</td></tr>
+        <tr><td>PJS</td><td>日语</td><td>人工标注</td><td>日语</td><td>音素平衡语料</td></tr>
+        <tr><td>Muse</td><td>116k合成</td><td>自动生成</td><td>—</td><td>合成数据+自动歌词风格</td></tr>
+        <tr><td>McHuo</td><td>132min/105首</td><td>人工标注</td><td>中文</td><td>专业男歌手录制</td></tr>
+        <tr><td>lakh_vocal_segments</td><td>—</td><td>MIDI(Lakh)</td><td>—</td><td>基于匹配 MIDI 标注</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- Recommended Pipeline -->
+<section id="recommended">
+  <h2 class="section-title">推荐数据处理 Pipeline</h2>
+  <p class="section-desc">基于以上调研，为"曲谱歌声合成 + 歌声克隆"目标推荐一套可落地的数据处理 pipeline。</p>
+
+  <div class="callout">
+    <strong>推荐方案：</strong>结合 OpenVPI 社区工具链 + 学术界最新自动化方法，
+    构建"分离→对齐→MIDI提取→质量过滤"全自动 pipeline，
+    同时保留人工校验环节处理高质量子集。
+  </p>
+
+  <div class="pipeline-step">
+    <span class="step-num">推荐 1</span>
+    <h3>人声分离：Demucs / UVR</h3>
+    <p>
+      使用 <strong>Demucs htdemucs</strong> 模型进行高质量人声分离。对于批量处理，可使用 <strong>UVR-GUI</strong>。
+      如果追求极致质量，可用 <strong>BS-RoFormer</strong>（MSST 项目）。分离后人声 SNR 应 &gt; 20dB。
+    </p>
+    <div class="tools">
+      <a class="tool tool-oss" href="https://github.com/facebookresearch/demucs" target="_blank">Demucs</a>
+      <a class="tool tool-oss" href="https://github.com/Anjok07/ultimatevocalremovergui" target="_blank">UVR-GUI</a>
+    </div>
+  </div>
+
+  <div class="pipeline-step">
+    <span class="step-num">推荐 2</span>
+    <h3>歌词对齐：MFA + MakeDiffSinger</h3>
+    <p>
+      使用 <strong>MFA</strong> 进行音素级强制对齐，配合 <strong>MakeDiffSinger</strong> 工具链配置歌声声学模型。
+      对于大规模无标注数据，可用 <strong>STARS</strong> 或 <strong>VocalParse</strong> 自动化对齐。
+      G2P 转换使用 <strong>OpenJTalk</strong>（日语）、<strong>pypinyin</strong>（中文）、<strong>g2p_en</strong>（英语）。
+    </p>
+    <div class="tools">
+      <a class="tool tool-oss" href="https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner" target="_blank">MFA</a>
+      <a class="tool tool-oss" href="https://github.com/openvpi/MakeDiffSinger" target="_blank">MakeDiffSinger</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2507.06670">STARS</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2605.04613">VocalParse</a>
+    </div>
+  </div>
+
+  <div class="pipeline-step">
+    <span class="step-num">推荐 3</span>
+    <h3>旋律提取：SOME + FCPE/CREPE</h3>
+    <p>
+      使用 <strong>SOME</strong>（Singing-Oriented MIDI Extractor）直接提取 MIDI，
+      配合 <strong>FCPE</strong> 或 <strong>CREPE</strong> 提取逐帧 F0 轨迹。
+      <strong>SOME</strong> 专为 SVS 数据制作设计，可直接输出与歌词对齐的 MIDI。
+      节拍追踪使用 <strong>madmom</strong> 库。
+    </p>
+    <div class="tools">
+      <a class="tool tool-oss" href="https://github.com/openvpi/SOME" target="_blank">SOME ⭐702</a>
+      <a class="tool tool-oss" href="https://github.com/CNChTu/FCPE" target="_blank">FCPE</a>
+      <a class="tool tool-oss" href="https://github.com/marl/crepe" target="_blank">CREPE ⭐1.4K</a>
+    </div>
+  </div>
+
+  <div class="pipeline-step">
+    <span class="step-num">推荐 4</span>
+    <h3>质量过滤 + 人工校验</h3>
+    <p>
+      自动标注结果需要质量过滤：对齐置信度（MFA posterior probability）、
+      F0 连续性检查（过滤颤音区域异常）、SNR 评估、去重。
+      高质量子集（如 10%）进行人工抽检修正。
+      参考 DeepSinger 的多维度过滤策略和 SingNet 的质量评估 pipeline。
+    </p>
+  </div>
+
+  <div class="pipeline-step">
+    <span class="step-num">推荐 5</span>
+    <h3>技巧标注（可选）：TechSinger 检测模型</h3>
+    <p>
+      如需技巧控制，使用 <strong>TechSinger</strong> 的技巧检测模型自动标注音素级技巧标签（7 种技巧）。
+      或参考 <strong>GTSinger</strong> 的 6 种技巧标注规范进行人工标注。
+    </p>
+    <div class="tools">
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2502.12572">TechSinger</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2409.13832">GTSinger</a>
+    </div>
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- Summary -->
+<section id="summary">
+  <h2 class="section-title">总结与关键洞察</h2>
+
+  <div class="card">
+    <h3>1. 数据制作正在从"人工标注"向"自动化歌声转谱"演进</h3>
+    <p>
+      DeepSinger（2020）开创全自动 pipeline → STARS（2025）统一框架 → VocalParse（2026）用音频大语言模型实现规模化转写。
+      趋势是用 LLM 统一多阶段 pipeline，减少对专用工具的依赖。
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>2. OpenVPI 社区提供了最完整的开源工具链</h3>
+    <p>
+      DiffSinger + MakeDiffSinger + SOME + OpenUtau 构成了从数据制作到合成再到编辑的完整生态。
+      对于想快速搭建 SVS pipeline 的团队，这是最佳起点。SOME（⭐702）专为 SVS 数据制作设计，是最实用的 MIDI 提取工具。
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>3. 旋律表征方式正在从"精细标注"向"灵活控制"演进</h3>
+    <p>
+      早期 SVS 需要音素级精确标注（方式①）→ RMSSinger 提出词级真实曲谱（方式②）→
+      SoulX-Singer 支持 MIDI+F0 双模式（方式③④）→ TokSing 用离散 token（方式⑤）→
+      YuE/DiffRhythm 不需要曲谱（方式⑥）→ YingMusic-Singer 用参考音频引导（方式⑦）→
+      UniVoice 统一语音歌声（方式⑧）。趋势是<strong>灵活控制 + 降低标注成本</strong>。
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>4. 对于"曲谱歌声合成+歌声克隆"目标的最佳实践</h3>
+    <p>
+      <strong>数据制作：</strong>路线 C（已有曲谱对齐）+ OpenVPI 工具链 = 最优成本效益<br>
+      <strong>旋律表征：</strong>方式③（MIDI+预测）或方式④（F0直接输入），参考 SoulX-Singer 双模式<br>
+      <strong>自动化补充：</strong>SOME 提取 MIDI + MFA 对齐 + STARS/VocalParse 自动标注<br>
+      <strong>大规模扩展：</strong>Demucs 分离 + DeepSinger pipeline + SingNet 质量过滤
+    </p>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>歌声合成数据处理流程深度调研 · 2026 年 7 月 · 由 Hermes Agent 生成</p>
+  <p style="margin-top:8px;">5 个环节 · 30+ 开源项目 · 8 种旋律表征方式 · <a href="https://arxiv.org">arXiv</a> + <a href="https://github.com">GitHub</a></p>
+</footer>
+
+</body>
+</html>
