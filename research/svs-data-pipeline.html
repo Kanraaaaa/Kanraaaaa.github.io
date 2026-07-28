@@ -585,6 +585,7 @@ a:hover{text-decoration:underline}
       <thead><tr><th>数据集</th><th>规模</th><th>曲谱来源</th><th>语言</th><th>制作方式</th></tr></thead>
       <tbody>
         <tr><td><a href="https://github.com/wenet-e2e/opencpop">Opencpop</a></td><td>100首/3.6h</td><td>人工标注</td><td>中文</td><td>录音棚+MFA+人工校验</td></tr>
+        <tr><td><a href="https://github.com/M4Singer/M4Singer" target="_blank">M4Singer</a></td><td>700+首/~50h</td><td>真实曲谱(MIDI)</td><td>中文</td><td>录音棚+人工标注+MIDI提供</td></tr>
         <tr><td>GTSinger</td><td>80.59h</td><td>真实曲谱</td><td>9种语言</td><td>专业录制+人工全标注</td></tr>
         <tr><td>DeepSinger</td><td>多语言/大规模</td><td>歌声转谱(自动)</td><td>3种</td><td>网络挖掘+全自动pipeline</td></tr>
         <tr><td>SingNet</td><td>3000h</td><td>歌声转谱(自动)</td><td>多语言</td><td>网络+Demucs分离+自动标注</td></tr>
@@ -594,6 +595,202 @@ a:hover{text-decoration:underline}
         <tr><td>Muse</td><td>116k合成</td><td>自动生成</td><td>—</td><td>合成数据+自动歌词风格</td></tr>
         <tr><td>McHuo</td><td>132min/105首</td><td>人工标注</td><td>中文</td><td>专业男歌手录制</td></tr>
         <tr><td>lakh_vocal_segments</td><td>—</td><td>MIDI(Lakh)</td><td>—</td><td>基于匹配 MIDI 标注</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- End-to-End Data Pipelines -->
+<section id="e2e-pipelines">
+  <h2 class="section-title">端到端数据制作流程案例</h2>
+  <p class="section-desc">
+    以下系统不仅提出了 SVS 模型，还公开了完整的训练数据制作 pipeline。这些案例对于自建数据 pipeline 的团队具有直接参考价值。
+  </p>
+
+  <!-- DeepSinger Pipeline -->
+  <div class="card" style="border-color: rgba(34,211,238,0.3);">
+    <h3>DeepSinger：从网络挖掘到训练数据的全自动 Pipeline（arXiv 2007.04590, KDD 2020）</h3>
+    <p>
+      <strong>DeepSinger 是首个完全从网络挖掘训练数据的 SVS 系统</strong>，其数据 pipeline 开创了自动化数据制作的范式。
+      <br><br>
+      <strong>完整 Pipeline 步骤：</strong><br>
+      <strong>① 数据爬取</strong>：从音乐网站（如 YouTube、Bilibili）爬取歌曲音频和对应歌词<br>
+      <strong>② 人声分离</strong>：使用 Spleeter 分离人声和伴奏<br>
+      <strong>③ 歌词对齐</strong>：设计专门的歌词-歌声对齐模型，<strong>从粗粒度句子级到细粒度音素级逐步对齐</strong>：
+      &nbsp;&nbsp;• 句子级：基于 DTW（动态时间规整）对齐歌词句子与音频<br>
+      &nbsp;&nbsp;• 音素级：基于 CTC 的对齐模型，在句子级基础上细化到每个音素<br>
+      <strong>④ 数据过滤</strong>：多维度自动过滤——对齐置信度、音高合理性、音频质量<br>
+      <strong>⑤ 歌声建模</strong>：Feed-forward Transformer 直接从歌词生成线性频谱图，Griffin-Lim 合成波形<br><br>
+      <strong>关键创新：</strong>歌词对齐模型完全避免人工标注，从 89 个歌手、3 种语言（中文/粤语/英语）的网站数据中自动构建了约 92 小时训练集。<br><br>
+      <strong>参考价值：</strong>DeepSinger 的 pipeline 至今仍是大规模自动数据制作的主流方案。SingNet 等后续工作在其基础上用更好的工具（Demucs 替代 Spleeter）扩展到 3000 小时。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2007.04590">arXiv 2007.04590</a>
+      <a class="ref" href="https://speechresearch.github.io/deepsinger/" target="_blank">Demo Page</a>
+    </div>
+  </div>
+
+  <!-- SoulX-Singer Pipeline -->
+  <div class="card" style="border-color: rgba(16,185,129,0.3);">
+    <h3>SoulX-Singer：42000 小时对齐数据的工业级 Pipeline（arXiv 2602.07803, 2026）</h3>
+    <p>
+      <strong>SoulX-Singer 是目前已知最大规模的开源 SVS 训练数据（42000+ 小时）</strong>，
+      支持普通话/英语/粤语三种语言，其数据 pipeline 代表了工业级标准。
+      <br><br>
+      <strong>数据特点：</strong><br>
+      • <strong>42,000+ 小时</strong>对齐训练数据（人声+歌词+音符）<br>
+      • 支持<strong>MIDI 曲谱</strong>（score-conditioned）和<strong>F0 旋律</strong>（melody-conditioned）双模式<br>
+      • 跨语言音色保留，解耦音色与内容<br>
+      • 构建了 SoulX-Singer-Eval 专用零样本评估基准（严格训练-测试分离）<br><br>
+      <strong>旋律表征方式：</strong>同时支持两种——<br>
+      &nbsp;&nbsp;• <strong>Score-conditioned</strong>：输入 MIDI 音符序列，模型处理为内部表示<br>
+      &nbsp;&nbsp;• <strong>Melody-conditioned</strong>：输入逐帧 F0 轨迹，保留连续音高细节<br><br>
+      <strong>工业级特性：</strong><br>
+      • 零样本泛化：无需微调即可生成未见歌手的声音<br>
+      • 歌词编辑：修改歌词同时保持自然韵律<br>
+      • SVC 变体（SoulX-Singer-SVC）：无需歌词转录或 MIDI 输入，直接音频到音频转换<br><br>
+      <strong>参考价值：</strong>对于"曲谱歌声合成+歌声克隆"目标，SoulX-Singer 是最匹配的开源参考系统。其 42K 小时数据的 pipeline 虽未完全开源，但从论文可推断采用了大规模自动标注（分离+对齐+MIDI提取+质量过滤）。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2602.07803">arXiv 2602.07803</a>
+      <a class="ref" href="https://github.com/Soul-AILab/SoulX-Singer" target="_blank">GitHub ⭐838</a>
+      <a class="ref" href="https://huggingface.co/Soul-AILab/SoulX-Singer" target="_blank">HuggingFace Model</a>
+    </div>
+  </div>
+
+  <!-- OpenVPI MakeDiffSinger Pipeline -->
+  <div class="card" style="border-color: rgba(251,191,36,0.3);">
+    <h3>OpenVPI/MakeDiffSinger：社区驱动的端到端数据制作工具链（GitHub ⭐145）</h3>
+    <p>
+      <strong>MakeDiffSinger 是唯一完全开源、可直接使用的 SVS 数据制作 pipeline</strong>，由 OpenVPI 社区维护，专为 DiffSinger 设计但通用性较强。
+      <br><br>
+      <strong>完整工具链：</strong><br>
+      • <strong>MakeDiffSinger</strong>（⭐145）：数据集构建 pipeline，从音频到 DiffSinger 训练格式<br>
+      • <strong>SOME</strong>（⭐702）：Singing-Oriented MIDI Extractor，从人声音频提取 MIDI<br>
+      • <strong>OpenUtau</strong>（⭐4.1K）：开源编辑器，可视化检查和修正标注<br>
+      • <strong>SingingVocoders</strong>：歌声专用声码器集合<br>
+      • <strong>GAME</strong>：生成式自适应 MIDI 提取器（改进 SOME）<br><br>
+      <strong>典型流程：</strong><br>
+      ① 人声分离（Demucs/UVR）<br>
+      ② SOME 提取 MIDI（从人声自动提取音符+音高+时长）<br>
+      ③ MFA 强制对齐（音素边界，需歌声声学模型）<br>
+      ④ MakeDiffSinger 格式转换（生成训练用标注文件）<br>
+      ⑤ OpenUtau 人工校验和修正<br><br>
+      <strong>参考价值：</strong>对于想快速搭建 SVS 数据 pipeline 的团队，这是<strong>最佳起点</strong>——所有工具开源、有文档、有社区支持。SOME 专为 SVS 数据制作设计，是最实用的 MIDI 提取工具。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://github.com/openvpi/MakeDiffSinger" target="_blank">MakeDiffSinger ⭐145</a>
+      <a class="ref" href="https://github.com/openvpi/SOME" target="_blank">SOME ⭐702</a>
+      <a class="ref" href="https://github.com/openvpi/DiffSinger" target="_blank">DiffSinger ⭐3.2K</a>
+    </div>
+  </div>
+
+  <!-- SingNet Pipeline -->
+  <div class="card" style="border-color: rgba(94,106,210,0.3);">
+    <h3>SingNet：3000 小时 in-the-wild 数据制作 Pipeline（arXiv 2505.09325, 2025）</h3>
+    <p>
+      <strong>SingNet 构建了 3000 小时的 in-the-wild 歌声数据集</strong>，展示了从互联网歌曲到可训练数据的完整自动化 pipeline。
+      <br><br>
+      <strong>Pipeline 步骤：</strong><br>
+      ① <strong>数据采集</strong>：从互联网获取 sample packs 和歌曲<br>
+      ② <strong>人声分离</strong>：使用 Demucs 从混合音频中分离人声<br>
+      ③ <strong>自动对齐</strong>：自动歌词-音频对齐 + 质量过滤<br>
+      ④ <strong>预训练模型</strong>：基于分离数据预训练 Wav2vec2、BigVGAN、NSF-HiFiGAN<br>
+      ⑤ <strong>基准实验</strong>：在 ALT（自动歌词转录）、神经声码器、SVC 上验证<br><br>
+      <strong>关键贡献：</strong>开源了预训练模型（Wav2vec2 for singing、BigVGAN vocoder、NSF-HiFiGAN），可直接用于下游任务。<br><br>
+      <strong>参考价值：</strong>展示了如何用现代工具（Demucs + 自动对齐 + 质量过滤）大规模扩展数据制作。3000 小时远超 DeepSinger 的 92 小时。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2505.09325">arXiv 2505.09325</a>
+    </div>
+  </div>
+
+  <!-- STARS Pipeline -->
+  <div class="card" style="border-color: rgba(167,139,250,0.3);">
+    <h3>STARS：统一歌声转写+对齐+风格标注框架（arXiv 2507.06670, 2025）</h3>
+    <p>
+      <strong>STARS 是首个统一同时完成歌声转写、对齐和细化风格标注的框架</strong>。
+      <br><br>
+      <strong>统一标注能力：</strong><br>
+      ① <strong>精确音素-音频对齐</strong>（phoneme-audio alignment）<br>
+      ② <strong>鲁棒音符转写和时间定位</strong>（note transcription & temporal localization）<br>
+      ③ <strong>表达性演唱技巧识别</strong>（vocal technique identification）<br>
+      ④ <strong>全局风格刻画</strong>（emotion and pace characterization）<br><br>
+      <strong>架构特点：</strong>分层声学特征处理，跨越帧/词/音素/音符/句子五个层级。非自回归局部声学编码器实现结构化分层表示学习。<br><br>
+      <strong>参考价值：</strong>代表了数据标注自动化的最新趋势——用一个统一模型替代多个专用工具。GitHub 开源（⭐85）。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2507.06670">arXiv 2507.06670</a>
+      <a class="ref" href="https://github.com/gwx314/STARS" target="_blank">GitHub ⭐85</a>
+    </div>
+  </div>
+
+  <!-- Pipeline Comparison Table -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">端到端 Pipeline 对比</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Pipeline</th>
+          <th>数据规模</th>
+          <th>分离工具</th>
+          <th>对齐方法</th>
+          <th>MIDI/旋律来源</th>
+          <th>开源程度</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://arxiv.org/abs/2007.04590">DeepSinger</a></td>
+          <td>92h / 3语言</td>
+          <td>Spleeter</td>
+          <td>DTW→CTC 自动</td>
+          <td>自动歌声转谱</td>
+          <td class="partial">论文+Demo</td>
+        </tr>
+        <tr>
+          <td><a href="https://arxiv.org/abs/2602.07803">SoulX-Singer</a></td>
+          <td>42,000h / 3语言</td>
+          <td>—</td>
+          <td>自动对齐</td>
+          <td>MIDI+F0 双模式</td>
+          <td class="yes">完全开源</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/openvpi/MakeDiffSinger" target="_blank">MakeDiffSinger</a></td>
+          <td>按需</td>
+          <td>Demucs/UVR</td>
+          <td>MFA</td>
+          <td>SOME 提取</td>
+          <td class="yes">完全开源+工具链</td>
+        </tr>
+        <tr>
+          <td><a href="https://arxiv.org/abs/2505.09325">SingNet</a></td>
+          <td>3,000h</td>
+          <td>Demucs</td>
+          <td>自动+质量过滤</td>
+          <td>自动</td>
+          <td class="yes">数据+模型</td>
+        </tr>
+        <tr>
+          <td><a href="https://arxiv.org/abs/2507.06670">STARS</a></td>
+          <td>—</td>
+          <td>—</td>
+          <td>统一框架</td>
+          <td>自动转写</td>
+          <td class="yes">开源</td>
+        </tr>
+        <tr>
+          <td><a href="https://arxiv.org/abs/2605.04613">VocalParse</a></td>
+          <td>可扩展</td>
+          <td>—</td>
+          <td>音频LLM</td>
+          <td>LLM 转写</td>
+          <td class="partial">论文</td>
+        </tr>
       </tbody>
     </table>
   </div>
