@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深度研究 · Research Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090a;
+  --panel: #0f1011;
+  --surface: #191a1b;
+  --text: #f7f8f8;
+  --text-2: #d0d6e0;
+  --text-3: #8a8f98;
+  --text-4: #62666d;
+  --accent: #5e6ad2;
+  --accent-bright: #7170ff;
+  --accent-hover: #828fff;
+  --green: #27a644;
+  --emerald: #10b981;
+  --orange: #fb923c;
+  --rose: #fb7185;
+  --cyan: #22d3ee;
+  --amber: #fbbf24;
+  --violet: #a78bfa;
+  --border: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.05);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter','Noto Sans SC', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* 背景装饰 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 20% 0%, rgba(94,106,210,0.08), transparent),
+    radial-gradient(ellipse 600px 400px at 80% 100%, rgba(16,185,129,0.05), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+/* Header */
+header { padding: 80px 0 60px; }
+header .avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-bright), var(--emerald));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: #fff;
+  margin-bottom: 24px;
+}
+header h1 { font-size: 42px; font-weight: 600; color: var(--text); letter-spacing: -1px; margin-bottom: 12px; }
+header .subtitle { font-size: 17px; color: var(--text-3); line-height: 1.6; max-width: 560px; }
+header .links { margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap; }
+header .links a { color: var(--text-3); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+header .links a:hover { color: var(--accent-hover); }
+header .links a svg { width: 18px; height: 18px; }
+
+/* Stats */
+.stats { display: flex; gap: 32px; margin-top: 32px; flex-wrap: wrap; }
+.stats .stat .num { font-size: 28px; font-weight: 700; color: var(--text); }
+.stats .stat .label { font-size: 13px; color: var(--text-4); }
+
+/* Section */
+section { padding: 48px 0; }
+.section-title { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.5px; }
+.section-desc { font-size: 15px; color: var(--text-3); margin-bottom: 28px; }
+
+/* Filter */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+.filter-btn { padding: 6px 14px; border-radius: 9999px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-3); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.filter-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+.filter-btn.active { background: rgba(94,106,210,0.15); border-color: rgba(94,106,210,0.4); color: var(--accent-hover); }
+
+/* Research card */
+.research-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 700px) { .research-grid { grid-template-columns: 1fr 1fr; } }
+
+.research-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  text-decoration: none;
+  transition: all 0.25s;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.research-card:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+.research-card .card-glow {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 12px 12px 0 0;
+  opacity: 0.8;
+}
+.research-card .card-icon { font-size: 32px; margin-bottom: 16px; }
+.research-card h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.2px; }
+.research-card .card-desc { font-size: 14px; color: var(--text-3); line-height: 1.6; margin-bottom: 16px; }
+.research-card .card-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-4); }
+.research-card .card-meta .meta-item { display: flex; align-items: center; gap: 4px; }
+.research-card .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.research-card .tag {
+  font-size: 11px; padding: 3px 8px; border-radius: 4px;
+  font-weight: 500;
+}
+.tag-svs { background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); color:#22d3ee; }
+.tag-musicgen { background: rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#c4b5fd; }
+.tag-survey { background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3); color:#7170ff; }
+.tag-data { background: rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fbbf24; }
+.tag-ai { background: rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; }
+.tag-placeholder { background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color: var(--text-4); }
+
+/* Coming soon card */
+.research-card.coming-soon {
+  border-style: dashed;
+  border-color: rgba(255,255,255,0.06);
+  opacity: 0.5;
+}
+.research-card.coming-soon:hover { opacity: 0.7; }
+
+/* Footer */
+footer { border-top: 1px solid var(--border-subtle); padding: 48px 0; text-align: center; color: var(--text-4); font-size: 13px; margin-top: 40px; }
+footer a { color: var(--text-3); text-decoration: none; }
+footer a:hover { color: var(--accent-bright); }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- Header -->
+<header>
+  <div class="avatar">R</div>
+  <h1>深度研究</h1>
+  <p class="subtitle">
+    AI 与音乐技术前沿调研站。涵盖歌声合成、音乐生成、音频 AI 等领域，
+    整合学术论文（arXiv）与工业界产品调研，持续更新。
+  </p>
+  <div class="links">
+    <a href="https://github.com/" target="_blank">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.37 1.23-3.21-.12-.3-.54-1.515.12-3.15 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.635.24 2.85.12 3.15.765.84 1.23 1.905 1.23 3.21 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+    <a href="https://arxiv.org" target="_blank">📄 arXiv</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="num" id="stat-reports">1</div><div class="label">调研报告</div></div>
+    <div class="stat"><div class="num" id="stat-papers">111</div><div class="label">收录论文</div></div>
+    <div class="stat"><div class="num" id="stat-products">35</div><div class="label">工业产品</div></div>
+    <div class="stat"><div class="num" id="stat-updated">2026.07</div><div class="label">最近更新</div></div>
+  </div>
+</header>
+
+<!-- Research Reports -->
+<section id="research">
+  <h2 class="section-title">调研报告</h2>
+  <p class="section-desc">点击卡片查看完整调研报告。报告持续更新中。</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterCards('all', this)">全部</button>
+    <button class="filter-btn" onclick="filterCards('svs', this)">歌声合成</button>
+    <button class="filter-btn" onclick="filterCards('musicgen', this)">音乐生成</button>
+    <button class="filter-btn" onclick="filterCards('ai', this)">AI 技术</button>
+    <button class="filter-btn" onclick="filterCards('data', this)">数据工程</button>
+  </div>
+
+  <div class="research-grid" id="researchGrid">
+
+    <!-- Report 1: SVS Survey V3 -->
+    <a class="research-card" href="research/svs-survey-v3.html" data-tags="svs,musicgen,ai,data">
+      <div class="card-glow" style="background: linear-gradient(90deg, #22d3ee, #7170ff);"></div>
+      <div class="card-icon">🎤</div>
+      <h3>歌声合成技术演进与方案调研</h3>
+      <p class="card-desc">
+        覆盖 150+ 篇 arXiv 论文与 20+ 工业产品，梳理 SVS/SVC/歌曲生成/编解码/零样本克隆七大方向。
+        含数据制作流程专题、曲谱控制 vs 以词生曲方向对比、十大演进趋势分析。
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-svs">歌声合成</span>
+        <span class="tag tag-musicgen">音乐生成</span>
+        <span class="tag tag-data">数据制作</span>
+        <span class="tag tag-survey">调研报告</span>
+      </div>
+      <div class="card-meta" style="margin-top:12px;">
+        <span class="meta-item">📅 2026.07</span>
+        <span class="meta-item">📄 111 篇论文</span>
+        <span class="meta-item">🏢 35 个产品</span>
+        <span class="meta-item">⏱ V3 版</span>
+      </div>
+    </a>
+
+    <!-- Placeholder: Coming Soon -->
+    <div class="research-card coming-soon" data-tags="">
+      <div class="card-glow" style="background: linear-gradient(90deg, #3a3a3a, #2a2a2a);"></div>
+      <div class="card-icon">📝</div>
+      <h3 style="color: var(--text-3);">更多调研即将到来</h3>
+      <p class="card-desc">
+        后续将添加更多领域的深度调研报告。
+      </p>
+    </div>
+
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>深度研究 · Research Hub · 由 Hermes Agent 生成 · <a href="https://github.com">GitHub</a></p>
+</footer>
+
+<script>
+function filterCards(tag, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const cards = document.querySelectorAll('#researchGrid .research-card');
+  cards.forEach(card => {
+    if (tag === 'all' || card.classList.contains('coming-soon')) {
+      card.style.display = '';
+    } else {
+      const tags = card.getAttribute('data-tags') || '';
+      if (tags.includes(tag)) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    }
+  });
+}
+</script>
+
+</body>
+</html>

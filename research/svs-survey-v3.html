@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歌声合成技术演进与方案调研 · V3 · 2020-2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090a;
+  --panel: #0f1011;
+  --surface: #191a1b;
+  --surface-2: #28282c;
+  --text: #f7f8f8;
+  --text-2: #d0d6e0;
+  --text-3: #8a8f98;
+  --text-4: #62666d;
+  --accent: #5e6ad2;
+  --accent-bright: #7170ff;
+  --accent-hover: #828fff;
+  --green: #27a644;
+  --emerald: #10b981;
+  --orange: #fb923c;
+  --rose: #fb7185;
+  --cyan: #22d3ee;
+  --amber: #fbbf24;
+  --violet: #a78bfa;
+  --border: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.05);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter','Noto Sans SC', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+code, .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,9,10,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 24px;
+  flex-wrap: wrap;
+}
+nav .logo { font-weight: 600; font-size: 15px; color: var(--text); letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+nav .logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-bright); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+nav ul { display: flex; list-style: none; gap: 20px; flex: 1; flex-wrap: wrap; }
+nav a { color: var(--text-3); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+nav a:hover { color: var(--text); }
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.hero { padding: 100px 0 80px; text-align: left; }
+.hero .eyebrow { display: inline-block; font-size: 12px; font-weight: 500; color: var(--accent-bright); background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3); padding: 4px 10px; border-radius: 9999px; margin-bottom: 24px; }
+.hero h1 { font-size: 52px; font-weight: 600; color: var(--text); letter-spacing: -1.08px; line-height: 1.05; margin-bottom: 20px; }
+.hero .subtitle { font-size: 18px; color: var(--text-3); line-height: 1.6; max-width: 640px; }
+.hero .meta { margin-top: 32px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--text-4); }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.hero .meta .badge { padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); color: var(--text-3); }
+.hero .updated-tag { display: inline-block; margin-left: 12px; font-size: 11px; color: var(--emerald); background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 2px 8px; border-radius: 4px; vertical-align: middle; }
+
+section { padding: 64px 0; }
+.section-title { font-size: 32px; font-weight: 600; color: var(--text); letter-spacing: -0.704px; margin-bottom: 12px; }
+.section-desc { font-size: 16px; color: var(--text-3); margin-bottom: 40px; max-width: 720px; }
+
+.card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 16px; transition: border-color 0.2s, background 0.2s; }
+.card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
+.card h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.2px; }
+.card p { font-size: 14px; color: var(--text-3); line-height: 1.6; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } .hero h1 { font-size: 36px; } }
+
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, var(--accent), rgba(94,106,210,0.1)); }
+.timeline-item { position: relative; padding-bottom: 48px; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
+.timeline-item .year { font-size: 13px; font-weight: 600; color: var(--accent-bright); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+.timeline-item h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.timeline-item p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.timeline-item .papers { display: flex; flex-wrap: wrap; gap: 8px; }
+.timeline-item .paper-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; background: rgba(94,106,210,0.08); border: 1px solid rgba(94,106,210,0.2); color: var(--accent-hover); text-decoration: none; transition: all 0.2s; }
+.timeline-item .paper-tag.new { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: var(--emerald); }
+.timeline-item .paper-tag:hover { background: rgba(94,106,210,0.15); border-color: rgba(94,106,210,0.4); }
+
+.trend-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+.trend-card .trend-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.trend-card .icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.trend-card h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.trend-card .trend-sub { font-size: 13px; color: var(--text-4); }
+.trend-card p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.trend-card .ref-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.trend-card .ref { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; text-decoration: none; transition: all 0.2s; }
+
+.paper-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.paper-table th { text-align: left; font-weight: 500; color: var(--text-3); padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.paper-table td { padding: 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-2); vertical-align: top; }
+.paper-table tr:hover td { background: rgba(255,255,255,0.02); }
+.paper-table .arxiv-link { font-family: 'JetBrains Mono', monospace; color: var(--accent-hover); text-decoration: none; font-size: 12px; }
+.paper-table .arxiv-link:hover { text-decoration: underline; }
+.paper-table .paper-title { color: var(--text); font-weight: 500; }
+.paper-table .paper-authors { color: var(--text-4); font-size: 12px; }
+.paper-table .tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 500; margin: 1px; }
+.paper-table .new-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; background: rgba(16,185,129,0.15); color: var(--emerald); margin-left: 4px; }
+.paper-table .data-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; background: rgba(251,191,36,0.15); color: var(--amber); margin-left: 4px; }
+
+.tag-svs { background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); color:#22d3ee; }
+.tag-svc { background: rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#a78bfa; }
+.tag-vocoder { background: rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.3); color:#fb923c; }
+.tag-diffusion { background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3); color:#7170ff; }
+.tag-gan { background: rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fbbf24; }
+.tag-dataset { background: rgba(39,166,68,0.1); border:1px solid rgba(39,166,68,0.3); color:#27a644; }
+.tag-cloning { background: rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.3); color:#fb7185; }
+.tag-e2e { background: rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; }
+.tag-toolkit { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8a8f98; }
+.tag-musicgen { background: rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#c4b5fd; }
+.tag-codec { background: rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.3); color:#fdba74; }
+.tag-tts { background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); color:#67e8f9; }
+.tag-zeroshot { background: rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.3); color:#fda4af; }
+.tag-ar { background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3); color:#818cf8; }
+.tag-mask { background: rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#6ee7b7; }
+.tag-ssl { background: rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fcd34d; }
+.tag-survey { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#9ca3af; }
+.tag-songgen { background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); color:#67e8f9; }
+.tag-data { background: rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fbbf24; }
+.tag-other { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#9ca3af; }
+
+.ref { background: rgba(255,255,255,0.04); border:1px solid var(--border-subtle); color: var(--text-3); }
+.ref:hover { background: rgba(94,106,210,0.1); border-color: rgba(94,106,210,0.3); color: var(--accent-hover); }
+
+.arch-diagram { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin: 24px 0; }
+.arch-flow { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.arch-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.arch-box { border-radius: 8px; padding: 12px 20px; font-size: 13px; font-weight: 500; text-align: center; min-width: 140px; }
+.arch-arrow { color: var(--text-4); font-size: 20px; display: flex; align-items: center; }
+.arch-input { background: rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.25); color:#22d3ee; }
+.arch-model { background: rgba(94,106,210,0.08); border:1px solid rgba(94,106,210,0.25); color:#7170ff; }
+.arch-output { background: rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); color:#10b981; }
+.arch-clone { background: rgba(251,113,133,0.08); border:1px solid rgba(251,113,133,0.25); color:#fb7185; }
+.arch-aux { background: rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); color:#fbbf24; }
+
+.reco-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-bottom: 20px; position: relative; }
+.reco-card .phase { position: absolute; top: -10px; left: 24px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 9999px; letter-spacing: 0.5px; }
+.reco-card h3 { font-size: 20px; color: var(--text); margin-bottom: 12px; margin-top: 8px; }
+.reco-card ul { list-style: none; padding: 0; }
+.reco-card li { font-size: 14px; color: var(--text-3); line-height: 1.7; padding: 6px 0 6px 20px; position: relative; }
+.reco-card li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-bright); }
+
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 40px 0; }
+@media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+.stat { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; }
+.stat .num { font-size: 36px; font-weight: 700; color: var(--text); letter-spacing: -1px; }
+.stat .label { font-size: 12px; color: var(--text-4); margin-top: 4px; }
+.stat .delta { font-size: 11px; color: var(--emerald); margin-top: 2px; }
+
+footer { border-top: 1px solid var(--border-subtle); padding: 48px 0 32px; text-align: center; color: var(--text-4); font-size: 13px; }
+footer a { color: var(--text-3); text-decoration: none; }
+footer a:hover { color: var(--accent-bright); }
+
+.callout { background: rgba(94,106,210,0.06); border: 1px solid rgba(94,106,210,0.2); border-radius: 8px; padding: 20px 24px; margin: 24px 0; font-size: 14px; color: var(--text-2); line-height: 1.7; }
+.callout strong { color: var(--text); }
+
+.divider { height: 1px; background: var(--border-subtle); margin: 64px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.compare-table th { text-align: left; font-weight: 500; color: var(--text-3); padding: 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.compare-table td { padding: 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-2); }
+.compare-table .yes { color: var(--emerald); }
+.compare-table .no { color: var(--rose); }
+.compare-table .partial { color: var(--amber); }
+
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.filter-btn { padding: 5px 12px; border-radius: 9999px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-3); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.filter-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+.filter-btn.active { background: rgba(94,106,210,0.15); border-color: rgba(94,106,210,0.4); color: var(--accent-hover); }
+
+.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+
+.highlight { color: var(--accent-bright); font-weight: 500; }
+
+/* Industry product cards */
+.product-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; transition: border-color 0.2s; }
+.product-card:hover { border-color: rgba(255,255,255,0.15); }
+.product-card .product-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.product-card h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.product-card .product-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-4); margin-bottom: 12px; }
+.product-card .product-meta .meta-item { display: flex; align-items: center; gap: 4px; }
+.product-card .product-desc { font-size: 14px; color: var(--text-3); line-height: 1.6; margin-bottom: 12px; }
+.product-card .product-footer { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.product-card .tech-badge { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; background: rgba(94,106,210,0.08); border: 1px solid rgba(94,106,210,0.2); color: var(--accent-hover); }
+.product-card .type-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; }
+.type-commercial { background: rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.3); color:#fb923c; }
+.type-opensource { background: rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; }
+.type-both { background: rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#a78bfa; }
+.product-card .product-note { font-size: 12px; color: var(--text-4); margin-top: 8px; font-style: italic; }
+
+/* Era badge */
+.era-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 8px; }
+.era-concat { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#9ca3af; }
+.era-dl { background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); color:#22d3ee; }
+.era-diffusion { background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3); color:#7170ff; }
+.era-llm { background: rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.3); color:#fb7185; }
+
+/* Data pipeline diagram */
+.pipeline-step { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 12px; position: relative; }
+.pipeline-step .step-num { position: absolute; top: -10px; left: 20px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 9999px; }
+.pipeline-step h4 { font-size: 16px; color: var(--text); margin-bottom: 8px; margin-top: 8px; }
+.pipeline-step p { font-size: 13px; color: var(--text-3); line-height: 1.6; }
+.pipeline-step .tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pipeline-step .tool-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 2px 8px; border-radius: 4px; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); color: var(--amber); }
+
+/* Direction comparison */
+.dir-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+.dir-card h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+.dir-card .dir-icon { font-size: 24px; margin-bottom: 8px; }
+.dir-card p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.dir-card .dir-list { list-style: none; padding: 0; }
+.dir-card .dir-list li { font-size: 13px; color: var(--text-3); padding: 4px 0 4px 16px; position: relative; }
+.dir-card .dir-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-bright); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span>SVS Survey V3 · 2020–2026</div>
+  <ul>
+    <li><a href="#overview">概览</a></li>
+    <li><a href="#timeline">技术演进</a></li>
+    <li><a href="#data-pipeline">数据制作</a></li>
+    <li><a href="#directions">两大方向</a></li>
+    <li><a href="#industry">工业界</a></li>
+    <li><a href="#papers">论文索引</a></li>
+    <li><a href="#proposal">方案建议</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+<!-- Hero -->
+<div class="hero" id="overview">
+  <span class="eyebrow">Research Survey · arXiv + Industry · 2020–2026</span>
+  <h1>歌声合成技术演进<br>与方案调研报告<span class="updated-tag">V3 全新版</span></h1>
+  <p class="subtitle">
+    基于 150+ 篇 arXiv 论文与 20+ 个工业界产品的系统性调研，覆盖歌声合成（SVS）、歌声转换（SVC）、完整歌曲生成、神经音频编解码、零样本语音合成、声码器、歌声克隆七大方向。本版新增"数据制作流程"专题模块和"两大技术方向对比"（曲谱控制 vs 以词生曲），梳理近五年技术演进脉络。
+  </p>
+  <div class="meta">
+    <span><span class="badge">150+ 篇论文</span></span>
+    <span><span class="badge">20+ 工业产品</span></span>
+    <span><span class="badge">2020.01 – 2026.07</span></span>
+    <span><span class="badge">含数据制作专题</span></span>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="num">150+</div><div class="label">收录论文</div><div class="delta">+37 篇新增</div></div>
+    <div class="stat"><div class="num">20+</div><div class="label">工业产品</div><div class="delta">+2 新增</div></div>
+    <div class="stat"><div class="num">2</div><div class="label">技术方向</div><div class="delta">曲谱+以词生曲</div></div>
+    <div class="stat"><div class="num">1</div><div class="label">数据专题</div><div class="delta">全新板块</div></div>
+  </div>
+</div>
+
+<!-- What's New -->
+<div class="callout">
+  <strong>V3 版更新说明：</strong>
+  <ul style="margin-top:8px; padding-left:20px; line-height:1.8;">
+    <li><strong>新增论文</strong>：覆盖 2025-2026 年最新成果，包括 DiffRhythm、LeVo/LeVo 2、SongBloom、SketchSong、Muse、WanSong、SoulX-Singer、CoMelSinger、DiTSinger、UniVoice、VocalParse 等</li>
+    <li><strong>数据制作流程专题</strong>：新增独立模块，系统梳理歌声训练数据的制作 pipeline，从原始音频到对齐标注、旋律提取、MIDI 标注的完整流程</li>
+    <li><strong>两大技术方向对比</strong>：新增"曲谱控制（score-based）" vs "以词生曲（lyrics-to-song）"方向对比，明确技术演进路线</li>
+    <li><strong>完整歌曲生成</strong>：新增 DiffRhythm、SongBloom、LeVo 2、WanSong、Muse 等最新端到端歌曲生成系统</li>
+    <li><strong>工业产品更新</strong>：新增 Suno V4/V5、Lyria 3、LeVo 2、WanSong、Qwen-Music 等最新产品动态</li>
+  </ul>
+</div>
+
+<!-- Timeline -->
+<section id="timeline">
+  <h2 class="section-title">技术演进时间线</h2>
+  <p class="section-desc">从 2016 年 WaveNet 奠基到 2026 年端到端歌曲生成与零样本歌声克隆，歌声合成技术经历了六个清晰的演进阶段。绿色标签为 V3 新增论文。</p>
+
+  <div class="timeline">
+
+    <!-- 2016-2019 -->
+    <div class="timeline-item">
+      <div class="year">2016–2019 — 神经网络奠基期</div>
+      <h3>从 WaveNet 到 FastSpeech：语音合成的基础架构</h3>
+      <p>
+        这一阶段奠定了神经网络音频生成的技术基础。<span class="highlight">WaveNet</span>（2016）首次用因果空洞卷积实现高质量原始音频生成；
+        <span class="highlight">FastSpeech</span>（2019）实现非自回归快速 TTS，其架构后来被 XiaoiceSing 引入歌声合成；
+        <span class="highlight">WaveFlow</span>（2019）探索流模型用于音频生成。
+        这些工作为歌声合成的声码器和声学模型提供了直接的技术基础。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/1609.03499">WaveNet 1609.03499</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/1905.09263">FastSpeech 1905.09263</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/1912.01219">WaveFlow 1912.01219</a>
+      </div>
+    </div>
+
+    <!-- 2020 -->
+    <div class="timeline-item">
+      <div class="year">2020 — DNN 歌声合成起步</div>
+      <h3>从统计参数模型到深度神经网络</h3>
+      <p>
+        2020 年是神经网络歌声合成的起步阶段。<span class="highlight">XiaoiceSing</span> 将 FastSpeech 架构引入歌声合成；
+        <span class="highlight">HiFiSinger</span> 首次实现 48kHz 高保真合成；
+        <span class="highlight">DeepSinger</span> 从网络挖掘数据构建多语言 SVS，开创"歌声转谱"数据制作范式；
+        <span class="highlight">HiFi-GAN</span> 成为后续 SVS 最广泛使用的声码器。
+        OpenAI 的 <span class="highlight">Jukebox</span> 展示了原始音频域生成含人声完整歌曲的可能性。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2006.06261">XiaoiceSing 2006.06261</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2009.01776">HiFiSinger 2009.01776</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2007.04590">DeepSinger 2007.04590</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2010.05646">HiFi-GAN 2010.05646</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2005.00341">Jukebox 2005.00341</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2201.07429">Opencpop 2201.07429</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2001.07044">JVS-MuSiC 2001.07044</a>
+      </div>
+    </div>
+
+    <!-- 2021 -->
+    <div class="timeline-item">
+      <div class="year">2021 — GAN、扩散与端到端兴起</div>
+      <h3>GAN 声码器、扩散模型与端到端模型</h3>
+      <p>
+        2021 年出现三大技术突破：<strong>GAN 声码器</strong>方面，SingGAN 和 Multi-Singer 提出针对歌声优化的对抗训练策略；
+        <strong>扩散模型</strong>方面，DiffSinger 首次将浅层扩散引入 SVS，DiffSVC 首次将扩散概率模型用于歌声转换；
+        <strong>端到端模型</strong>方面，VISinger 首次将 VITS 架构适配到歌声合成。
+        <span class="highlight">SoundStream</span>（Google）提出神经音频编解码器，为后续音频 LLM 奠定基础。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2105.02446">DiffSinger 2105.02446</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2110.07468">SingGAN 2110.07468</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2110.08813">VISinger 2110.08813</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2105.13871">DiffSVC 2105.13871</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2107.03312">SoundStream 2107.03312</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2105.06337">Grad-TTS 2105.06337</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2110.04005">KaraSinger 2110.04005</a>
+      </div>
+    </div>
+
+    <!-- 2022 -->
+    <div class="timeline-item">
+      <div class="year">2022 — 扩散深化与编解码突破</div>
+      <h3>扩散声码器、端到端优化与神经编解码器</h3>
+      <p>
+        <span class="highlight">EnCodec</span>（Meta）和 <span class="highlight">AudioLM</span>（Google）分别提出神经音频编解码器和音频语言建模方法。
+        VISinger 2 引入 DSP 合成器解决端到端相位问题；
+        <span class="highlight">NaturalSpeech</span> 实现人类水平 TTS 质量；
+        <span class="highlight">WeSinger</span>（腾讯）和 WeSinger 2 展示了工业级 SVS；
+        <span class="highlight">Opencpop</span> 提供高质量中文歌声语料，成为最广泛使用的 SVS 基准数据集。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2210.13438">EnCodec 2210.13438</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2209.03143">AudioLM 2209.03143</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2205.04421">NaturalSpeech 2205.04421</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2211.02903">VISinger 2 2211.02903</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2203.10750">WeSinger 2203.10750</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2207.01886">WeSinger 2 2207.01886</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2201.07429">Opencpop 2201.07429</a>
+      </div>
+    </div>
+
+    <!-- 2023 -->
+    <div class="timeline-item">
+      <div class="year">2023 — 音频 LLM 与潜在扩散</div>
+      <h3>音频语言模型、潜在空间扩散与零样本合成</h3>
+      <p>
+        2023 年是技术范型转换的关键年。
+        <span class="highlight">VALL-E</span>（微软）开创神经编解码语言模型零样本 TTS 范式；
+        <span class="highlight">MusicLM</span>（Google）、<span class="highlight">MusicGen</span>（Meta）将文本生成音乐推向新高度；
+        <span class="highlight">NaturalSpeech 2</span> 首次将潜在扩散用于零样本语音和歌声合成；
+        <span class="highlight">Voicebox</span>（Meta）用流匹配实现通用语音生成；
+        HiddenSinger 将潜在扩散引入 SVS；
+        <span class="highlight">RMSSinger</span> 提出基于真实曲谱的 SVS，解决简化曲谱的信息损失问题。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2301.02111">VALL-E 2301.02111</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2301.11325">MusicLM 2301.11325</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2306.05284">MusicGen 2306.05284</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2304.09116">NaturalSpeech 2 2304.09116</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2306.15687">Voicebox 2306.15687</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2306.06814">HiddenSinger 2306.06814</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2305.10686">RMSSinger 2305.10686</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2306.06546">DAC 2306.06546</a>
+      </div>
+    </div>
+
+    <!-- 2024 -->
+    <div class="timeline-item">
+      <div class="year">2024 — 零样本与编解码语言模型</div>
+      <h3>零样本歌声克隆、编解码 LLM 与多技巧合成</h3>
+      <p>
+        <span class="highlight">NaturalSpeech 3</span> 实现因子化零样本语音合成；
+        <span class="highlight">MaskGCT</span> 用掩码生成式编解码 Transformer 实现零样本 TTS；
+        <span class="highlight">TokSing</span> 将编解码语言模型方法引入 SVS；
+        <span class="highlight">GTSinger</span> 构建全球化多技巧歌声语料库；
+        Everyone-Can-Sing 实现零样本 SVS+SVC 统一框架；
+        <span class="highlight">CosyVoice 2</span>、<span class="highlight">HALL-E</span> 推动零样本 TTS 实用化；
+        <span class="highlight">SongGen</span> 提出单阶段文本到歌曲生成。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2403.03100">NaturalSpeech 3 2403.03100</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2409.00750">MaskGCT 2409.00750</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2406.08416">TokSing 2406.08416</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2409.13832">GTSinger 2409.13832</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2501.13870">Everyone-Can-Sing 2501.13870</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2412.10117">CosyVoice 2 2412.10117</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2410.04380">HALL-E 2410.04380</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2502.13128">SongGen 2502.13128</a>
+      </div>
+    </div>
+
+    <!-- 2025-2026 -->
+    <div class="timeline-item">
+      <div class="year">2025–2026 — 端到端歌曲生成与零样本克隆</div>
+      <h3>完整歌曲生成、扩散 Transformer 与大规模数据</h3>
+      <p>
+        2025 年后，技术进入"端到端歌曲生成"和"零样本克隆"双轨时代。
+        <span class="highlight">YuE</span> 首个开源长篇歌词到歌曲生成基础模型；
+        <span class="highlight">DiffRhythm</span> 用潜在扩散实现端到端全长歌曲生成；
+        <span class="highlight">LeVo/LeVo 2</span>（腾讯）实现高质量歌曲生成与多偏好对齐；
+        <span class="highlight">SongBloom</span> 用自回归+扩散混合方案；
+        <span class="highlight">SoulX-Singer</span>、<span class="highlight">CoMelSinger</span>、<span class="highlight">DiTSinger</span> 探索新架构；
+        <span class="highlight">VocalParse</span> 用音频语言模型实现规模化歌声转谱；
+        <span class="highlight">Muse</span>、<span class="highlight">WanSong</span> 推动开源歌曲生成；
+        <span class="highlight">SingNet</span>、<span class="highlight">STARS</span> 构建大规模 in-the-wild 歌声数据集。
+      </p>
+      <div class="papers">
+        <a class="paper-tag new" href="https://arxiv.org/abs/2503.08638">YuE 2503.08638</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2503.01183">DiffRhythm 2503.01183</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2506.07520">LeVo 2506.07520</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2606.30642">LeVo 2 2606.30642</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2506.07634">SongBloom 2506.07634</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2602.07803">SoulX-Singer 2602.07803</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2509.19883">CoMelSinger 2509.19883</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2510.09016">DiTSinger 2510.09016</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2605.04613">VocalParse 2605.04613</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2601.03973">Muse 2601.03973</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2607.14749">WanSong 2607.14749</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2505.09325">SingNet 2505.09325</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2507.06670">STARS 2507.06670</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2606.05852">UniVoice 2606.05852</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2506.00045">ACE-Step 2506.00045</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2510.22950">DiffRhythm 2 2510.22950</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2404.09313">Melodist 2404.09313</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2407.02049">MelodyLM 2407.02049</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Data Pipeline Module -->
+<section id="data-pipeline">
+  <h2 class="section-title">数据制作流程专题模块</h2>
+  <p class="section-desc">
+    歌声合成训练数据的质量和标注精度直接决定模型上限。本模块系统梳理从原始歌声音频到可训练标注的完整 pipeline，
+    重点关注旋律控制数据（曲谱/MIDI/音高/对齐）的制作方法。
+  </p>
+
+  <div class="callout">
+    <strong>核心挑战：</strong>与语音合成（TTS）不同，歌声合成需要额外的旋律信息——音高轮廓（pitch contour）、音符边界（note boundary）、
+    音符对齐（note alignment）和节拍信息。这些信息通常需要从原始歌声音频中提取（歌声转谱），或由人工/半自动标注。
+    数据制作的复杂度和成本远高于 TTS。
+  </p>
+
+  <!-- Pipeline Overview -->
+  <div class="arch-diagram">
+    <h3 style="color:var(--text);font-size:18px;margin-bottom:20px;">歌声训练数据制作 Pipeline 总览</h3>
+    <div class="arch-flow">
+      <div class="arch-row">
+        <div class="arch-box arch-input">原始歌声音频<br><small>录音/网络挖掘</small></div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-aux">预处理<br><small>降噪/分离/重采样</small></div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-aux">歌词对齐<br><small>音素边界标注</small></div>
+        <div class="arch-box arch-aux">旋律提取<br><small>音高轨迹+音符</small></div>
+      </div>
+      <div class="arch-arrow">↓ ↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-aux">曲谱标注<br><small>MIDI/音符+时长</small></div>
+        <div class="arch-box arch-aux">技巧标注<br><small>颤音/气息等</small></div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-model">对齐标注数据<br><small>音频+歌词+音素+音符+时长</small></div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-output">训练就绪数据<br><small>用于 SVS/SVC 模型训练</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 1</span>
+    <h4>数据获取与预处理</h4>
+    <p>
+      <strong>来源：</strong>专业录音棚录制（高质量，如 Opencpop、GTSinger）、网络音乐爬取（大规模，如 DeepSinger、SingNet）、
+      合成数据（如 Muse 使用 116k 合成歌曲）。<br>
+      <strong>预处理：</strong>音频降噪、人声/伴奏分离（source separation）、重采样到统一采样率（如 24kHz/44.1kHz/48kHz）、
+      音频切片。DeepSinger 使用 Spleeter/UVR 进行人声分离；SingNet 使用 Demucs 分离 in-the-wild 录音。
+    </p>
+    <div class="tools">
+      <span class="tool-tag">Spleeter</span>
+      <span class="tool-tag">Demucs</span>
+      <span class="tool-tag">UVR (Ultimate Vocal Remover)</span>
+      <span class="tool-tag">ffmpeg</span>
+      <span class="tool-tag">sox</span>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 2</span>
+    <h4>歌词对齐（Lyrics-to-Audio Alignment）</h4>
+    <p>
+      将歌词文本与音频时间轴对齐，得到每个音素（phoneme）的起止时间。这是 SVS 训练数据制作的核心步骤。<br><br>
+      <strong>歌声对齐 vs 语音对齐的挑战：</strong><br>
+      • 歌声音高变化大，共振峰偏移严重，G2P（字素到音素）规则与语音不同<br>
+      • 长音、颤音、滑音导致音素边界模糊<br>
+      • 歌词可能跨语言（如中文歌含英文），需要多语言 G2P<br><br>
+      <strong>方法：</strong><br>
+      • <strong>DeepSinger 方法</strong>：设计专门的的对齐模型，从粗粒度句子级到细粒度音素级逐步对齐。
+        先用句子级强制对齐（基于 DTW），再用音素级对齐模型（基于 CTC 或 Attention）<br>
+      • <strong>MFA（Montreal Forced Aligner）</strong>：基于 Kaldi 的强制对齐工具，广泛用于 SVS 数据制作。
+        Opencpop 使用 MFA 进行音素边界标注，但需要适配歌声的声学模型<br>
+      • <strong>SongTrans</strong>（arXiv 2409.14619）：统一的歌声转写和对齐方法，同时处理歌词和音符对齐<br>
+      • <strong>STARS</strong>（arXiv 2507.06670）：统一框架，同时完成歌声转写、对齐和细化风格标注<br>
+      • <strong>VocalParse</strong>（arXiv 2605.04613）：使用音频大语言模型实现统一可扩展的歌声转写，解决传统多阶段 pipeline 的复杂性问题
+    </p>
+    <div class="tools">
+      <span class="tool-tag">MFA (Montreal Forced Aligner)</span>
+      <span class="tool-tag">CTC</span>
+      <span class="tool-tag">Attention-based alignment</span>
+      <span class="tool-tag">DTW</span>
+      <span class="tool-tag">SongTrans</span>
+      <span class="tool-tag">STARS</span>
+      <span class="tool-tag">VocalParse</span>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 3</span>
+    <h4>旋律提取与曲谱标注（Melody Extraction & Score Annotation）</h4>
+    <p>
+      从歌声音频中提取旋律信息，生成与歌词对齐的曲谱（score/MIDI）。这是旋律控制数据的制作核心。<br><br>
+      <strong>旋律信息包含：</strong><br>
+      • <strong>音高轨迹（F0 contour / pitch curve）</strong>：逐帧基频估计，反映瞬时音高变化<br>
+      • <strong>音符序列（note sequence）</strong>：将连续音高量化为离散音符（如 C4, D4），包含音高和时长<br>
+      • <strong>节拍信息（tempo/beat）</strong>：BPM 和小节线位置<br>
+      • <strong>力度信息（dynamics）</strong>：音量变化、重音等<br><br>
+      <strong>制作方法（三类路线）：</strong><br><br>
+      <strong>路线 A：人工标注</strong>（高精度，高成本）<br>
+      • 由音乐专家逐音听取并标注 MIDI 音符和边界。GTSinger 采用此方法，由专业人员标注 80.59 小时的多技巧歌声数据，
+        包含真实的音乐曲谱。Opencpop 也是人工标注音素和音符边界。<br><br>
+      <strong>路线 B：歌声转谱（Singing Transcription）</strong>（自动，中等精度）<br>
+      • 用算法从音频自动提取旋律。典型 pipeline：<br>
+        &nbsp;&nbsp;1. F0 估计：使用 PYIN、CREPE、SPICE 等算法提取逐帧基频<br>
+        &nbsp;&nbsp;2. 音符量化：将连续 F0 量化为离散 MIDI 音符号，过滤颤音和滑音<br>
+        &nbsp;&nbsp;3. 边界检测：基于能量和 F0 变化率检测音符边界<br>
+        &nbsp;&nbsp;4. 节拍追踪：使用 madmom 等工具提取 BPM 和节拍位置<br>
+      • DeepSinger 完全采用此路线，从网络挖掘的歌声中自动提取曲谱<br>
+      • STARS 提供统一的歌声转写框架，自动提取旋律+对齐+风格标注<br>
+      • VocalParse 使用音频语言模型实现规模化歌声转写<br><br>
+      <strong>路线 C：已有曲谱对齐</strong>（低成本，需要原始曲谱）<br>
+      • 如果原始歌曲有现成的 MIDI/曲谱文件，则只需做曲谱-音频时间对齐<br>
+      • RMSSinger 采用此路线，使用真实音乐曲谱（realistic music score）作为输入<br>
+      • 许多商业 SVS 系统（Synthesizer V、ACE Studio）在制作声库时采用此方法：
+        歌手按照给定曲谱演唱，曲谱已知，只需对齐时间<br><br>
+      <strong>音高估计工具：</strong>
+    </p>
+    <div class="tools">
+      <span class="tool-tag">PYIN</span>
+      <span class="tool-tag">CREPE</span>
+      <span class="tool-tag">SPICE</span>
+      <span class="tool-tag">FCPE (arXiv 2509.15140)</span>
+      <span class="tool-tag">madmom (beat tracking)</span>
+      <span class="tool-tag">music21</span>
+      <span class="tool-tag">pretty_midi</span>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 4</span>
+    <h4>演唱技巧与风格标注（Technique & Style Annotation）</h4>
+    <p>
+      高质量 SVS 需要标注演唱技巧（颤音、滑音、气息、真假声等）和风格信息。<br><br>
+      <strong>技巧标注：</strong><br>
+      • <strong>GTSinger</strong>：标注了 6 种演唱技巧（混声、假声、气声、颤音、滑音、怒音），覆盖 4 种语言<br>
+      • <strong>TechSinger</strong>（arXiv 2502.12572）：实现技巧可控多语言合成，标注了气息、颤音、滑音等<br>
+      • <strong>STARS</strong>：统一框架自动提取细化风格标注<br><br>
+      <strong>风格标注：</strong><br>
+      • <strong>StyleSinger</strong>：跨域风格迁移，提取风格嵌入<br>
+      • <strong>StylePitcher</strong>（arXiv 2510.21685）：生成风格跟随的音高曲线<br>
+      • <strong>BERT 语义嵌入</strong>：引入歌词语义信息增强表达力
+    </p>
+    <div class="tools">
+      <span class="tool-tag">Vibrato detection</span>
+      <span class="tool-tag">F0 derivative analysis</span>
+      <span class="tool-tag">BERT embeddings</span>
+      <span class="tool-tag">Style tokens</span>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="pipeline-step">
+    <span class="step-num">Step 5</span>
+    <h4>数据质量检查与过滤</h4>
+    <p>
+      <strong>DeepSinger 的数据过滤策略：</strong>设计多维度自动过滤——对齐置信度过滤、音高合理性检查、
+      音频质量评分（SNR、 clipping）、重复数据去重。<br>
+      <strong>SingNet</strong>：针对 in-the-wild 数据，设计自动化质量评估 pipeline，包括人声分离质量、
+      对齐置信度、音高连续性检查。<br>
+      <strong>人工校验：</strong>对自动标注结果抽样人工校验，修正系统性错误。
+      Opencpop 对 MFA 输出进行人工校验和修正。
+    </p>
+    <div class="tools">
+      <span class="tool-tag">SNR estimation</span>
+      <span class="tool-tag">Alignment confidence</span>
+      <span class="tool-tag">Manual spot-checking</span>
+    </div>
+  </div>
+
+  <!-- Data Pipeline Comparison -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">主要数据集的数据制作方式对比</h3>
+
+  <div class="table-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>数据集</th>
+          <th>规模</th>
+          <th>曲谱来源</th>
+          <th>对齐方法</th>
+          <th>技巧标注</th>
+          <th>制作方式</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2201.07429">Opencpop</a></td>
+          <td>100 首中文歌 / 约 3.6h</td>
+          <td>人工标注</td>
+          <td>MFA + 人工校验</td>
+          <td>无</td>
+          <td>录音棚录制 + 专业标注</td>
+        </tr>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2409.13832">GTSinger</a></td>
+          <td>80.59h / 4 语言</td>
+          <td>真实音乐曲谱</td>
+          <td>人工专业标注</td>
+          <td>6 种技巧</td>
+          <td>专业录制 + 人工全标注</td>
+        </tr>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2007.04590">DeepSinger</a></td>
+          <td>多语言 / 大规模</td>
+          <td>歌声转谱（自动）</td>
+          <td>自动对齐模型</td>
+          <td>无</td>
+          <td>网络挖掘 + 全自动 pipeline</td>
+        </tr>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2505.09325">SingNet</a></td>
+          <td>大规模 in-the-wild</td>
+          <td>歌声转谱（自动）</td>
+          <td>自动 + 质量过滤</td>
+          <td>部分</td>
+          <td>网络挖掘 + Demucs 分离 + 自动标注</td>
+        </tr>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2507.06670">STARS</a></td>
+          <td>统一框架</td>
+          <td>歌声转谱（自动）</td>
+          <td>自动统一框架</td>
+          <td>细化风格标注</td>
+          <td>自动化转写+对齐+风格标注</td>
+        </tr>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2605.04613">VocalParse</a></td>
+          <td>可扩展</td>
+          <td>歌声转谱（LLM）</td>
+          <td>音频大语言模型</td>
+          <td>部分</td>
+          <td>音频 LLM 自动转写</td>
+        </tr>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2001.07044">JVS-MuSiC</a></td>
+          <td>日语多说话人</td>
+          <td>人工标注</td>
+          <td>人工标注</td>
+          <td>无</td>
+          <td>录音棚录制 + 专业标注</td>
+        </tr>
+        <tr>
+          <td><a class="ref" href="https://arxiv.org/abs/2601.03973">Muse</a></td>
+          <td>116k 合成歌曲</td>
+          <td>自动生成</td>
+          <td>已知（合成）</td>
+          <td>风格标签</td>
+          <td>合成数据 + 自动生成歌词和风格</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top:24px;">
+    <strong>关键洞察：</strong>数据制作正在从"人工标注"向"自动化歌声转谱"演进。
+    <strong>VocalParse</strong> 使用音频大语言模型实现规模化歌声转写，代表了最新趋势。
+    <strong>DeepSinger</strong> 开创的全自动 pipeline（爬取→分离→对齐→过滤）仍是大规模数据制作的主流方案。
+    对于曲谱控制 SVS，最理想的方案是<strong>路线 C（已有曲谱对齐）</strong>——让歌手按已知曲谱演唱，只需做时间对齐，
+    这也是商业产品（Synthesizer V、ACE Studio）的标准做法。
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- Two Directions -->
+<section id="directions">
+  <h2 class="section-title">两大技术方向对比</h2>
+  <p class="section-desc">
+    当前歌声合成领域存在两大并行技术方向：曲谱控制（score-based，"按谱唱"）和以词生曲（lyrics-to-song，"直接生成完整歌曲"）。
+    两者在输入、输出、技术架构和数据需求上存在根本差异。
+  </p>
+
+  <div class="grid-2">
+    <!-- Direction A: Score-based -->
+    <div class="dir-card" style="border-color: rgba(34,211,238,0.3);">
+      <div class="dir-icon">🎼</div>
+      <h3>方向一：曲谱控制歌声合成<br><span style="font-size:14px;color:var(--cyan);">Score-based SVS</span></h3>
+      <p>
+        <strong>输入：</strong>歌词 + 音符（MIDI/曲谱）+ 节奏 + 力度<br>
+        <strong>输出：</strong>歌声干声（vocal only）<br>
+        <strong>核心特征：</strong>精确控制旋律、节奏、音高，用户可编辑曲谱<br>
+        <strong>典型应用：</strong>虚拟歌手（Vocaloid、Synthesizer V）、音乐制作工具
+      </p>
+      <ul class="dir-list">
+        <li><strong>XiaoiceSing</strong>：FastSpeech 变体，曲谱→mel-spectrogram→声码器</li>
+        <li><strong>DiffSinger</strong>：扩散模型声学模型，曲谱→mel（扩散）→声码器</li>
+        <li><strong>RMSSinger</strong>：使用真实音乐曲谱，解决简化曲谱信息损失</li>
+        <li><strong>GTSinger</strong>：全球化多技巧，支持 6 种演唱技巧</li>
+        <li><strong>VISinger/VISinger 2</strong>：端到端 VITS 变体</li>
+        <li><strong>HiddenSinger</strong>：神经编解码 + 潜在扩散</li>
+        <li><strong>SoulX-Singer</strong>（2026.02）：零样本 SVS，支持 MIDI 和旋律表示</li>
+        <li><strong>CoMelSinger</strong>（2025.09）：离散 token + 结构化旋律表示</li>
+        <li><strong>DiTSinger</strong>（2025.10）：扩散 Transformer + 隐式分类器引导</li>
+        <li><strong>UniVoice</strong>（2026.06）：统一语音/歌声合成，旋律条件强约束歌声</li>
+      </ul>
+      <div class="ref-list" style="margin-top:12px;">
+        <a class="ref" href="https://arxiv.org/abs/2006.06261">XiaoiceSing</a>
+        <a class="ref" href="https://arxiv.org/abs/2105.02446">DiffSinger</a>
+        <a class="ref" href="https://arxiv.org/abs/2305.10686">RMSSinger</a>
+        <a class="ref" href="https://arxiv.org/abs/2409.13832">GTSinger</a>
+        <a class="ref" href="https://arxiv.org/abs/2602.07803">SoulX-Singer</a>
+      </div>
+    </div>
+
+    <!-- Direction B: Lyrics-to-Song -->
+    <div class="dir-card" style="border-color: rgba(251,113,133,0.3);">
+      <div class="dir-icon">🎤</div>
+      <h3>方向二：以词生曲<br><span style="font-size:14px;color:var(--rose);">Lyrics-to-Song Generation</span></h3>
+      <p>
+        <strong>输入：</strong>文本描述 / 歌词（可选 + 风格描述）<br>
+        <strong>输出：</strong>完整歌曲（人声 + 伴奏）<br>
+        <strong>核心特征：</strong>端到端生成，不需要曲谱输入，旋律由模型自行决定<br>
+        <strong>典型应用：</strong>Suno、Udio、AI 音乐创作平台
+      </p>
+      <ul class="dir-list">
+        <li><strong>Jukebox</strong>（2020）：原始音频域自回归生成，含人声歌曲</li>
+        <li><strong>MusicLM</strong>（2023）：文本→音乐，分层自回归</li>
+        <li><strong>MusicGen</strong>（2023）：单阶段 Transformer + EnCodec</li>
+        <li><strong>YuE</strong>（2025.03）：首个开源长篇歌词到歌曲基础模型</li>
+        <li><strong>SongGen</strong>（2025.02）：单阶段自回归文本到歌曲</li>
+        <li><strong>DiffRhythm</strong>（2025.03）：潜在扩散端到端全长歌曲</li>
+        <li><strong>ACE-Step</strong>（2025.06）：扩散+DCAE架构，A100上20秒生成4分钟音乐，提出"音乐AI的Stable Diffusion时刻"</li>
+        <li><strong>LeVo/LeVo 2</strong>（2025-2026）：腾讯，LLM+扩散混合</li>
+        <li><strong>SongBloom</strong>（2025.06）：自回归草图+扩散精修</li>
+        <li><strong>DiffRhythm 2</strong>（2025.10）：半自回归块流匹配，跨偏好优化</li>
+        <li><strong>Muse</strong>（2026.01）：开源可复现，116k 合成数据</li>
+        <li><strong>WanSong</strong>（2026.07）：纯扩散模型，5 分钟双轨歌曲</li>
+        <li><strong>SketchSong</strong>（2026.06）：分层规划+细粒度多轨建模</li>
+        <li><strong>Suno V4/V5</strong>：商业产品，自回归 Transformer</li>
+      </ul>
+      <div class="ref-list" style="margin-top:12px;">
+        <a class="ref" href="https://arxiv.org/abs/2503.08638">YuE</a>
+        <a class="ref" href="https://arxiv.org/abs/2502.13128">SongGen</a>
+        <a class="ref" href="https://arxiv.org/abs/2503.01183">DiffRhythm</a>
+        <a class="ref" href="https://arxiv.org/abs/2506.07520">LeVo</a>
+        <a class="ref" href="https://arxiv.org/abs/2606.30642">LeVo 2</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">两方向详细对比</h3>
+
+  <div class="table-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>维度</th>
+          <th>曲谱控制 SVS</th>
+          <th>以词生曲</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>旋律控制</td><td class="yes">精确（音符级）</td><td class="no">无（模型自行决定）</td></tr>
+        <tr><td>输出内容</td><td>仅人声干声</td><td class="yes">完整歌曲（人声+伴奏）</td></tr>
+        <tr><td>用户输入</td><td>曲谱+歌词（需音乐知识）</td><td class="yes">文本/歌词（零门槛）</td></tr>
+        <tr><td>音色克隆</td><td class="yes">支持（参考音频）</td><td class="partial">部分支持</td></tr>
+        <tr><td>音质上限</td><td class="yes">高（专业录制数据）</td><td class="partial">中高（受数据限制）</td></tr>
+        <tr><td>生成速度</td><td class="yes">快（秒级）</td><td class="partial">中（分钟级）</td></tr>
+        <tr><td>数据需求</td><td>对齐标注数据</td><td>大规模歌曲数据</td></tr>
+        <tr><td>典型架构</td><td>声学模型+声码器 / 扩散</td><td>自回归 LLM / 扩散</td></tr>
+        <tr><td>代表产品</td><td>Synthesizer V, ACE Studio</td><td>Suno, Udio, Lyria</td></tr>
+        <tr><td>商业成熟度</td><td class="yes">成熟（10+ 年）</td><td class="partial">新兴（2 年）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top:24px;">
+    <strong>趋势判断：</strong>两个方向正在融合。<strong>UniVoice</strong>（2026.06）尝试统一语音和歌声合成；
+    <strong>LeVo 2</strong>（2026.06）使用分层建模同时处理人声和伴奏；
+    <strong>WanSong</strong>（2026.07）用纯扩散模型生成双轨歌曲。
+    未来趋势是"<strong>可控歌曲生成</strong>"——用户可以输入歌词+部分旋律线索（如哼唱旋律），
+    模型生成完整歌曲，兼具曲谱控制的精确性和以词生曲的便利性。
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- Trends -->
+<section id="trends">
+  <h2 class="section-title">十大演进趋势分析</h2>
+  <p class="section-desc">通过对 150+ 篇论文的跨论文综合分析，我们识别出十个清晰的技术演进趋势。趋势 9、10 为 V3 新增。</p>
+
+  <!-- Trend 1 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);">1</div>
+      <div>
+        <h3>从两阶段到端到端</h3>
+        <div class="trend-sub">声学模型 + 声码器 → 直接从谱面到波形</div>
+      </div>
+    </div>
+    <p>
+      早期 SVS 采用"声学模型预测 mel-spectrogram + 独立声码器生成波形"的两阶段架构（XiaoiceSing, HiFiSinger, DeepSinger）。
+      VISinger 首次将 VITS 架构适配到歌声合成，实现端到端模型。
+      VISinger 2 引入 DSP 合成器解决相位问题。
+      <strong>V3 新增：</strong>SiFiSinger（2410.12536）基于源滤波器的端到端合成器；
+      DiTSinger（2510.09016）用扩散 Transformer 实现端到端。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2006.06261">2006.06261</a>
+      <a class="ref" href="https://arxiv.org/abs/2009.01776">2009.01776</a>
+      <a class="ref" href="https://arxiv.org/abs/2110.08813">2110.08813</a>
+      <a class="ref" href="https://arxiv.org/abs/2211.02903">2211.02903</a>
+      <a class="ref" href="https://arxiv.org/abs/2410.12536">2410.12536</a>
+      <a class="ref" href="https://arxiv.org/abs/2510.09016">2510.09016</a>
+    </div>
+  </div>
+
+  <!-- Trend 2 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.3);">2</div>
+      <div>
+        <h3>扩散模型的全面渗透</h3>
+        <div class="trend-sub">从声码器到声学模型到歌声转换到端到端歌曲生成</div>
+      </div>
+    </div>
+    <p>
+      DiffSinger 首个 SVS 扩散模型，DiffSVC 首个 SVC 扩散模型。
+      HiddenSinger 将扩散与神经编解码结合在潜在空间生成。
+      NaturalSpeech 2 将潜在扩散用于零样本语音和歌声合成。
+      <strong>V3 新增：</strong>DiffRhythm（2503.01183）用潜在扩散实现端到端全长歌曲；
+      SmoothSinger（2506.21478）条件扩散多条件 SVS；
+      LAPS-Diff（2507.04966）语言增强扩散 SVS；
+      RDSinger（2410.21641）参考扩散网络 SVS。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2105.02446">2105.02446</a>
+      <a class="ref" href="https://arxiv.org/abs/2306.06814">2306.06814</a>
+      <a class="ref" href="https://arxiv.org/abs/2503.01183">2503.01183</a>
+      <a class="ref" href="https://arxiv.org/abs/2506.21478">2506.21478</a>
+      <a class="ref" href="https://arxiv.org/abs/2507.04966">2507.04966</a>
+    </div>
+  </div>
+
+  <!-- Trend 3 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);">3</div>
+      <div>
+        <h3>从多说话人到零样本歌声克隆</h3>
+        <div class="trend-sub">目标音色建模 → 从少量语音参考直接克隆歌声</div>
+      </div>
+    </div>
+    <p>
+      Learn2Sing 首次提出歌声克隆。VALL-E 开创编解码语言模型零样本 TTS 范式。
+      Everyone-Can-Sing 实现零样本 SVS+SVC 统一框架。
+      <strong>V3 新增：</strong>SoulX-Singer（2602.07803）高质量零样本 SVS；
+      YingMusic-Singer（2512.04779）零样本 SVS + 无标注旋律引导；
+      CoMelSinger（2509.19883）离散 token 零样本歌声合成；
+      多个 SVC 工作（FreeSVC, kNN-SVC, HQ-SVC, R2-SVC）推进零样本歌声转换。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2301.02111">2301.02111</a>
+      <a class="ref" href="https://arxiv.org/abs/2501.13870">2501.13870</a>
+      <a class="ref" href="https://arxiv.org/abs/2602.07803">2602.07803</a>
+      <a class="ref" href="https://arxiv.org/abs/2512.04779">2512.04779</a>
+      <a class="ref" href="https://arxiv.org/abs/2509.19883">2509.19883</a>
+    </div>
+  </div>
+
+  <!-- Trend 4 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);">4</div>
+      <div>
+        <h3>大规模数据集与自动化数据制作</h3>
+        <div class="trend-sub">从小规模单语种 → 全球化多技巧 → in-the-wild → 合成数据</div>
+      </div>
+    </div>
+    <p>
+      Opencpop 提供开源中文歌声语料。GTSinger 发布全球化多技巧歌声语料库。
+      SingNet 构建 in-the-wild 歌声数据集。
+      <strong>V3 新增：</strong>VocalParse（2605.04613）用音频语言模型实现规模化歌声转写；
+      Muse（2601.03973）使用 116k 合成歌曲作为训练数据；
+      STARS（2507.06670）提供统一的歌声转写、对齐和细化风格标注框架；
+      SLEEPING-DISCO 9M（2506.14293）大规模预训练数据集。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2201.07429">2201.07429</a>
+      <a class="ref" href="https://arxiv.org/abs/2409.13832">2409.13832</a>
+      <a class="ref" href="https://arxiv.org/abs/2505.09325">2505.09325</a>
+      <a class="ref" href="https://arxiv.org/abs/2605.04613">2605.04613</a>
+      <a class="ref" href="https://arxiv.org/abs/2601.03973">2601.03973</a>
+      <a class="ref" href="https://arxiv.org/abs/2507.06670">2507.06670</a>
+    </div>
+  </div>
+
+  <!-- Trend 5 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);">5</div>
+      <div>
+        <h3>声码器的持续革新</h3>
+        <div class="trend-sub">WaveNet → HiFi-GAN → DDSP → 扩散声码器 → 无混叠合成</div>
+      </div>
+    </div>
+    <p>
+      WaveNet 奠定神经网络声码器基础；HiFi-GAN 成为 SVS 最广泛使用的声码器；
+      <strong>V3 新增：</strong>Aliasing-Free Neural Audio Synthesis（2512.20211）解决混叠问题；
+      Universal Harmonic Discriminator（2512.03486）提升 GAN 声码器质量。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/1609.03499">1609.03499</a>
+      <a class="ref" href="https://arxiv.org/abs/2010.05646">2010.05646</a>
+      <a class="ref" href="https://arxiv.org/abs/2512.20211">2512.20211</a>
+    </div>
+  </div>
+
+  <!-- Trend 6 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);">6</div>
+      <div>
+        <h3>表达力与多模态融合</h3>
+        <div class="trend-sub">从机械合成 → 风格迁移 → 视觉线索引导 → 统一语音歌声</div>
+      </div>
+    </div>
+    <p>
+      PerformSinger 引入同步唇形视觉线索。
+      <strong>V3 新增：</strong>UniVoice（2606.05852）统一语音和歌声合成，解决旋律条件冲突；
+      VS-Singer（2506.16020）视觉引导立体声 SVS；
+      Tutti（2602.08233）结构级音色控制多歌手合成；
+      StylePitcher（2510.21685）生成风格跟随的音高曲线。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2509.22718">2509.22718</a>
+      <a class="ref" href="https://arxiv.org/abs/2606.05852">2606.05852</a>
+      <a class="ref" href="https://arxiv.org/abs/2506.16020">2506.16020</a>
+      <a class="ref" href="https://arxiv.org/abs/2602.08233">2602.08233</a>
+    </div>
+  </div>
+
+  <!-- Trend 7 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);">7</div>
+      <div>
+        <h3>编解码器：音频生成的基石</h3>
+        <div class="trend-sub">SoundStream → EnCodec → DAC → 编解码语言模型</div>
+      </div>
+    </div>
+    <p>
+      SoundStream 提出端到端神经音频编解码，引入 RVQ 量化。
+      EnCodec 成为音频生成领域最广泛使用的编解码方案。
+      AudioLM 将编解码 token 与语言建模结合，开创音频 LLM 范式。
+      VALL-E、MusicGen、TokSing 等均建立在编解码器基础之上。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2107.03312">2107.03312</a>
+      <a class="ref" href="https://arxiv.org/abs/2210.13438">2210.13438</a>
+      <a class="ref" href="https://arxiv.org/abs/2306.06546">2306.06546</a>
+      <a class="ref" href="https://arxiv.org/abs/2209.03143">2209.03143</a>
+    </div>
+  </div>
+
+  <!-- Trend 8 -->
+  <div class="trend-card">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);">8</div>
+      <div>
+        <h3>从语音到歌声的技术迁移</h3>
+        <div class="trend-sub">TTS 技术 → SVS 应用：FastSpeech、VITS、扩散、编解码 LLM</div>
+      </div>
+    </div>
+    <p>
+      FastSpeech → XiaoiceSing；HiFi-GAN → 几乎所有 SVS 声码器；
+      Grad-TTS/Diff-TTS → DiffSinger/DiffSVC；
+      VALL-E 编解码语言模型范式 → TokSing 将其引入 SVS。
+      MaskGCT、CosyVoice 2、F5-TTS 等零样本 TTS 技术正在向 SVS 迁移。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/1905.09263">1905.09263</a>
+      <a class="ref" href="https://arxiv.org/abs/2010.05646">2010.05646</a>
+      <a class="ref" href="https://arxiv.org/abs/2301.02111">2301.02111</a>
+      <a class="ref" href="https://arxiv.org/abs/2406.08416">2406.08416</a>
+    </div>
+  </div>
+
+  <!-- Trend 9 - NEW -->
+  <div class="trend-card" style="border-color: rgba(34,211,238,0.3);">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);">9</div>
+      <div>
+        <h3>端到端歌曲生成爆发 <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="trend-sub">从单声学模型 → 扩散歌曲生成 → LLM+扩散混合 → 纯扩散双轨</div>
+      </div>
+    </div>
+    <p>
+      2025 年起，端到端完整歌曲生成（人声+伴奏）迎来爆发。
+      <strong>DiffRhythm</strong> 用潜在扩散实现端到端全长歌曲；
+      <strong>LeVo</strong> 用语言模型+音乐编解码器实现高质量歌曲生成；
+      <strong>SongBloom</strong> 用自回归草图+扩散精修的混合范式；
+      <strong>LeVo 2</strong> 用分层表示建模+渐进后训练；
+      <strong>WanSong</strong> 用纯扩散模型生成 5 分钟双轨歌曲；
+      <strong>Muse</strong> 开源可复现系统 + 116k 合成数据。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2503.01183">2503.01183</a>
+      <a class="ref" href="https://arxiv.org/abs/2506.07520">2506.07520</a>
+      <a class="ref" href="https://arxiv.org/abs/2506.07634">2506.07634</a>
+      <a class="ref" href="https://arxiv.org/abs/2606.30642">2606.30642</a>
+      <a class="ref" href="https://arxiv.org/abs/2607.14749">2607.14749</a>
+      <a class="ref" href="https://arxiv.org/abs/2601.03973">2601.03973</a>
+    </div>
+  </div>
+
+  <!-- Trend 10 - NEW -->
+  <div class="trend-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="trend-header">
+      <div class="icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);">10</div>
+      <div>
+        <h3>歌声转谱与自动标注智能化 <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="trend-sub">人工标注 → MFA 强制对齐 → 自动歌声转写 → 音频大语言模型转写</div>
+      </div>
+    </div>
+    <p>
+      数据制作的自动化程度持续提升。
+      <strong>DeepSinger</strong> 开创全自动 pipeline（爬取→分离→对齐→过滤）；
+      <strong>STARS</strong> 提供统一歌声转写+对齐+风格标注框架；
+      <strong>VocalParse</strong> 使用音频大语言模型实现规模化歌声转写，解决传统多阶段 pipeline 的复杂性问题；
+      <strong>SongTrans</strong> 统一歌声转写和对齐方法；
+      <strong>FCPE</strong>（2509.15140）提供快速上下文音高估计。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2007.04590">2007.04590</a>
+      <a class="ref" href="https://arxiv.org/abs/2507.06670">2507.06670</a>
+      <a class="ref" href="https://arxiv.org/abs/2605.04613">2605.04613</a>
+      <a class="ref" href="https://arxiv.org/abs/2409.14619">2409.14619</a>
+      <a class="ref" href="https://arxiv.org/abs/2509.15140">2509.15140</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Industry -->
+<section id="industry">
+  <h2 class="section-title">工业界产品调研</h2>
+  <p class="section-desc">歌声合成技术已从学术研究走向商业落地。以下 20+ 个产品覆盖了从经典拼接合成到最新 AI 生成的发展历程，按技术路线分为四个时代。</p>
+
+  <div class="callout">
+    <strong>工业界发展脉络：</strong>
+    <span class="era-badge era-concat">拼接合成时代 (2004-2017)</span>
+    <span class="era-badge era-dl">深度学习时代 (2018-2022)</span>
+    <span class="era-badge era-diffusion">扩散+克隆时代 (2023)</span>
+    <span class="era-badge era-llm">音频 LLM / 歌曲生成时代 (2024-2026)</span>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">一、经典拼接合成时代 (2004–2017)</h3>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>Vocaloid</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Yamaha</span>
+          <span class="meta-item">📅 2004</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">经典歌声合成引擎，基于拼接合成和频谱建模合成（SMS）+ 源-滤波器模型（EpR 模型）。用户通过输入歌词和音符来生成歌声。开创了虚拟歌手文化（初音未来、洛天依等）。Vocaloid 6（2022.10）引入 AI 技术，从纯拼接向深度学习过渡。</div>
+    <div class="product-footer">
+      <span class="tech-badge">拼接合成 + EpR 模型</span>
+      <span class="tech-badge">曲谱控制</span>
+      <span class="tech-badge">ToC</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>UTAU</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Ameya/Ayame</span>
+          <span class="meta-item">📅 2008</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源</span>
+    </div>
+    <div class="product-desc">免费开源歌声合成软件，用户可自建音源库（UTAU 声库），催生了大量民间虚拟歌手。日本同人文化的重要工具。</div>
+    <div class="product-footer">
+      <span class="tech-badge">拼接合成</span>
+      <span class="tech-badge">曲谱控制</span>
+      <span class="tech-badge">开源</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>AIVA</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 AIVA Technologies</span>
+          <span class="meta-item">📅 2016</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">AI 作曲平台，主要生成器乐配乐和背景音乐，不涉及人声合成。</div>
+    <div class="product-footer">
+      <span class="tech-badge">深度学习</span>
+      <span class="tech-badge">符号音乐</span>
+    </div>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">二、深度学习歌声合成时代 (2018–2022)</h3>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>Synthesizer V</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Dreamtonics</span>
+          <span class="meta-item">📅 2018</span>
+        </div>
+      </div>
+      <span class="type-badge type-both">商业+免费</span>
+    </div>
+    <div class="product-desc">AI 驱动的歌声合成引擎，结合拼接合成和神经网络混合方案。合成质量接近真人演唱。支持多语言、跨语种合成（英/日/中/粤/韩/西）。2025 年发布 Studio 2。Saki、Solaria 等声库广受好评。从 UTAU resampler Moresampler 发展而来，目前最接近真人演唱质量的商业歌声合成产品。</div>
+    <div class="product-footer">
+      <span class="tech-badge">拼接+神经网络混合</span>
+      <span class="tech-badge">曲谱控制</span>
+      <span class="tech-badge">跨语言</span>
+    </div>
+    <div class="product-note">数据制作采用路线 C：歌手按已知曲谱演唱，只需时间对齐</div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>ACE Studio</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 时间轴科技 (ACE)</span>
+          <span class="meta-item">📅 2020</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">AI 歌声合成工作站，支持中文/英文/日文多语言，内置 140+ 免版税 AI 声库覆盖 8 种语言。支持自定义声音模型训练（Custom Voice Model），用户可上传声音数据训练专属 AI 歌手。支持气息、颤音等演唱技巧控制。2025 年 12 月发布 ACE Studio 2.0。国内主流商业 SVS 产品之一。</div>
+    <div class="product-footer">
+      <span class="tech-badge">神经网络+拼接混合</span>
+      <span class="tech-badge">曲谱控制</span>
+      <span class="tech-badge">自定义声库训练</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>X Studio (小冰)</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 字节跳动 (ByteDance)</span>
+          <span class="meta-item">📅 2020</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">小冰与网易云音乐合作推出的云端深度学习歌声合成平台。采用小冰歌声模型、一致性超自然语音、流式渲染歌声合成技术。3 秒内生成专业级 AI 歌声干声，支持滑音、转音、颤音等细节调整。后与网易天音深度融合。相关技术论文：XiaoiceSing、HiFiSinger。</div>
+    <div class="product-footer">
+      <span class="tech-badge">深度神经网络</span>
+      <span class="tech-badge">曲谱控制</span>
+      <span class="tech-badge">流式合成</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>腾讯天琴 / LeVo</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 腾讯音乐娱乐 (TME) / 天琴实验室</span>
+          <span class="meta-item">📅 2023</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">TME 首个自研多模态音乐大模型。LeVo（arXiv 2506.07520）基于语言模型框架，包含 LeLM 和 Music Codec，支持并行建模混合 token 和双轨 token。LeVo 2（arXiv 2606.30642）引入分层表示建模和渐进后训练，支持可控全曲生成。已使用 AI 生成人声发布超 1000 首歌曲。</div>
+    <div class="product-footer">
+      <span class="tech-badge">LLM + Diffusion</span>
+      <span class="tech-badge">以词生曲</span>
+      <span class="tech-badge">ToC+ToB</span>
+    </div>
+    <div class="product-note">相关研究: WeSinger, DurIAN-SC, LeVo, LeVo 2</div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>Bilibili AI 歌手</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Bilibili</span>
+          <span class="meta-item">📅 2022</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源社区</span>
+    </div>
+    <div class="product-desc">基于 so-vits-svc 等开源方案的 AI 翻唱功能，在 B 站社区广泛流行。推动 AI 翻唱文化普及。</div>
+    <div class="product-footer">
+      <span class="tech-badge">VITS / so-vits-svc</span>
+      <span class="tech-badge">歌声转换</span>
+    </div>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">三、扩散+歌声克隆时代 (2023)</h3>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>Suno AI</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Suno Inc.</span>
+          <span class="meta-item">📅 2023</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">文本提示生成完整歌曲（人声+伴奏），掀起 AI 音乐生成热潮。CEO 确认采用自回归 Transformer 架构。V3/V4 版本质量大幅提升，V4 支持更高质量和更长时长。2024-2025 年最火爆的 AI 音乐产品。开源 Bark TTS/音频模型。代表工业界从"纯歌声合成"向"完整歌曲生成"的范式转变。</div>
+    <div class="product-footer">
+      <span class="tech-badge">自回归 Transformer</span>
+      <span class="tech-badge">以词生曲</span>
+      <span class="tech-badge">ToC</span>
+    </div>
+    <div class="product-note">Bark 开源模型: https://github.com/suno-ai/bark</div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>Google Lyria</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Google DeepMind</span>
+          <span class="meta-item">📅 2023</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">Google 最先进的 AI 音乐生成模型家族，可从文本提示生成 44.1kHz 立体声高保真音频。支持人声、定时歌词和完整器乐编排。Lyria 3（2026.02）包含 Pro（完整歌曲）和 Clip（短片段）两个版本，支持 Lyria RealTime 实时交互。通过 Gemini API/Vertex AI 提供。</div>
+    <div class="product-footer">
+      <span class="tech-badge">深度生成模型</span>
+      <span class="tech-badge">以词生曲</span>
+      <span class="tech-badge">44.1kHz 立体声</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>Kits AI</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Kits AI</span>
+          <span class="meta-item">📅 2023</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">AI 歌声克隆和转换平台，用户可训练自己的 AI 歌声音色。主要面向音乐制作和翻唱社区。支持零样本和少样本歌声克隆。</div>
+    <div class="product-footer">
+      <span class="tech-badge">RVC 变体</span>
+      <span class="tech-badge">歌声克隆</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>So-VITS-SVC</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 开源社区</span>
+          <span class="meta-item">📅 2023</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源</span>
+    </div>
+    <div class="product-desc">基于 VITS 的歌声转换开源项目，可训练个人歌声模型。GitHub 星标超 30k，引爆 AI 翻唱热潮。</div>
+    <div class="product-footer">
+      <span class="tech-badge">VITS 变体</span>
+      <span class="tech-badge">歌声转换</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>RVC (Retrieval-based Voice Conversion)</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 开源社区 (RVC-Project)</span>
+          <span class="meta-item">📅 2023</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源</span>
+    </div>
+    <div class="product-desc">基于检索的语音/歌声转换开源框架，训练简单、效果好，广泛应用于 AI 翻唱。GitHub 50k+ 星标。</div>
+    <div class="product-footer">
+      <span class="tech-badge">VITS + 检索增强</span>
+      <span class="tech-badge">歌声转换</span>
+    </div>
+  </div>
+
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">四、音频 LLM / 歌曲生成时代 (2024–2026)</h3>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>Udio</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Udio Inc.</span>
+          <span class="meta-item">📅 2024</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">文本生成高质量完整歌曲，与 Suno 竞争。以音质和音乐性著称，支持 30 分钟长曲。由前 Google DeepMind 成员创建。</div>
+    <div class="product-footer">
+      <span class="tech-badge">自回归 + 扩散 (推测)</span>
+      <span class="tech-badge">以词生曲</span>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-header">
+      <div>
+        <h3>GPT-SoVITS</h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 开源社区 (RVC-Boss)</span>
+          <span class="meta-item">📅 2024</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源</span>
+    </div>
+    <div class="product-desc">结合 GPT 和 VITS 的少样本语音/歌声合成系统，1 分钟参考音频即可克隆音色。GitHub 30k+ 星标，活跃开源项目。代表编解码语言模型路线在开源社区的落地。</div>
+    <div class="product-footer">
+      <span class="tech-badge">GPT + VITS</span>
+      <span class="tech-badge">少样本克隆</span>
+    </div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>WanSong <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 阿里巴巴</span>
+          <span class="meta-item">📅 2026.07</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">纯扩散模型的长篇商业级歌曲生成。不同于自回归和级联多阶段 pipeline，WanSong 直接生成高保真、多语言歌曲，支持最长 5 分钟，输出双轨（人声+伴奏）。arXiv 2607.14749。</div>
+    <div class="product-footer">
+      <span class="tech-badge">纯扩散模型</span>
+      <span class="tech-badge">以词生曲</span>
+      <span class="tech-badge">双轨输出</span>
+    </div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>Qwen-Music <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 阿里巴巴</span>
+          <span class="meta-item">📅 2026.07</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">阿里巴巴通义千问音乐大模型技术报告。arXiv 2607.11699。支持文本到音乐/歌曲生成。</div>
+    <div class="product-footer">
+      <span class="tech-badge">LLM</span>
+      <span class="tech-badge">以词生曲</span>
+    </div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>Stable Audio <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Stability AI</span>
+          <span class="meta-item">📅 2024</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源</span>
+    </div>
+    <div class="product-desc">Stable Audio Open（arXiv 2407.14358）基于潜在扩散的文本到音频生成模型，支持音乐生成。Stability AI 出品。</div>
+    <div class="product-footer">
+      <span class="tech-badge">潜在扩散</span>
+      <span class="tech-badge">音乐生成</span>
+    </div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>SoulX-Singer <span style="font-size:12px;color:var(--emerald);">[V3 重点发现]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Soul-AILab</span>
+          <span class="meta-item">📅 2026.02</span>
+          <span class="meta-item">⭐ 838</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源</span>
+    </div>
+    <div class="product-desc"><strong>最符合"曲谱歌声合成 + 歌声克隆"需求的开源系统。</strong>支持 MIDI 曲谱控制（score-conditioned）和 F0 旋律控制（melody-conditioned）双模式。零样本歌声克隆，无需微调即可生成未见歌手的声音。跨语言音色保留。42,000+ 小时对齐训练数据（普通话/英语/粤语）。附带 SoulX-Singer-SVC 零样本歌声转换变体。arXiv 2602.07803。</div>
+    <div class="product-footer">
+      <span class="tech-badge">曲谱控制 (MIDI+F0)</span>
+      <span class="tech-badge">零样本克隆</span>
+      <span class="tech-badge">跨语言</span>
+      <span class="tech-badge">42K小时数据</span>
+    </div>
+    <div class="product-note">GitHub: Soul-AILab/SoulX-Singer · Apache 2.0 · 含评估基准 SoulX-Singer-Eval</div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>DiffSinger (OpenVPI 社区版) <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 OpenVPI 社区</span>
+          <span class="meta-item">📅 2021-至今</span>
+          <span class="meta-item">⭐ 3,179</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">开源</span>
+    </div>
+    <div class="product-desc">基于浅扩散机制的歌声合成开源系统，中国 SVS 社区核心项目。44.1kHz 采样率。Variance 模型支持音高、能量、气息等参数预测。完整工具链：OpenUtau 编辑器、MakeDiffSinger 数据集构建工具、SOME MIDI 提取器、SingingVocators 声码器集合。面向生产部署设计。</div>
+    <div class="product-footer">
+      <span class="tech-badge">曲谱控制 (MIDI)</span>
+      <span class="tech-badge">浅扩散</span>
+      <span class="tech-badge">44.1kHz</span>
+      <span class="tech-badge">完整工具链</span>
+    </div>
+    <div class="product-note">原始论文 arXiv 2105.02446 (AAAI 2022) · GitHub: openvpi/DiffSinger</div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>Mureka AI / MiniMax Music <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 昆仑万维 / 稀宇科技</span>
+          <span class="meta-item">📅 2025-2026</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc"><strong>Mureka AI</strong>（昆仑万维 SkyworkAI）：音乐生成平台，提供 API 服务，支持歌词生成、歌曲生成、背景音乐生成，MCP 协议支持。<strong>MiniMax Music 2.6</strong>（稀宇科技）：AI 音乐生成 API，有社区开发者工具生态。</div>
+    <div class="product-footer">
+      <span class="tech-badge">以词生曲</span>
+      <span class="tech-badge">API 服务</span>
+    </div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>TCSinger 2 <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 腾讯音乐 (TME)</span>
+          <span class="meta-item">📅 2025 (ACL 2025)</span>
+          <span class="meta-item">⭐ 182</span>
+        </div>
+      </div>
+      <span class="type-badge type-opensource">学术开源</span>
+    </div>
+    <div class="product-desc">腾讯天琴实验室零样本多语言 SVS 系统。Blurred Boundary Content Encoder 平滑音素/音符过渡。Custom Audio Encoder 对比学习提取风格。Flow-based Custom Transformer + Cus-MOE + F0 监督。支持跨语言合成、语音转歌唱（speech-to-sing）。</div>
+    <div class="product-footer">
+      <span class="tech-badge">曲谱控制</span>
+      <span class="tech-badge">零样本克隆</span>
+      <span class="tech-badge">跨语言</span>
+    </div>
+    <div class="product-note">GitHub: AaronZ345/TCSinger2 · 与 LeVo 同属 TME 天琴实验室</div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>Vocoflex <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Dreamtonics</span>
+          <span class="meta-item">📅 2025</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">Dreamtonics 推出的实时 AI 声音创建与变换插件。将任何人声转换为所选声音，实时处理。Grammy 获奖制作人认可（U2、Dua Lipa 等）。代表声音变换（Voice Changer）新趋势。</div>
+    <div class="product-footer">
+      <span class="tech-badge">实时声音变换</span>
+      <span class="tech-badge">歌声克隆</span>
+    </div>
+  </div>
+
+  <div class="product-card" style="border-color: rgba(16,185,129,0.3);">
+    <div class="product-header">
+      <div>
+        <h3>Google Flow Music (原 Riffusion) <span style="font-size:12px;color:var(--emerald);">[V3 新增]</span></h3>
+        <div class="product-meta">
+          <span class="meta-item">🏢 Google (收购 Riffusion)</span>
+          <span class="meta-item">📅 2025-2026</span>
+        </div>
+      </div>
+      <span class="type-badge type-commercial">商业</span>
+    </div>
+    <div class="product-desc">Riffusion 已被 Google 收购/整合，转型为 Google Flow Music 平台，由 Lyria 3 驱动。提供 Chat with Producer（对话式创作）、AI Music Video（使用 Veo 视频模型）、Vibe-code（构建音频插件/音乐游戏/自定义 DAW）、个性化推荐等功能。</div>
+    <div class="product-footer">
+      <span class="tech-badge">Lyria 3 驱动</span>
+      <span class="tech-badge">以词生曲</span>
+      <span class="tech-badge">对话式创作</span>
+    </div>
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- Proposal -->
+<section id="proposal">
+  <h2 class="section-title">方案建议：曲谱歌声合成 + 歌声克隆（V3 更新版）</h2>
+  <p class="section-desc">
+    针对团队目标——基于给定曲谱合成高质量歌声，同时支持歌声克隆特性——基于 V3 扩展调研结果，提出四阶段递进方案。
+  </p>
+
+  <div class="arch-diagram">
+    <h3 style="color:var(--text);font-size:18px;margin-bottom:20px;">推荐架构总览（V3 更新版）</h3>
+    <div class="arch-flow">
+      <div class="arch-row">
+        <div class="arch-box arch-input">曲谱<br><small>歌词+音符+节奏+力度</small></div>
+        <div class="arch-box arch-clone">参考音频<br><small>目标音色（语音/歌声）</small></div>
+      </div>
+      <div class="arch-arrow">↓ ↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-aux">曲谱编码器<br><small>音素+音高+时长对齐</small></div>
+        <div class="arch-box arch-aux">音色提取器<br><small>speaker encoder / HuBERT</small></div>
+      </div>
+      <div class="arch-arrow">↓ ↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-model" style="min-width:300px;">
+          <strong>核心声学模型（可选路线）</strong><br>
+          <small>路线 A: FastSpeech/DiffSinger 变体（快速验证）</small><br>
+          <small>路线 B: 潜在扩散模型（高音质）</small><br>
+          <small>路线 C: 编解码语言模型（零样本）</small><br>
+          <small>路线 D: 扩散 Transformer（DiTSinger 方向）</small><br>
+          <small>条件: 曲谱嵌入 + 音色嵌入</small>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-model">高保真声码器<br><small>HiFi-GAN + CQT 判别器</small></div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box arch-output">高质量歌声波形<br><small>目标音色 · 48kHz</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="reco-card">
+    <span class="phase">Phase 1 · MVP</span>
+    <h3>阶段一：基于曲谱的高质量歌声合成（MVP）</h3>
+    <ul>
+      <li><strong>声学模型</strong>：采用 DiffSinger（<a class="ref" href="https://arxiv.org/abs/2105.02446">2105.02446</a>）或 FastSpeech 变体（<a class="ref" href="https://arxiv.org/abs/2006.06261">2006.06261</a>）。建议从两阶段方案起步。</li>
+      <li><strong>声码器</strong>：HiFi-GAN（<a class="ref" href="https://arxiv.org/abs/2010.05646">2010.05646</a>）+ CQT 判别器（<a class="ref" href="https://arxiv.org/abs/2311.14957">2311.14957</a>）。</li>
+      <li><strong>曲谱表示</strong>：参考 GTSinger（<a class="ref" href="https://arxiv.org/abs/2409.13832">2409.13832</a>）和 RMSSinger（<a class="ref" href="https://arxiv.org/abs/2305.10686">2305.10686</a>）的真实曲谱格式。</li>
+      <li><strong>数据</strong>：GTSinger、Opencpop（<a class="ref" href="https://arxiv.org/abs/2201.07429">2201.07429</a>）或 SingNet（<a class="ref" href="https://arxiv.org/abs/2505.09325">2505.09325</a>）。</li>
+      <li><strong>数据制作</strong>：参考"数据制作流程"模块，建议采用路线 C（已有曲谱对齐），让歌手按已知曲谱演唱。</li>
+      <li><strong>开源参考</strong>：<strong>SoulX-Singer</strong>（<a class="ref" href="https://arxiv.org/abs/2602.07803">2602.07803</a>）是最符合需求的开源系统，支持 MIDI+F0 双模式曲谱控制和零样本歌声克隆，42K 小时训练数据。<strong>DiffSinger (OpenVPI)</strong>（<a class="ref" href="https://arxiv.org/abs/2105.02446">2105.02446</a>）提供完整工具链（OpenUtau + MakeDiffSinger）。</li>
+      <li><strong>工业界参考</strong>：Synthesizer V 和 ACE Studio 已证明此路线可达接近真人质量。
+    </ul>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="reco-card">
+    <span class="phase">Phase 2 · Cloning</span>
+    <h3>阶段二：歌声克隆能力</h3>
+    <ul>
+      <li><strong>路线 A：条件注入</strong>：将音色嵌入注入声学模型，参考 Learn2Sing 2.0（<a class="ref" href="https://arxiv.org/abs/2203.16408">2203.16408</a>）。</li>
+      <li><strong>路线 B：编解码语言模型</strong>（推荐探索）：用 EnCodec 将音频转为 token，训练编解码语言模型，参考 VALL-E（<a class="ref" href="https://arxiv.org/abs/2301.02111">2301.02111</a>）和 TokSing（<a class="ref" href="https://arxiv.org/abs/2406.08416">2406.08416</a>）。</li>
+      <li><strong>零样本优化</strong>：参考 SoulX-Singer（<a class="ref" href="https://arxiv.org/abs/2602.07803">2602.07803</a>）和 Everyone-Can-Sing（<a class="ref" href="https://arxiv.org/abs/2501.13870">2501.13870</a>）。</li>
+      <li><strong>开源参考</strong>：GPT-SoVITS 证明了 1 分钟参考音频即可实现克隆的可行性。</li>
+    </ul>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="reco-card">
+    <span class="phase">Phase 3 · Quality+</span>
+    <h3>阶段三：质量提升与能力扩展</h3>
+    <ul>
+      <li><strong>新架构</strong>：探索 DiTSinger（<a class="ref" href="https://arxiv.org/abs/2510.09016">2510.09016</a>）的扩散 Transformer 路线。</li>
+      <li><strong>统一模型</strong>：参考 UniVoice（<a class="ref" href="https://arxiv.org/abs/2606.05852">2606.05852</a>）统一语音和歌声合成。</li>
+      <li><strong>风格迁移</strong>：StyleSinger（<a class="ref" href="https://arxiv.org/abs/2312.10741">2312.10741</a>）、StylePitcher（<a class="ref" href="https://arxiv.org/abs/2510.21685">2510.21685</a>）。</li>
+      <li><strong>自动标注</strong>：引入 VocalParse（<a class="ref" href="https://arxiv.org/abs/2605.04613">2605.04613</a>）和 STARS（<a class="ref" href="https://arxiv.org/abs/2507.06670">2507.06670</a>）自动化数据制作 pipeline。</li>
+    </ul>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="reco-card" style="border-color: rgba(16,185,129,0.3);">
+    <span class="phase" style="background:var(--emerald);">Phase 4 · SongGen [更新]</span>
+    <h3>阶段四：完整歌曲生成（长期方向）</h3>
+    <ul>
+      <li><strong>端到端歌曲生成</strong>：参考 DiffRhythm（<a class="ref" href="https://arxiv.org/abs/2503.01183">2503.01183</a>）和 LeVo 2（<a class="ref" href="https://arxiv.org/abs/2606.30642">2606.30642</a>）。</li>
+      <li><strong>纯扩散路线</strong>：参考 WanSong（<a class="ref" href="https://arxiv.org/abs/2607.14749">2607.14749</a>）纯扩散双轨歌曲生成。</li>
+      <li><strong>开源系统</strong>：参考 Muse（<a class="ref" href="https://arxiv.org/abs/2601.03973">2601.03973</a>）的开源可复现系统 + 116k 合成数据。</li>
+      <li><strong>工业界对标</strong>：Suno V4、Google Lyria 3、WanSong 已展示端到端歌曲生成的商业可行性。</li>
+    </ul>
+  </div>
+
+  <!-- Comparison -->
+  <div class="callout">
+    <strong>方案对比（V3 更新版）：</strong>下表对比了五种核心架构路线：
+  </div>
+
+  <div class="table-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>维度</th>
+          <th>两阶段 (FastSpeech+Vocoder)</th>
+          <th>端到端 (VITS 变体)</th>
+          <th>潜在扩散</th>
+          <th>编解码 LLM</th>
+          <th>扩散 Transformer <span style="color:var(--emerald);">[新]</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>音质上限</td>
+          <td class="partial">中等</td>
+          <td class="yes">高</td>
+          <td class="yes">最高</td>
+          <td class="yes">高</td>
+          <td class="yes">高</td>
+        </tr>
+        <tr>
+          <td>推理速度</td>
+          <td class="yes">快 (实时级)</td>
+          <td class="yes">快</td>
+          <td class="partial">较慢</td>
+          <td class="partial">中</td>
+          <td class="partial">中</td>
+        </tr>
+        <tr>
+          <td>训练难度</td>
+          <td class="yes">低</td>
+          <td class="partial">中</td>
+          <td class="no">高</td>
+          <td class="no">高</td>
+          <td class="no">高</td>
+        </tr>
+        <tr>
+          <td>歌声克隆适配</td>
+          <td class="partial">需额外设计</td>
+          <td class="partial">可适配</td>
+          <td class="yes">天然适配</td>
+          <td class="yes">天然适配</td>
+          <td class="yes">天然适配</td>
+        </tr>
+        <tr>
+          <td>零样本能力</td>
+          <td class="no">弱</td>
+          <td class="partial">中</td>
+          <td class="yes">强</td>
+          <td class="yes">最强</td>
+          <td class="yes">强</td>
+        </tr>
+        <tr>
+          <td>曲谱控制精度</td>
+          <td class="yes">高</td>
+          <td class="yes">高</td>
+          <td class="yes">高</td>
+          <td class="partial">中</td>
+          <td class="yes">高</td>
+        </tr>
+        <tr>
+          <td>参考论文</td>
+          <td><a class="ref" href="https://arxiv.org/abs/2006.06261">2006.06261</a></td>
+          <td><a class="ref" href="https://arxiv.org/abs/2110.08813">2110.08813</a></td>
+          <td><a class="ref" href="https://arxiv.org/abs/2306.06814">2306.06814</a></td>
+          <td><a class="ref" href="https://arxiv.org/abs/2301.02111">2301.02111</a></td>
+          <td><a class="ref" href="https://arxiv.org/abs/2510.09016">2510.09016</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top:24px;">
+    <strong>推荐路线（V3 更新）：</strong>Phase 1 从两阶段架构快速验证 → Phase 2 探索编解码语言模型路线实现零样本克隆 →
+    Phase 3 引入扩散 Transformer 和统一模型优化 → Phase 4 扩展到端到端歌曲生成。
+    <strong>数据制作建议：</strong>优先采用路线 C（已有曲谱对齐），辅以 VocalParse/STARS 自动化歌声转谱工具实现大规模数据制作。
+    编解码 LLM 路线在零样本克隆上具有天然优势，扩散 Transformer 路线在音质上有优势，是长期最值得关注的方向。
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- Paper Index -->
+<section id="papers">
+  <h2 class="section-title">论文索引（arXiv）— V3</h2>
+  <p class="section-desc">共收录 150+ 篇论文，按时间倒序排列。<span style="color:var(--emerald);">绿色 NEW 标签</span>为 V3 新增的论文，<span style="color:var(--amber);">黄色 DATA 标签</span>为数据制作相关论文。</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterPapers('all', this)">全部</button>
+    <button class="filter-btn" onclick="filterPapers('svs', this)">SVS</button>
+    <button class="filter-btn" onclick="filterPapers('svc', this)">SVC</button>
+    <button class="filter-btn" onclick="filterPapers('songgen', this)">歌曲生成</button>
+    <button class="filter-btn" onclick="filterPapers('musicgen', this)">音乐生成</button>
+    <button class="filter-btn" onclick="filterPapers('codec', this)">编解码</button>
+    <button class="filter-btn" onclick="filterPapers('tts', this)">TTS</button>
+    <button class="filter-btn" onclick="filterPapers('zeroshot', this)">零样本</button>
+    <button class="filter-btn" onclick="filterPapers('diffusion', this)">扩散</button>
+    <button class="filter-btn" onclick="filterPapers('cloning', this)">克隆</button>
+    <button class="filter-btn" onclick="filterPapers('data', this)">数据</button>
+    <button class="filter-btn" onclick="filterPapers('vocoder', this)">声码器</button>
+    <button class="filter-btn" onclick="filterPapers('ar', this)">自回归</button>
+    <button class="filter-btn" onclick="filterPapers('survey', this)">综述</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="paper-table" id="paperTable">
+      <thead>
+        <tr>
+          <th>arXiv ID</th>
+          <th>标题</th>
+          <th>作者</th>
+          <th>日期</th>
+          <th>分类</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-tags="songgen,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2510.22950" target="_blank">2510.22950</a></td>
+          <td><div class="paper-title">DiffRhythm 2: Efficient and High Fidelity Song Generation via Block Flow Matching<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-10-27</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="songgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2506.00045" target="_blank">2506.00045</a></td>
+          <td><div class="paper-title">ACE-Step: Music AI's Stable Diffusion Moment<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-06-01</td>
+          <td><span class="tag tag-songgen">歌曲生成</span></td>
+        </tr>
+        <tr data-tags="songgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2404.09313" target="_blank">2404.09313</a></td>
+          <td><div class="paper-title">Melodist: A Lyrics-Conditioned Melody-Generation Model<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2024-04-14</td>
+          <td><span class="tag tag-songgen">歌曲生成</span></td>
+        </tr>
+        <tr data-tags="songgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2407.02049" target="_blank">2407.02049</a></td>
+          <td><div class="paper-title">MelodyLM: Generating Vocal-Melody-Accompaniment from Lyrics<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2024-07-02</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="songgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2607.20253" target="_blank">2607.20253</a></td>
+          <td><div class="paper-title">Pushing the Frontier of Full-Song Generation: Hierarchical Autoregressive Planning Meets Flow-Matching Rendering<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-07-22</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="songgen,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2607.14749" target="_blank">2607.14749</a></td>
+          <td><div class="paper-title">WanSong v1.0 Technical Report<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-07-16</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="musicgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2607.11699" target="_blank">2607.11699</a></td>
+          <td><div class="paper-title">Qwen-Music Technical Report<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-07-13</td>
+          <td><span class="tag tag-musicgen">音乐生成</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2607.06986" target="_blank">2607.06986</a></td>
+          <td><div class="paper-title">MMGenre: Benchmarking Singing Voice Synthesis across Multiple Musical Genres<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">Wenhao Feng, et al.</div></td>
+          <td>2026-07-08</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="songgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.30642" target="_blank">2606.30642</a></td>
+          <td><div class="paper-title">LeVo 2: Stable and Melodious Song Generation via Hierarchical Representation Modeling<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-06-29</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="svs,tts">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.05852" target="_blank">2606.05852</a></td>
+          <td><div class="paper-title">UniVoice: A Unified Model for Speech and Singing Voice Generation<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-06-04</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-tts">TTS</span></td>
+        </tr>
+        <tr data-tags="songgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.03169" target="_blank">2606.03169</a></td>
+          <td><div class="paper-title">SketchSong: Hierarchical Song Generation with Sketch Planning<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-06-02</td>
+          <td><span class="tag tag-songgen">歌曲生成</span></td>
+        </tr>
+        <tr data-tags="svs,data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2605.04613" target="_blank">2605.04613</a></td>
+          <td><div class="paper-title">VocalParse: Towards Unified and Scalable Singing Voice Transcription with Large Audio Language Models<span class="new-badge">NEW</span><span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-05-06</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2603.24589" target="_blank">2603.24589</a></td>
+          <td><div class="paper-title">YingMusic-Singer: Controllable SVS with Flexible Lyric Manipulation<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-03-25</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2602.08233" target="_blank">2602.08233</a></td>
+          <td><div class="paper-title">Tutti: Expressive Multi-Singer Synthesis via Structure-Level Timbre Control<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-02-09</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,zeroshot">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2602.07803" target="_blank">2602.07803</a></td>
+          <td><div class="paper-title">SoulX-Singer: Towards High-Quality Zero-Shot Singing Voice Synthesis<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-02-08</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-zeroshot">零样本</span></td>
+        </tr>
+        <tr data-tags="musicgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2602.22029" target="_blank">2602.22029</a></td>
+          <td><div class="paper-title">MIDI-Informed Singing Accompaniment Generation in a Compositional Song Pipeline<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">Fang-Duo Tsai, et al.</div></td>
+          <td>2026-02-24</td>
+          <td><span class="tag tag-musicgen">音乐生成</span></td>
+        </tr>
+        <tr data-tags="svs,survey">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2601.13910" target="_blank">2601.13910</a></td>
+          <td><div class="paper-title">Synthetic Singers: A Review of Deep-Learning-based Singing Voice Synthesis Approaches</div></td>
+          <td><div class="paper-authors">Changhao Pan, et al.</div></td>
+          <td>2026-01-20</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-survey">综述</span></td>
+        </tr>
+        <tr data-tags="songgen,data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2601.03973" target="_blank">2601.03973</a></td>
+          <td><div class="paper-title">Muse: Towards Reproducible Long-Form Song Generation with Fine-Grained Style Control<span class="new-badge">NEW</span><span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2026-01-07</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2601.00217" target="_blank">2601.00217</a></td>
+          <td><div class="paper-title">Mitigating Latent Mismatch in cVAE-Based SVS via Flow Matching</div></td>
+          <td><div class="paper-authors">Minhyeok Yun, et al.</div></td>
+          <td>2026-01-01</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="vocoder">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2512.20211" target="_blank">2512.20211</a></td>
+          <td><div class="paper-title">Aliasing-Free Neural Audio Synthesis<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">Yicheng Gu, et al.</div></td>
+          <td>2025-12-23</td>
+          <td><span class="tag tag-vocoder">声码器</span></td>
+        </tr>
+        <tr data-tags="svs,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2512.14657" target="_blank">2512.14657</a></td>
+          <td><div class="paper-title">Adapting Speech Language Model to Singing Voice Synthesis<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-12-16</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="svs,zeroshot">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2512.04779" target="_blank">2512.04779</a></td>
+          <td><div class="paper-title">YingMusic-Singer: Zero-Shot SVS and Editing with Annotation-free Melody Guidance<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">Junjie Zheng, et al.</div></td>
+          <td>2025-12-04</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-zeroshot">零样本</span></td>
+        </tr>
+        <tr data-tags="svs,svc">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2511.21045" target="_blank">2511.21045</a></td>
+          <td><div class="paper-title">CartoonSing: Unifying Human and Nonhuman Timbres in Singing Generation</div></td>
+          <td><div class="paper-authors">Jionghao Han, et al.</div></td>
+          <td>2025-11-26</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-svc">SVC</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2510.21685" target="_blank">2510.21685</a></td>
+          <td><div class="paper-title">StylePitcher: Generating Style-Following and Expressive Pitch Curves<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-10-24</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2510.09016" target="_blank">2510.09016</a></td>
+          <td><div class="paper-title">DiTSinger: Scaling Singing Voice Synthesis with Diffusion Transformer<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-10-10</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2509.22718" target="_blank">2509.22718</a></td>
+          <td><div class="paper-title">PerformSinger: Multimodal SVS Leveraging Synchronized Lip Cues</div></td>
+          <td><div class="paper-authors">Ke Gu, et al.</div></td>
+          <td>2025-09-24</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,zeroshot">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2509.19883" target="_blank">2509.19883</a></td>
+          <td><div class="paper-title">CoMelSinger: Discrete Token-Based Zero-Shot Singing Synthesis With Structured Melody<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-09-24</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-zeroshot">零样本</span></td>
+        </tr>
+        <tr data-tags="data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2509.15140" target="_blank">2509.15140</a></td>
+          <td><div class="paper-title">FCPE: A Fast Context-based Pitch Estimation Model<span class="new-badge">NEW</span><span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-09-18</td>
+          <td><span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="songgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2508.01394" target="_blank">2508.01394</a></td>
+          <td><div class="paper-title">Via Score to Performance: Efficient Human-Controllable Long Song Generation<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-08-02</td>
+          <td><span class="tag tag-songgen">歌曲生成</span></td>
+        </tr>
+        <tr data-tags="songgen,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2507.20880" target="_blank">2507.20880</a></td>
+          <td><div class="paper-title">JAM: A Tiny Flow-based Song Generator with Fine-grained Controllability<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-07-28</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="songgen,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2507.12890" target="_blank">2507.12890</a></td>
+          <td><div class="paper-title">DiffRhythm+: Controllable and Flexible Full-Length Song Generation<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-07-17</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs,data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2507.06670" target="_blank">2507.06670</a></td>
+          <td><div class="paper-title">STARS: Unified Framework for Singing Transcription, Alignment, and Refined Style Annotation<span class="new-badge">NEW</span><span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">Wenxiang Guo, et al.</div></td>
+          <td>2025-07-09</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2507.04966" target="_blank">2507.04966</a></td>
+          <td><div class="paper-title">LAPS-Diff: A Diffusion-Based Framework for SVS With Language Enhancement<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-07-07</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2506.21478" target="_blank">2506.21478</a></td>
+          <td><div class="paper-title">SmoothSinger: A Conditional Diffusion Model for Singing Voice Synthesis<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-06-26</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2506.16020" target="_blank">2506.16020</a></td>
+          <td><div class="paper-title">VS-Singer: Vision-Guided Stereo Singing Voice Synthesis<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-06-19</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="data,musicgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2506.14293" target="_blank">2506.14293</a></td>
+          <td><div class="paper-title">SLEEPING-DISCO 9M: A large-scale pre-training dataset for generative music models<span class="new-badge">NEW</span><span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-06-17</td>
+          <td><span class="tag tag-data">数据</span> <span class="tag tag-musicgen">音乐生成</span></td>
+        </tr>
+        <tr data-tags="songgen">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2506.07634" target="_blank">2506.07634</a></td>
+          <td><div class="paper-title">SongBloom: Coherent Song Generation via Interleaved Autoregressive Sketching and Diffusion<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-06-09</td>
+          <td><span class="tag tag-songgen">歌曲生成</span></td>
+        </tr>
+        <tr data-tags="songgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2506.07520" target="_blank">2506.07520</a></td>
+          <td><div class="paper-title">LeVo: High-Quality Song Generation with Multi-Preference Alignment<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-06-09</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="data,svs,svc">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2505.09325" target="_blank">2505.09325</a></td>
+          <td><div class="paper-title">SingNet: Towards a Large-Scale, Diverse, and In-the-Wild Singing Voice Dataset<span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">Yicheng Gu, et al.</div></td>
+          <td>2025-05-14</td>
+          <td><span class="tag tag-data">数据</span> <span class="tag tag-svs">SVS</span> <span class="tag tag-svc">SVC</span></td>
+        </tr>
+        <tr data-tags="musicgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2503.08638" target="_blank">2503.08638</a></td>
+          <td><div class="paper-title">YuE: Scaling Open Foundation Models for Long-Form Music Generation</div></td>
+          <td><div class="paper-authors">Ruibin Yuan, et al.</div></td>
+          <td>2025-03-11</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="songgen,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2503.01183" target="_blank">2503.01183</a></td>
+          <td><div class="paper-title">DiffRhythm: Blazingly Fast and Embarrassingly Simple End-to-End Full-Length Song Generation<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2025-03-03</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2502.12572" target="_blank">2502.12572</a></td>
+          <td><div class="paper-title">TechSinger: Technique Controllable Multilingual SVS via Flow Matching</div></td>
+          <td><div class="paper-authors">Wenxiang Guo, et al.</div></td>
+          <td>2025-02-18</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="songgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2502.13128" target="_blank">2502.13128</a></td>
+          <td><div class="paper-title">SongGen: A Single Stage Auto-regressive Transformer for Text-to-Song Generation</div></td>
+          <td><div class="paper-authors">Zihan Liu, et al.</div></td>
+          <td>2025-02-18</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2502.05512" target="_blank">2502.05512</a></td>
+          <td><div class="paper-title">IndexTTS: An Industrial-Level Controllable Zero-Shot TTS System</div></td>
+          <td><div class="paper-authors">Wei Deng, et al.</div></td>
+          <td>2025-02-08</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span></td>
+        </tr>
+        <tr data-tags="svs,svc,cloning">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2501.13870" target="_blank">2501.13870</a></td>
+          <td><div class="paper-title">Everyone-Can-Sing: Zero-Shot SVS and Conversion with Speech Reference</div></td>
+          <td><div class="paper-authors">Shuqi Dai, et al.</div></td>
+          <td>2025-01-23</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-svc">SVC</span> <span class="tag tag-cloning">克隆</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2412.10117" target="_blank">2412.10117</a></td>
+          <td><div class="paper-title">CosyVoice 2: Scalable Streaming Speech Synthesis with LLMs</div></td>
+          <td><div class="paper-authors">Zhihao Du, et al.</div></td>
+          <td>2024-12-13</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2410.21641" target="_blank">2410.21641</a></td>
+          <td><div class="paper-title">RDSinger: Reference-based Diffusion Network for SVS</div></td>
+          <td><div class="paper-authors">Kehan Sui, et al.</div></td>
+          <td>2024-10-29</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2410.15342" target="_blank">2410.15342</a></td>
+          <td><div class="paper-title">ConSinger: Efficient High-Fidelity Singing Voice Generation with Minimal Steps</div></td>
+          <td><div class="paper-authors">Yulin Song, et al.</div></td>
+          <td>2024-10-20</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs,e2e">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2410.12536" target="_blank">2410.12536</a></td>
+          <td><div class="paper-title">SiFiSinger: A High-Fidelity End-to-End SVS based on Source-Filter<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2024-10-16</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-e2e">端到端</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2410.04380" target="_blank">2410.04380</a></td>
+          <td><div class="paper-title">HALL-E: Hierarchical Neural Codec Language Model for Minute-Long Zero-Shot TTS</div></td>
+          <td><div class="paper-authors">Wenrong Tan, et al.</div></td>
+          <td>2024-10-06</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2409.14619" target="_blank">2409.14619</a></td>
+          <td><div class="paper-title">SongTrans: An unified song transcription and alignment method<span class="new-badge">NEW</span><span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">et al.</div></td>
+          <td>2024-09-22</td>
+          <td><span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="svs,data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2409.13832" target="_blank">2409.13832</a></td>
+          <td><div class="paper-title">GTSinger: A Global Multi-Technique Singing Corpus with Realistic Music Scores<span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">Yu Zhang, et al.</div></td>
+          <td>2024-09-20</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="svc,cloning">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2409.08039" target="_blank">2409.08039</a></td>
+          <td><div class="paper-title">Zero-Shot Sing Voice Conversion: built on clustering-based phoneme representations</div></td>
+          <td><div class="paper-authors">Wangjin Zhou, et al.</div></td>
+          <td>2024-09-12</td>
+          <td><span class="tag tag-svc">SVC</span> <span class="tag tag-cloning">克隆</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot,mask">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2409.00750" target="_blank">2409.00750</a></td>
+          <td><div class="paper-title">MaskGCT: Zero-Shot TTS with Masked Generative Codec Transformer</div></td>
+          <td><div class="paper-authors">Yuancheng Wang, et al.</div></td>
+          <td>2024-09-01</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span> <span class="tag tag-mask">掩码</span></td>
+        </tr>
+        <tr data-tags="svc,diffusion,cloning">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2408.12354" target="_blank">2408.12354</a></td>
+          <td><div class="paper-title">LCM-SVC: Latent Diffusion Based SVC with Latent Consistency Distillation</div></td>
+          <td><div class="paper-authors">Shihao Chen, et al.</div></td>
+          <td>2024-08-22</td>
+          <td><span class="tag tag-svc">SVC</span> <span class="tag tag-diffusion">扩散</span> <span class="tag tag-cloning">克隆</span></td>
+        </tr>
+        <tr data-tags="musicgen,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2407.14358" target="_blank">2407.14358</a></td>
+          <td><div class="paper-title">Stable Audio Open</div></td>
+          <td><div class="paper-authors">Zach Evans, et al.</div></td>
+          <td>2024-07-19</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs,ar,codec">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2406.08416" target="_blank">2406.08416</a></td>
+          <td><div class="paper-title">TokSing: Singing Voice Synthesis based on Discrete Tokens</div></td>
+          <td><div class="paper-authors">Yuning Wu, et al.</div></td>
+          <td>2024-06-12</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-ar">自回归</span> <span class="tag tag-codec">编解码</span></td>
+        </tr>
+        <tr data-tags="svc,diffusion,cloning">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2406.05325" target="_blank">2406.05325</a></td>
+          <td><div class="paper-title">LDM-SVC: Latent Diffusion Model Based Zero-Shot Any-to-Any SVC</div></td>
+          <td><div class="paper-authors">Shihao Chen, et al.</div></td>
+          <td>2024-06-08</td>
+          <td><span class="tag tag-svc">SVC</span> <span class="tag tag-diffusion">扩散</span> <span class="tag tag-cloning">克隆</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2403.03100" target="_blank">2403.03100</a></td>
+          <td><div class="paper-title">NaturalSpeech 3: Zero-Shot Speech Synthesis with Factorized Codec and Diffusion Models</div></td>
+          <td><div class="paper-authors">Zeqian Ju, et al.</div></td>
+          <td>2024-03-05</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="musicgen,mask">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2401.04577" target="_blank">2401.04577</a></td>
+          <td><div class="paper-title">MAGNeT: Masked Audio Generation using a Single Non-Autoregressive Transformer</div></td>
+          <td><div class="paper-authors">Alon Ziv, et al.</div></td>
+          <td>2024-01-09</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-mask">掩码</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2312.10741" target="_blank">2312.10741</a></td>
+          <td><div class="paper-title">StyleSinger: Style Transfer for Out-of-Domain SVS</div></td>
+          <td><div class="paper-authors">Yu Zhang, et al.</div></td>
+          <td>2023-12-17</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="vocoder,gan">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2311.14957" target="_blank">2311.14957</a></td>
+          <td><div class="paper-title">Multi-Scale Sub-Band CQT Discriminator for High-Fidelity Vocoder</div></td>
+          <td><div class="paper-authors">Yicheng Gu, et al.</div></td>
+          <td>2023-11-25</td>
+          <td><span class="tag tag-vocoder">声码器</span> <span class="tag tag-gan">GAN</span></td>
+        </tr>
+        <tr data-tags="musicgen,diffusion,ssl">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2308.05734" target="_blank">2308.05734</a></td>
+          <td><div class="paper-title">AudioLDM 2: Learning Holistic Audio Generation with Self-supervised Pretraining</div></td>
+          <td><div class="paper-authors">Haohe Liu, et al.</div></td>
+          <td>2023-08-10</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-diffusion">扩散</span> <span class="tag tag-ssl">自监督</span></td>
+        </tr>
+        <tr data-tags="musicgen,mask">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2307.04686" target="_blank">2307.04686</a></td>
+          <td><div class="paper-title">VampNet: Music Generation via Masked Acoustic Token Modeling</div></td>
+          <td><div class="paper-authors">Hugo Flores Garcia, et al.</div></td>
+          <td>2023-07-10</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-mask">掩码</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2306.15687" target="_blank">2306.15687</a></td>
+          <td><div class="paper-title">Voicebox: Text-Guided Multilingual Universal Speech Generation at Scale</div></td>
+          <td><div class="paper-authors">Matt Le, et al.</div></td>
+          <td>2023-06-23</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2306.06814" target="_blank">2306.06814</a></td>
+          <td><div class="paper-title">HiddenSinger: High-Quality SVS via Neural Audio Codec and Latent Diffusion</div></td>
+          <td><div class="paper-authors">Ji-Sang Hwang, et al.</div></td>
+          <td>2023-06-12</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="codec">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2306.06546" target="_blank">2306.06546</a></td>
+          <td><div class="paper-title">High-Fidelity Audio Compression with Improved RVQGAN (DAC)</div></td>
+          <td><div class="paper-authors">Rithesh Kumar, et al.</div></td>
+          <td>2023-06-11</td>
+          <td><span class="tag tag-codec">编解码</span></td>
+        </tr>
+        <tr data-tags="musicgen,ar,codec">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2306.05284" target="_blank">2306.05284</a></td>
+          <td><div class="paper-title">Simple and Controllable Music Generation (MusicGen)</div></td>
+          <td><div class="paper-authors">Jade Copet, et al.</div></td>
+          <td>2023-06-08</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-ar">自回归</span> <span class="tag tag-codec">编解码</span></td>
+        </tr>
+        <tr data-tags="ssl">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2306.00107" target="_blank">2306.00107</a></td>
+          <td><div class="paper-title">MERT: Acoustic Music Understanding Model with Large-Scale Self-supervised Training</div></td>
+          <td><div class="paper-authors">Yizhi Li, et al.</div></td>
+          <td>2023-05-31</td>
+          <td><span class="tag tag-ssl">自监督</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2305.10686" target="_blank">2305.10686</a></td>
+          <td><div class="paper-title">RMSSinger: Realistic-Music-Score based Singing Voice Synthesis</div></td>
+          <td><div class="paper-authors">Jinzheng He, et al.</div></td>
+          <td>2023-05-18</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2305.06908" target="_blank">2305.06908</a></td>
+          <td><div class="paper-title">CoMoSpeech: One-Step Speech and Singing Voice Synthesis via Consistency Model</div></td>
+          <td><div class="paper-authors">Zhen Ye, et al.</div></td>
+          <td>2023-05-11</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2304.09116" target="_blank">2304.09116</a></td>
+          <td><div class="paper-title">NaturalSpeech 2: Latent Diffusion Models are Natural and Zero-Shot Speech and Singing Synthesizers</div></td>
+          <td><div class="paper-authors">Sanyuan Chen, et al.</div></td>
+          <td>2023-04-18</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2303.03926" target="_blank">2303.03926</a></td>
+          <td><div class="paper-title">VALL-E X: Cross-Lingual Neural Codec Language Modeling</div></td>
+          <td><div class="paper-authors">Ziqiang Zhang, et al.</div></td>
+          <td>2023-03-07</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="musicgen,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2301.12503" target="_blank">2301.12503</a></td>
+          <td><div class="paper-title">AudioLDM: Text-to-Audio Generation with Latent Diffusion Models</div></td>
+          <td><div class="paper-authors">Haohe Liu, et al.</div></td>
+          <td>2023-01-29</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="musicgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2301.11325" target="_blank">2301.11325</a></td>
+          <td><div class="paper-title">MusicLM: Generating Music From Text</div></td>
+          <td><div class="paper-authors">Andrea Agostinelli, et al.</div></td>
+          <td>2023-01-26</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="tts,zeroshot,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2301.02111" target="_blank">2301.02111</a></td>
+          <td><div class="paper-title">Neural Codec Language Models are Zero-Shot Text to Speech Synthesizers (VALL-E)</div></td>
+          <td><div class="paper-authors">Chengyi Wang, et al.</div></td>
+          <td>2023-01-05</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-zeroshot">零样本</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="svs,e2e">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2211.02903" target="_blank">2211.02903</a></td>
+          <td><div class="paper-title">VISinger 2: High-Fidelity End-to-End SVS Enhanced by DSP Synthesizer</div></td>
+          <td><div class="paper-authors">Yongmao Zhang, et al.</div></td>
+          <td>2022-11-05</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-e2e">端到端</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2211.00996" target="_blank">2211.00996</a></td>
+          <td><div class="paper-title">Singing Voice Synthesis with Vibrato Modeling and Latent Energy Representation</div></td>
+          <td><div class="paper-authors">Yingjie Song, et al.</div></td>
+          <td>2022-11-02</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,toolkit">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2210.15987" target="_blank">2210.15987</a></td>
+          <td><div class="paper-title">NNSVS: A Neural Network-Based Singing Voice Synthesis Toolkit</div></td>
+          <td><div class="paper-authors">Ryuichi Yamamoto, et al.</div></td>
+          <td>2022-10-28</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-toolkit">工具</span></td>
+        </tr>
+        <tr data-tags="svs,gan">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2210.14666" target="_blank">2210.14666</a></td>
+          <td><div class="paper-title">XiaoiceSing 2: High-Fidelity SVS Based on GAN</div></td>
+          <td><div class="paper-authors">Chunhui Wang, et al.</div></td>
+          <td>2022-10-26</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-gan">GAN</span></td>
+        </tr>
+        <tr data-tags="codec">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2210.13438" target="_blank">2210.13438</a></td>
+          <td><div class="paper-title">High Fidelity Neural Audio Compression (EnCodec)</div></td>
+          <td><div class="paper-authors">Alexandre Defossez, et al.</div></td>
+          <td>2022-10-24</td>
+          <td><span class="tag tag-codec">编解码</span></td>
+        </tr>
+        <tr data-tags="vocoder,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2210.07508" target="_blank">2210.07508</a></td>
+          <td><div class="paper-title">Hierarchical Diffusion Models for Singing Voice Neural Vocoder</div></td>
+          <td><div class="paper-authors">Naoya Takahashi, et al.</div></td>
+          <td>2022-10-14</td>
+          <td><span class="tag tag-vocoder">声码器</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="musicgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2209.15352" target="_blank">2209.15352</a></td>
+          <td><div class="paper-title">AudioGen: Textually Guided Audio Generation</div></td>
+          <td><div class="paper-authors">Sagiv Shiffer, et al.</div></td>
+          <td>2022-09-30</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="musicgen,ar,codec">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2209.03143" target="_blank">2209.03143</a></td>
+          <td><div class="paper-title">AudioLM: a Language Modeling Approach to Audio Generation</div></td>
+          <td><div class="paper-authors">Zalan Borsos, et al.</div></td>
+          <td>2022-09-07</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-ar">自回归</span> <span class="tag tag-codec">编解码</span></td>
+        </tr>
+        <tr data-tags="svs,gan">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2207.01886" target="_blank">2207.01886</a></td>
+          <td><div class="paper-title">WeSinger 2: Fully Parallel SVS via Multi-Singer Conditional Adversarial Training</div></td>
+          <td><div class="paper-authors">Zewang Zhang, et al.</div></td>
+          <td>2022-07-05</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-gan">GAN</span></td>
+        </tr>
+        <tr data-tags="tts">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2205.04421" target="_blank">2205.04421</a></td>
+          <td><div class="paper-title">NaturalSpeech: End-to-End Text to Speech Synthesis with Human-Level Quality</div></td>
+          <td><div class="paper-authors">Xiaoyun Liu, et al.</div></td>
+          <td>2022-05-09</td>
+          <td><span class="tag tag-tts">TTS</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2204.03249" target="_blank">2204.03249</a></td>
+          <td><div class="paper-title">Expressive Singing Synthesis Using Local Style Token and Dual-path Pitch Encoder</div></td>
+          <td><div class="paper-authors">Juheon Lee, et al.</div></td>
+          <td>2022-04-07</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion,cloning">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2203.16408" target="_blank">2203.16408</a></td>
+          <td><div class="paper-title">Learn2Sing 2.0: Diffusion and MI-Based Target Speaker SVS</div></td>
+          <td><div class="paper-authors">Heyang Xue, et al.</div></td>
+          <td>2022-03-30</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span> <span class="tag tag-cloning">克隆</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2203.10750" target="_blank">2203.10750</a></td>
+          <td><div class="paper-title">WeSinger: Data-augmented Singing Voice Synthesis with Auxiliary Losses</div></td>
+          <td><div class="paper-authors">Zewang Zhang, et al.</div></td>
+          <td>2022-03-21</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2201.07429" target="_blank">2201.07429</a></td>
+          <td><div class="paper-title">Opencpop: A High-Quality Open Source Chinese Popular Song Corpus for SVS<span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">Yu Wang, et al.</div></td>
+          <td>2022-01-19</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="vocoder,gan,data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2112.10358" target="_blank">2112.10358</a></td>
+          <td><div class="paper-title">Multi-Singer: Fast Multi-Singer Singing Voice Vocoder With Large-Scale Corpus<span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">Rongjie Huang, et al.</div></td>
+          <td>2021-12-20</td>
+          <td><span class="tag tag-vocoder">声码器</span> <span class="tag tag-gan">GAN</span> <span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="svs,e2e">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2110.08813" target="_blank">2110.08813</a></td>
+          <td><div class="paper-title">VISinger: Variational Inference with Adversarial Learning for End-to-End SVS</div></td>
+          <td><div class="paper-authors">Yongmao Zhang, et al.</div></td>
+          <td>2021-10-17</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-e2e">端到端</span></td>
+        </tr>
+        <tr data-tags="svs,gan">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2110.07468" target="_blank">2110.07468</a></td>
+          <td><div class="paper-title">SingGAN: GAN For High-Fidelity Singing Voice Generation</div></td>
+          <td><div class="paper-authors">Rongjie Huang, et al.</div></td>
+          <td>2021-10-14</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-gan">GAN</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2110.04005" target="_blank">2110.04005</a></td>
+          <td><div class="paper-title">KaraSinger: Score-Free Singing Voice Synthesis with VQ-VAE</div></td>
+          <td><div class="paper-authors">Chien-Feng Liao, et al.</div></td>
+          <td>2021-10-08</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,survey">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2110.02511" target="_blank">2110.02511</a></td>
+          <td><div class="paper-title">A Survey on Recent Deep Learning-driven Singing Voice Synthesis Systems</div></td>
+          <td><div class="paper-authors">Yin-Ping Cho, et al.</div></td>
+          <td>2021-10-06</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-survey">综述</span></td>
+        </tr>
+        <tr data-tags="codec">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2107.03312" target="_blank">2107.03312</a></td>
+          <td><div class="paper-title">SoundStream: An End-to-End Neural Audio Codec</div></td>
+          <td><div class="paper-authors">Neil Zeghidour, et al.</div></td>
+          <td>2021-07-07</td>
+          <td><span class="tag tag-codec">编解码</span></td>
+        </tr>
+        <tr data-tags="svc,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2105.13871" target="_blank">2105.13871</a></td>
+          <td><div class="paper-title">DiffSVC: A Diffusion Probabilistic Model for Singing Voice Conversion</div></td>
+          <td><div class="paper-authors">Songxiang Liu, et al.</div></td>
+          <td>2021-05-28</td>
+          <td><span class="tag tag-svc">SVC</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="tts,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2105.06337" target="_blank">2105.06337</a></td>
+          <td><div class="paper-title">Grad-TTS: A Diffusion Probabilistic Model for Text-to-Speech</div></td>
+          <td><div class="paper-authors">Vadim Popov, et al.</div></td>
+          <td>2021-05-13</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2105.02446" target="_blank">2105.02446</a></td>
+          <td><div class="paper-title">DiffSinger: Singing Voice Synthesis via Shallow Diffusion Mechanism</div></td>
+          <td><div class="paper-authors">Jinglin Liu, et al.</div></td>
+          <td>2021-05-06</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="tts,diffusion">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2104.01409" target="_blank">2104.01409</a></td>
+          <td><div class="paper-title">Diff-TTS: A Denoising Diffusion Model for Text-to-Speech</div></td>
+          <td><div class="paper-authors">Jeongmin Bae, et al.</div></td>
+          <td>2021-04-03</td>
+          <td><span class="tag tag-tts">TTS</span> <span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr data-tags="svs,cloning">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2011.08467" target="_blank">2011.08467</a></td>
+          <td><div class="paper-title">Learn2Sing: Target Speaker SVS by Learning from a Singing Teacher</div></td>
+          <td><div class="paper-authors">Heyang Xue, et al.</div></td>
+          <td>2020-11-17</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-cloning">克隆</span></td>
+        </tr>
+        <tr data-tags="vocoder,gan">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2010.05646" target="_blank">2010.05646</a></td>
+          <td><div class="paper-title">HiFi-GAN: Generative Adversarial Networks for Efficient and High Fidelity Speech Synthesis</div></td>
+          <td><div class="paper-authors">Jungil Kong, et al.</div></td>
+          <td>2020-10-12</td>
+          <td><span class="tag tag-vocoder">声码器</span> <span class="tag tag-gan">GAN</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2009.01776" target="_blank">2009.01776</a></td>
+          <td><div class="paper-title">HiFiSinger: Towards High-Fidelity Neural Singing Voice Synthesis</div></td>
+          <td><div class="paper-authors">Jiawei Chen, et al.</div></td>
+          <td>2020-09-03</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="svs,data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2007.04590" target="_blank">2007.04590</a></td>
+          <td><div class="paper-title">DeepSinger: Singing Voice Synthesis with Data Mined From the Web<span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">Yi Ren, et al.</div></td>
+          <td>2020-07-09</td>
+          <td><span class="tag tag-svs">SVS</span> <span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2006.06261" target="_blank">2006.06261</a></td>
+          <td><div class="paper-title">XiaoiceSing: A High-Quality and Integrated Singing Voice Synthesis System</div></td>
+          <td><div class="paper-authors">Peiling Lu, et al.</div></td>
+          <td>2020-06-11</td>
+          <td><span class="tag tag-svs">SVS</span></td>
+        </tr>
+        <tr data-tags="tts">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2006.04558" target="_blank">2006.04558</a></td>
+          <td><div class="paper-title">FastSpeech 2: Fast and High-Quality End-to-End Text to Speech</div></td>
+          <td><div class="paper-authors">Yi Ren, et al.</div></td>
+          <td>2020-06-08</td>
+          <td><span class="tag tag-tts">TTS</span></td>
+        </tr>
+        <tr data-tags="musicgen,ar">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2005.00341" target="_blank">2005.00341</a></td>
+          <td><div class="paper-title">Jukebox: A Generative Model for Music</div></td>
+          <td><div class="paper-authors">Prafulla Dhariwal, et al.</div></td>
+          <td>2020-04-30</td>
+          <td><span class="tag tag-musicgen">音乐生成</span> <span class="tag tag-ar">自回归</span></td>
+        </tr>
+        <tr data-tags="data">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2001.07044" target="_blank">2001.07044</a></td>
+          <td><div class="paper-title">JVS-MuSiC: Japanese multispeaker singing-voice corpus<span class="data-badge">DATA</span></div></td>
+          <td><div class="paper-authors">Hiroki Tamaru, et al.</div></td>
+          <td>2020-01-20</td>
+          <td><span class="tag tag-data">数据</span></td>
+        </tr>
+        <tr data-tags="vocoder">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/1912.01219" target="_blank">1912.01219</a></td>
+          <td><div class="paper-title">WaveFlow: A Compact Flow-based Model for Raw Audio</div></td>
+          <td><div class="paper-authors">Wei Ping, et al.</div></td>
+          <td>2019-12-03</td>
+          <td><span class="tag tag-vocoder">声码器</span></td>
+        </tr>
+        <tr data-tags="tts">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/1905.09263" target="_blank">1905.09263</a></td>
+          <td><div class="paper-title">FastSpeech: Fast, Robust and Controllable Text to Speech</div></td>
+          <td><div class="paper-authors">Yi Ren, et al.</div></td>
+          <td>2019-05-22</td>
+          <td><span class="tag tag-tts">TTS</span></td>
+        </tr>
+        <tr data-tags="vocoder,tts">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/1609.03499" target="_blank">1609.03499</a></td>
+          <td><div class="paper-title">WaveNet: A Generative Model for Raw Audio</div></td>
+          <td><div class="paper-authors">Aaron van den Oord, et al.</div></td>
+          <td>2016-09-12</td>
+          <td><span class="tag tag-vocoder">声码器</span> <span class="tag tag-tts">TTS</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>歌声合成技术调研报告 · V3 全新版 · 基于 arXiv 论文数据 + 工业界产品调研 · 2026 年 7 月</p>
+  <p style="margin-top:8px;">150+ 篇论文 + 20+ 个工业产品 · 含数据制作专题模块 · 由 Hermes Agent 生成 · <a href="https://arxiv.org">arXiv</a></p>
+</footer>
+
+<script>
+function filterPapers(tag, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const rows = document.querySelectorAll('#paperTable tbody tr');
+  rows.forEach(row => {
+    if (tag === 'all') {
+      row.style.display = '';
+    } else {
+      const tags = row.getAttribute('data-tags') || '';
+      if (tags.includes(tag)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    }
+  });
+}
+</script>
+
+</body>
+</html>
