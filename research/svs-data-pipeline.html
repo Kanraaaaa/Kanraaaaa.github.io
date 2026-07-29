@@ -104,13 +104,13 @@ a:hover{text-decoration:underline}
   <div class="meta">
     <span><span class="badge">5 个处理环节</span></span>
     <span><span class="badge">30+ 开源项目</span></span>
-    <span><span class="badge">14 种旋律表征方式</span></span>
+    <span><span class="badge">15 种旋律表征方式</span></span>
     <span><span class="badge">2026.07</span></span>
   </div>
   <div class="stats-row">
     <div class="stat"><div class="num">5</div><div class="label">处理环节</div></div>
     <div class="stat"><div class="num">30+</div><div class="label">开源项目</div></div>
-    <div class="stat"><div class="num">14</div><div class="label">旋律表征方式</div></div>
+    <div class="stat"><div class="num">15</div><div class="label">旋律表征方式</div></div>
     <div class="stat"><div class="num">10+</div><div class="label">数据集</div></div>
   </div>
 </div>
@@ -623,6 +623,46 @@ a:hover{text-decoration:underline}
     </div>
   </div>
 
+  <!-- Approach 15 -->
+  <div class="approach-card" style="border-color: rgba(251,146,60,0.3);">
+    <div class="approach-header">
+      <div class="icon" style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);">15</div>
+      <div>
+        <h3>5Hz 语义 codes 量化表征（5Hz Semantic Codes Quantization）</h3>
+        <div class="sub">源音频→VAE/DCAE 编码→5Hz 语义 token 序列，隐式包含旋律/节奏/和弦/编排</div>
+      </div>
+    </div>
+    <p>
+      <strong>方式：</strong>将源音频通过 VAE/DCAE 编码器量化为 5Hz 语义 token 序列（audio_codes）。
+      这些 semantic codes 隐式包含旋律（音符方向和音高）、节奏（节拍/重音/groove）、
+      和弦（和声进行）、编排（乐器层次）和部分音色信息。
+      Cover 模式时<strong>自动跳过 LM 规划</strong>，源音频的 codes 直接作为条件输入 DiT，
+      "你替代了 LM 的工作——你提供源音频，你自己就是规划者"。
+      <br><br>
+      <strong>ACE-Step 1.5</strong>（GitHub ⭐11.9K）的 Cover 模式是代表。架构为"双脑"设计：
+      <br>&nbsp;&nbsp;• <strong>5Hz LM（规划器，可选）</strong>：通过 Chain-of-Thought 推断 BPM/调性/时长等元数据，
+      优化 caption，生成语义 codes（隐含旋律/编排/部分音色）<br>
+      &nbsp;&nbsp;• <strong>DiT（执行器）</strong>：接收 codes 和条件，通过流匹配扩散过程逐步"雕刻"音频<br>
+      &nbsp;&nbsp;• Cover 模式跳过 LM，源音频→量化 codes→直接输入 DiT<br><br>
+      <strong>audio_cover_strength 参数</strong>控制源音频结构保留程度：<br>
+      &nbsp;&nbsp;• 1.0 = 严格遵循源音频结构<br>
+      &nbsp;&nbsp;• 0.5 = 平衡变换<br>
+      &nbsp;&nbsp;• 0.1 = 松散解读（接近自由生成）<br><br>
+      <strong>与 Reference Audio 的区别：</strong>Reference audio 通过 VAE tiled_encode 编码为 latent，
+      对时间维度取平均，<strong>全局作用于音色/风格</strong>（去除旋律/节奏等结构信息）；
+      Source audio（Cover）量化为 semantic codes，<strong>保留旋律/节奏/和弦等结构信息</strong>。
+      两者可同时使用：reference 控制音色，source 控制结构。<br><br>
+      <strong>优点：</strong>无需 MIDI/曲谱，直接从音频到音频；语义 codes 可复用（导出后用于变体生成、歌曲扩展、DJ 混音式组合）。<br>
+      <strong>关键洞察：</strong>这是"端到端学习的语义级旋律表征"——不使用手工设计的 MIDI/符号表示，
+      而是让 VAE/DCAE 编码器自动学习如何将音频压缩为保留结构信息的语义 token。
+    </p>
+    <div class="examples">
+      <div class="example"><strong>ACE-Step 1.5</strong>（GitHub ⭐11.9K）：5Hz semantic codes + DiT 流匹配 + Cover/Repaint/Extract 模式</div>
+      <div class="example"><strong>Qwen-Music</strong>（arXiv 2607.11699）：25Hz 单码本 Music Semantic Tokens + Melody-CoT，类似思路</div>
+      <div class="example"><strong>Pushing the Frontier</strong>（arXiv 2607.20253）：8-codebook RVQ + two-level melody module，类似思路</div>
+    </div>
+  </div>
+
   <!-- Representation comparison table -->
   <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">旋律表征方式对比总表</h3>
   <div class="table-wrap">
@@ -652,6 +692,7 @@ a:hover{text-decoration:underline}
         <tr><td>⑫ 小节级符号曲谱</td><td>符号曲谱token</td><td class="yes">高</td><td class="partial">中</td><td class="partial">中</td><td>BACH, HNote</td></tr>
         <tr><td>⑬ 归一化旋律</td><td>F0归一化token</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>Qwen-Music, Pushing Frontier</td></tr>
         <tr><td>⑭ 多模态融合</td><td>曲谱+音频+文本</td><td class="yes">高</td><td class="yes">低</td><td class="partial">中</td><td>Seed-Music</td></tr>
+        <tr><td>⑮ 5Hz语义codes</td><td>音频→量化token</td><td class="partial">中</td><td class="yes">低</td><td class="yes">低</td><td>ACE-Step 1.5, Qwen-Music</td></tr>
       </tbody>
     </table>
   </div>
@@ -883,6 +924,60 @@ a:hover{text-decoration:underline}
     </div>
   </div>
 
+  <!-- ACE-Step 1.5 Pipeline -->
+  <div class="card" style="border-color: rgba(251,146,60,0.3);">
+    <h3>ACE-Step 1.5：双脑架构 + 完整数据处理工具链（GitHub ⭐11.9K，2025-2026）</h3>
+    <p>
+      <strong>ACE-Step 1.5 是目前最强大的开源本地音乐生成模型</strong>（超过几乎所有商业替代品），
+      其数据处理工作也非常完善，提供了从数据准备到训练再到推理的完整工具链。
+      <br><br>
+      <strong>架构："双脑"设计</strong><br>
+      <strong>① 5Hz LM（规划器，可选）</strong>：通过 Chain-of-Thought 推断 BPM/调性/时长等元数据，
+      优化 caption，生成语义 codes（隐含旋律/编排/部分音色）。可选 0.6B/1.7B/4B 三个规模<br>
+      <strong>② DiT（执行器）</strong>：接收 codes 和条件，通过流匹配扩散过程生成高保真音频<br><br>
+      <strong>数据处理 Pipeline：</strong><br>
+      <strong>① 音频+歌词+标注三件套</strong>：每首歌需要音频文件（mp3/wav/flac/ogg/opus）、
+      .lyrics.txt 歌词文件、.json 标注文件（caption/bpm/keyscale/timesignature/language）<br>
+      <strong>② 歌词转录</strong>：如无歌词，提供 Whisper / ElevenLabs Scribe 自动转录脚本（scripts/lora_data_prepare/），
+      转录后必须人工审核修正。支持 LRC 格式歌词去时间戳<br>
+      <strong>③ BPM/调性获取</strong>：推荐使用 Key-BPM-Finder（vocalremover.org）在线获取，
+      导出 CSV 批量导入。也可用 librosa 等 BPM 检测库<br>
+      <strong>④ Caption 生成</strong>：使用 acestep-5Hz-lm 自动标注（Gradio UI Auto Label），
+      或使用 Gemini API 批量生成 caption（gemini_caption.py）<br>
+      <strong>⑤ 数据预处理</strong>：Gradio UI 可视化数据审核→预处理生成 .pt tensor 文件。
+      预处理需 12GB+ VRAM，将音频编码为模型训练用的 latent 张量<br>
+      <strong>⑥ 训练</strong>：LoRA 微调（4x24GB 起步）或全参数 SFT（8x40GB 起步）。
+      支持多 GPU 训练<br><br>
+      <strong>大规模训练数据：Muse 数据集</strong><br>
+      使用 <a href="https://huggingface.co/datasets/bolshyC/Muse" target="_blank">Muse 数据集</a>
+      （116K 首授权合成歌曲）进行大规模 SFT 训练。数据分中英文两部分（suno_cn_songs / suno_en_songs），
+      JSONL 元数据包含 song_id、audio_path、lyrics、caption、sections 等。
+      转换脚本 convert_muse_to_acestep.py 将 Muse 格式转为 ACE-Step 目录结构。<br>
+      <strong>存储需求</strong>：音频 500GB + 预处理 tensor 800GB-1.2TB + checkpoint 50-200GB = 总计 1.5-2TB<br><br>
+      <strong>推理端数据处理（关键创新）：</strong><br>
+      • <strong>Reference Audio（风格参考）</strong>：VAE tiled_encode 编码为 latent，时间维度取平均，全局控制音色/风格<br>
+      • <strong>Source Audio（结构控制）</strong>：量化为 5Hz 语义 codes，保留旋律/节奏/和弦/编排，用于 Cover 模式<br>
+      • <strong>audio_cover_strength</strong>：0.0-1.0 控制源音频结构保留程度<br>
+      • <strong>Repaint</strong>：局部时间段重绘，保留上下文<br>
+      • <strong>Extract</strong>：分轨提取（人声/伴奏分离）<br>
+      • <strong>Vocal2BGM</strong>：从人声自动生成伴奏<br><br>
+      <strong>其他技术特性：</strong><br>
+      • <strong>DCW（Differential Correction in Wavelet Domain）</strong>：训练无关的小波域微分修正，
+        解决扩散模型 SNR-t 偏差，按频带分别修正（CVPR 2026, arXiv 2604.16044）<br>
+      • <strong>ALT_VAE</strong>：支持社区微调 VAE 替换（如 ScragVAE），改变音色/瞬态处理<br>
+      • <strong>支持 Mac/AMD/Intel/CUDA 全平台</strong>，2 秒生成一首完整歌曲（A100）<br><br>
+      <strong>参考价值：</strong>ACE-Step 1.5 的数据处理工具链是开源项目中最完善的——
+      从歌词转录、BPM 检测、Caption 生成、数据预处理到训练全流程覆盖。
+      其 5Hz 语义 codes 表征方式代表了一种全新的旋律控制范式：不使用 MIDI/符号曲谱，
+      而是让 VAE/DCAE 编码器自动学习音频到语义 token 的映射。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://github.com/ace-step/ACE-Step-1.5" target="_blank">GitHub ⭐11.9K</a>
+      <a class="ref" href="https://huggingface.co/datasets/bolshyC/Muse" target="_blank">Muse 数据集 (116K songs)</a>
+      <a class="ref" href="https://arxiv.org/abs/2604.16044" target="_blank">DCW paper (CVPR 2026)</a>
+    </div>
+  </div>
+
   <!-- Pipeline Comparison Table -->
   <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">端到端 Pipeline 对比</h3>
   <div class="table-wrap">
@@ -945,6 +1040,14 @@ a:hover{text-decoration:underline}
           <td>音频LLM</td>
           <td>LLM 转写</td>
           <td class="partial">论文</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/ace-step/ACE-Step-1.5" target="_blank">ACE-Step 1.5</a></td>
+          <td>116K(Muse)</td>
+          <td>内置Extract</td>
+          <td>Whisper/Scribe</td>
+          <td>5Hz语义codes</td>
+          <td class="yes">完全开源+工具链</td>
         </tr>
       </tbody>
     </table>
