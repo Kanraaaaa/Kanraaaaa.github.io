@@ -920,7 +920,7 @@ footer a:hover { color: var(--accent-bright); }
     <p>
       Learn2Sing 首次提出歌声克隆。VALL-E 开创编解码语言模型零样本 TTS 范式。
       Everyone-Can-Sing 实现零样本 SVS+SVC 统一框架。
-      <strong>V3 新增：</strong>SoulX-Singer（2602.07803）高质量零样本 SVS；
+      <strong>V3 新增：</strong>SoulX-Singer（2602.07803）高质量零样本 SVS，核心创新包括：双模式旋律控制（MIDI score-conditioned + F0 melody-conditioned）、音色编码器实现零样本泛化、跨语言音色解耦、42K 小时训练数据 + 完整开源数据制作 pipeline（含人声分离/F0提取/歌词转录/MIDI提取/编辑器全链路）；
       YingMusic-Singer（2512.04779）零样本 SVS + 无标注旋律引导；
       CoMelSinger（2509.19883）离散 token 零样本歌声合成；
       多个 SVC 工作（FreeSVC, kNN-SVC, HQ-SVC, R2-SVC）推进零样本歌声转换。
@@ -1478,7 +1478,11 @@ footer a:hover { color: var(--accent-bright); }
       </div>
       <span class="type-badge type-opensource">开源</span>
     </div>
-    <div class="product-desc"><strong>最符合"曲谱歌声合成 + 歌声克隆"需求的开源系统。</strong>支持 MIDI 曲谱控制（score-conditioned）和 F0 旋律控制（melody-conditioned）双模式。零样本歌声克隆，无需微调即可生成未见歌手的声音。跨语言音色保留。42,000+ 小时对齐训练数据（普通话/英语/粤语）。附带 SoulX-Singer-SVC 零样本歌声转换变体。arXiv 2602.07803。</div>
+    <div class="product-desc"><strong>最符合"曲谱歌声合成 + 歌声克隆"需求的开源系统。</strong>
+    系统架构核心设计：(1) <strong>双模式旋律控制</strong>——score-conditioned（MIDI 音符序列输入）和 melody-conditioned（F0 轨迹输入），灵活适配不同场景；(2) <strong>零样本泛化</strong>——通过音色编码器从参考音频提取说话人嵌入，无需微调即可生成未见歌手的声音；(3) <strong>跨语言音色保留</strong>——解耦音色与内容，跨语言合成保持歌手身份；(4) <strong>歌词编辑</strong>——修改歌词同时保持自然韵律。
+    训练数据：42,000+ 小时对齐训练数据（普通话/英语/粤语）。附带 SoulX-Singer-SVC 零样本歌声转换变体（无需歌词转录或 MIDI 输入，直接音频到音频转换）和 SoulX-Singer-Eval 专用评估基准。
+    <strong>数据制作 pipeline 完全开源</strong>（preprocess/ 目录），包含人声分离（mel-band-roformer）、F0 提取（RMVPE）、歌词转录（多语言 ASR）、MIDI 提取（ROSVOT）、MIDI 编辑器等完整工具链，一行命令跑完全流程。
+    arXiv 2602.07803。</div>
     <div class="product-footer">
       <span class="tech-badge">曲谱控制 (MIDI+F0)</span>
       <span class="tech-badge">零样本克隆</span>
@@ -1641,7 +1645,7 @@ footer a:hover { color: var(--accent-bright); }
       <li><strong>曲谱表示</strong>：参考 GTSinger（<a class="ref" href="https://arxiv.org/abs/2409.13832">2409.13832</a>）和 RMSSinger（<a class="ref" href="https://arxiv.org/abs/2305.10686">2305.10686</a>）的真实曲谱格式。</li>
       <li><strong>数据</strong>：GTSinger、Opencpop（<a class="ref" href="https://arxiv.org/abs/2201.07429">2201.07429</a>）或 SingNet（<a class="ref" href="https://arxiv.org/abs/2505.09325">2505.09325</a>）。</li>
       <li><strong>数据制作</strong>：参考"数据制作流程"模块，建议采用路线 C（已有曲谱对齐），让歌手按已知曲谱演唱。</li>
-      <li><strong>开源参考</strong>：<strong>SoulX-Singer</strong>（<a class="ref" href="https://arxiv.org/abs/2602.07803">2602.07803</a>）是最符合需求的开源系统，支持 MIDI+F0 双模式曲谱控制和零样本歌声克隆，42K 小时训练数据。<strong>DiffSinger (OpenVPI)</strong>（<a class="ref" href="https://arxiv.org/abs/2105.02446">2105.02446</a>）提供完整工具链（OpenUtau + MakeDiffSinger）。</li>
+      <li><strong>开源参考</strong>：<strong>SoulX-Singer</strong>（<a class="ref" href="https://arxiv.org/abs/2602.07803">2602.07803</a>）是最符合需求的开源系统——支持 MIDI+F0 双模式曲谱控制和零样本歌声克隆，42K 小时训练数据，且<strong>完整开源了 preprocess pipeline</strong>（人声分离/F0提取/歌词转录/MIDI提取/编辑器全链路，一行命令跑完），可直接用于数据制作。<strong>DiffSinger (OpenVPI)</strong>（<a class="ref" href="https://arxiv.org/abs/2105.02446">2105.02446</a>）提供完整工具链（OpenUtau + MakeDiffSinger）。</li>
       <li><strong>工业界参考</strong>：Synthesizer V 和 ACE Studio 已证明此路线可达接近真人质量。
     </ul>
   </div>

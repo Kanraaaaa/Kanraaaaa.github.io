@@ -757,28 +757,57 @@ a:hover{text-decoration:underline}
 
   <!-- SoulX-Singer Pipeline -->
   <div class="card" style="border-color: rgba(16,185,129,0.3);">
-    <h3>SoulX-Singer：42000 小时对齐数据的工业级 Pipeline（arXiv 2602.07803, 2026）</h3>
+    <h3>SoulX-Singer：42000 小时数据 + 完整开源数据制作 Pipeline（arXiv 2602.07803, 2026）</h3>
     <p>
       <strong>SoulX-Singer 是目前已知最大规模的开源 SVS 训练数据（42000+ 小时）</strong>，
-      支持普通话/英语/粤语三种语言，其数据 pipeline 代表了工业级标准。
+      并且<strong>完整开源了数据制作 preprocess pipeline</strong>（代码在 GitHub `preprocess/` 目录）。
       <br><br>
-      <strong>数据特点：</strong><br>
-      • <strong>42,000+ 小时</strong>对齐训练数据（人声+歌词+音符）<br>
-      • 支持<strong>MIDI 曲谱</strong>（score-conditioned）和<strong>F0 旋律</strong>（melody-conditioned）双模式<br>
-      • 跨语言音色保留，解耦音色与内容<br>
-      • 构建了 SoulX-Singer-Eval 专用零样本评估基准（严格训练-测试分离）<br><br>
-      <strong>旋律表征方式：</strong>同时支持两种——<br>
-      &nbsp;&nbsp;• <strong>Score-conditioned</strong>：输入 MIDI 音符序列，模型处理为内部表示<br>
-      &nbsp;&nbsp;• <strong>Melody-conditioned</strong>：输入逐帧 F0 轨迹，保留连续音高细节<br><br>
-      <strong>工业级特性：</strong><br>
-      • 零样本泛化：无需微调即可生成未见歌手的声音<br>
-      • 歌词编辑：修改歌词同时保持自然韵律<br>
-      • SVC 变体（SoulX-Singer-SVC）：无需歌词转录或 MIDI 输入，直接音频到音频转换<br><br>
-      <strong>参考价值：</strong>对于"曲谱歌声合成+歌声克隆"目标，SoulX-Singer 是最匹配的开源参考系统。其 42K 小时数据的 pipeline 虽未完全开源，但从论文可推断采用了大规模自动标注（分离+对齐+MIDI提取+质量过滤）。
+      <strong>系统架构（模型层面）：</strong><br>
+      高保真零样本 SVS 系统，核心设计包括：<br>
+      • <strong>双模式旋律控制</strong>：score-conditioned（MIDI 音符序列）和 melody-conditioned（F0 轨迹）<br>
+      • <strong>零样本泛化</strong>：无需微调即可生成未见歌手的声音，通过音色编码器从参考音频提取说话人嵌入<br>
+      • <strong>跨语言音色保留</strong>：解耦音色与内容，跨语言合成保持歌手身份<br>
+      • <strong>SoulX-Singer-SVC</strong>：歌声转换变体，无需歌词转录或 MIDI 输入，直接音频到音频转换<br>
+      • <strong>SoulX-Singer-Eval</strong>：专用零样本评估基准，严格训练-测试分离<br><br>
+      <strong>数据制作 Pipeline（完全开源，代码在 preprocess/ 目录）：</strong><br>
+      SoulX-Singer 的 preprocess pipeline 是一个完整的端到端数据制作工具链，由 PreprocessPipeline 类管理，
+      一行命令 `bash example/preprocess.sh` 跑完全流程：<br><br>
+      <strong>① 人声分离 + 去混响</strong>（VocalSeparator）<br>
+      &nbsp;&nbsp;• mel-band-roformer 模型（karaoke 版），分离人声和伴奏<br>
+      &nbsp;&nbsp;• dereverb mel-band-roformer 模型，去除人声混响<br>
+      &nbsp;&nbsp;• 输出：干净干声 vocal.wav + 伴奏 acc.wav<br><br>
+      <strong>② F0 音高提取</strong>（F0Extractor）<br>
+      &nbsp;&nbsp;• RMVPE 模型提取逐帧 F0 轨迹<br>
+      &nbsp;&nbsp;• 输出：_f0.npy 文件<br><br>
+      <strong>③ 人声活动检测 + 切分</strong>（VocalDetector）<br>
+      &nbsp;&nbsp;• 基于 F0 和能量检测人声段<br>
+      &nbsp;&nbsp;• 将长音频切分为短片段（cut_wavs），便于后续逐段处理<br><br>
+      <strong>④ 歌词转录</strong>（LyricTranscriber）<br>
+      &nbsp;&nbsp;• 中文：SeaOaraParaformer（speech_seaco_paraformer_large）<br>
+      &nbsp;&nbsp;• 英文：Parakeet-TDT-0.6b-v2（NVIDIA NeMo）<br>
+      &nbsp;&nbsp;• 输出：每个片段的词序列和词时长<br><br>
+      <strong>⑤ 音符转写 / MIDI 提取</strong>（NoteTranscriber）<br>
+      &nbsp;&nbsp;• ROSVOT 模型（Robust Singing Voice Transcription and MIDI Extraction）<br>
+      &nbsp;&nbsp;• RWBD 模型（ singing voice boundary detection）<br>
+      &nbsp;&nbsp;• 输出：音符级表示，含音高、音符值、与歌词对齐<br><br>
+      <strong>⑥ 短段合并</strong>（merge_short_segments）<br>
+      &nbsp;&nbsp;• 将切分的短片段合并回长片段（最长 60 秒），保持上下文连贯<br>
+      &nbsp;&nbsp;• 输出 SoulX-Singer 格式 metadata JSON<br><br>
+      <strong>⑦ MIDI 编辑器</strong>（midi_editor）<br>
+      &nbsp;&nbsp;• 导出 metadata 到 MIDI → 在编辑器中人工审核修正 → 导入回 metadata<br>
+      &nbsp;&nbsp;• 可编辑歌词、音素对齐、音符音高和时长<br>
+      &nbsp;&nbsp;• 官方强烈建议人工审核修正自动标注结果<br><br>
+      <strong>输出格式：</strong>每个音频文件生成同名 JSON metadata，包含词序列、词时长、音符音高、
+      音符值、语言等信息，可直接用于 SoulX-Singer SVS 训练。<br><br>
+      <strong>工具链对比：</strong><br>
+      相比 OpenVPI/MakeDiffSinger（需要手动组装 Demucs+MFA+SOME），SoulX-Singer preprocess 将所有模块
+      打包为 PreprocessPipeline 类，内置预训练模型下载，一行命令完成全流程。而且分离模型用 mel-band-roformer
+      （比 Demucs 更新），歌词转录用多语言 ASR 模型（比 MFA 更端到端），MIDI 提取用 ROSVOT（专为歌声设计）。
     </p>
     <div class="ref-list">
       <a class="ref" href="https://arxiv.org/abs/2602.07803">arXiv 2602.07803</a>
       <a class="ref" href="https://github.com/Soul-AILab/SoulX-Singer" target="_blank">GitHub ⭐838</a>
+      <a class="ref" href="https://github.com/Soul-AILab/SoulX-Singer/tree/main/preprocess" target="_blank">preprocess pipeline 代码</a>
       <a class="ref" href="https://huggingface.co/Soul-AILab/SoulX-Singer" target="_blank">HuggingFace Model</a>
     </div>
   </div>
@@ -930,10 +959,10 @@ a:hover{text-decoration:underline}
         <tr>
           <td><a href="https://arxiv.org/abs/2602.07803">SoulX-Singer</a></td>
           <td>42,000h / 3语言</td>
-          <td>—</td>
-          <td>自动对齐</td>
-          <td>MIDI+F0 双模式</td>
-          <td class="yes">完全开源</td>
+          <td>mel-band-roformer</td>
+          <td>SeaOara+Parakeet ASR</td>
+          <td>ROSVOT MIDI提取</td>
+          <td class="yes">完全开源+preprocess pipeline</td>
         </tr>
         <tr>
           <td><a href="https://github.com/openvpi/MakeDiffSinger" target="_blank">MakeDiffSinger</a></td>
