@@ -170,6 +170,8 @@ a:hover{text-decoration:underline}
       • <span class="highlight">SongTrans</span>（arXiv 2409.14619）：统一歌声转写和对齐方法，自回归模块预测歌词+音符时长+音符号，非自回归模块预测音高和时长，同时完成歌词转写和音符对齐<br>
       • <span class="highlight">STARS</span>（arXiv 2507.06670）：统一框架，同时完成歌声转写、对齐和细化风格标注。分层声学特征处理（帧/词/音素/音符/句），非自回归局部声学编码器<br>
       • <span class="highlight">VocalParse</span>（arXiv 2605.04613）：基于大音频语言模型（LALM）的统一歌声转写。交错提示建模歌词+旋律+词-音符对应关系，CoT 策略先解码歌词作为语义支架<br>
+      • <span class="highlight">Phonsa</span>（arXiv 2607.26698 中的工具）：基于 Whisper 的歌声音素级自动标注工具，用 chunked self-attention 替代 RNN，引入 breath token 和 boundary token。
+        <strong>MAE 从 MFA 的 233.9ms 降到 32.6ms</strong>，支持强制对齐和无监督分割两种模式。训练数据：M4Singer + Opencpop（30.92h），测试集 GTSinger（16.54h）<br>
       • <span class="highlight">LyricsAlignment-MTL</span>：多任务学习的歌词-音频对齐，深度学习方法<br><br>
       <strong>工业界实践：</strong><br>
       • <strong>Opencpop</strong>：MFA 对齐 + 人工校验修正，100 首歌逐一检查<br>
@@ -187,6 +189,7 @@ a:hover{text-decoration:underline}
       <a class="tool tool-oss" href="https://github.com/AlexandaJerry/SingingVoice-Auto-Alignment" target="_blank">SingingVoice-Auto-Alignment</a>
       <a class="tool tool-paper" href="https://arxiv.org/abs/2507.06670">STARS</a>
       <a class="tool tool-paper" href="https://arxiv.org/abs/2605.04613">VocalParse</a>
+      <a class="tool tool-paper" href="https://arxiv.org/abs/2607.26698">Phonsa</a>
       <a class="tool tool-paper" href="https://arxiv.org/abs/2409.14619">SongTrans</a>
     </div>
   </div>
@@ -933,6 +936,49 @@ a:hover{text-decoration:underline}
     </div>
   </div>
 
+  <!-- MPEcho Pipeline -->
+  <div class="card" style="border-color: rgba(167,139,250,0.3);">
+    <h3>MPEcho：SVS 音素级控制反哺翻唱生成 + Phonsa 自动标注（arXiv 2607.26698, 2026.07）</h3>
+    <p>
+      <strong>MPEcho 是首个将 SVS 的音素级精确控制引入翻唱歌曲生成（CSG）的端到端框架</strong>。
+      核心洞察：SVS 领域的 phoneme encoder + length regulator（源自 FastSpeech）可以为歌曲生成提供精确的语言学控制，
+      解决 SongEcho 仅用 F0+V/UV tags 导致 PER 高达 45.62% 的问题。
+      <br><br>
+      <strong>系统架构：</strong>基于 ACE-Step DiT 骨干 + SongEcho 旋律条件 + MPEcho 音素条件<br>
+      • <strong>旋律条件 c_m</strong>：RMVPE 提取 F0 序列 + V/UV tags（继承自 SongEcho）<br>
+      • <strong>音素条件 c_p</strong>：Phonsa 提取音素序列 + 时长 → phoneme encoder（4层 FFT）→ length regulator 扩展到音频时间轴<br>
+      • <strong>多条件融合</strong>：c_m 和 c_p 通过 IA-EiLM adapters 融合注入 DiT<br>
+      • <strong>多条件 CFG</strong>：分解式多条件引导（text/lyrics/melody+phoneme 各自独立 CFG），解决条件冲突<br>
+      • 训练目标：流匹配 ℒ = E[‖D_θ(z_t, t, c_t, c_l, c_m, c_p) - x‖²]<br><br>
+      <strong>数据处理 Pipeline：</strong><br>
+      <strong>① 训练数据</strong>：内部中文歌词-歌曲数据集，13,045 首 / ~1,427 小时<br>
+      &nbsp;&nbsp;• <strong>SongPrep</strong>：结构解析（歌曲分段）<br>
+      &nbsp;&nbsp;• <strong>Qwen2-Audio-7B</strong>：自动 caption 生成（流派/乐器/情绪/主题标签）<br>
+      &nbsp;&nbsp;• <strong>Essentia</strong>：调性和 BPM 提取<br>
+      &nbsp;&nbsp;• 标签拼接为输入 prompt<br>
+      <strong>② 音素级标注（Phonsa pipeline）</strong>：<br>
+      &nbsp;&nbsp;• 基于 Whisper 的音素级强制对齐和分割工具<br>
+      &nbsp;&nbsp;• chunked self-attention（4 头，chunk 500 帧/10 秒，50% 重叠）替代 RNN<br>
+      &nbsp;&nbsp;• 引入 breath token（呼吸音标注）和 boundary token（连续相同音素分割）<br>
+      &nbsp;&nbsp;• 多任务训练：CTC（序列级对齐）+ CE（帧级分类）<br>
+      &nbsp;&nbsp;• <strong>性能</strong>：MAE 32.6ms（MFA 233.9ms），PCO 0.965（MFA 0.767），支持无监督分割<br>
+      &nbsp;&nbsp;• 训练数据：M4Singer + Opencpop（30.92h），测试：GTSinger（16.54h）<br>
+      <strong>③ 推理端</strong>：给定参考歌曲 → Phonsa 提取音素+时长 → RMVPE 提取 F0 → MPEcho 生成翻唱<br><br>
+      <strong>实验结果：</strong><br>
+      • PER 从 SongEcho 的 45.62% 降到 18.65%（降低 59%）<br>
+      • SVS-style 音素排列优于 JAM-style 词级排列<br>
+      • 分解式多条件 CFG 解决条件冲突，优于 SongEcho 的 entangled CFG<br>
+      • 主观听测显著优于 SongEcho<br><br>
+      <strong>关键洞察：</strong>MPEcho 证明了"SVS-derived priors can effectively enhance controllability in end-to-end full-song generation"
+      ——<strong>SVS 的精细控制思路不是只适用于纯歌声合成，而是可以反哺端到端歌曲生成</strong>。
+      对于做曲谱 SVS 的团队，这意味着你的音素级控制技术可以扩展到完整歌曲生成。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2607.26698">arXiv 2607.26698</a>
+      <a class="ref" href="https://lonian6.github.io/MPEcho.github.io/" target="_blank">项目主页（代码+权重）</a>
+    </div>
+  </div>
+
   <!-- Pipeline Comparison Table -->
   <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">端到端 Pipeline 对比</h3>
   <div class="table-wrap">
@@ -1003,6 +1049,14 @@ a:hover{text-decoration:underline}
           <td>Whisper/Scribe</td>
           <td>5Hz语义codes</td>
           <td class="yes">完全开源+工具链</td>
+        </tr>
+        <tr>
+          <td><a href="https://arxiv.org/abs/2607.26698">MPEcho/Phonsa</a></td>
+          <td>1,427h/13K首</td>
+          <td>—</td>
+          <td>Phonsa(Whisper)</td>
+          <td>F0+音素LR</td>
+          <td class="yes">开源(代码+权重)</td>
         </tr>
       </tbody>
     </table>

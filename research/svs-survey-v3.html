@@ -448,6 +448,7 @@ footer a:hover { color: var(--accent-bright); }
         <a class="paper-tag new" href="https://arxiv.org/abs/2505.09325">SingNet 2505.09325</a>
         <a class="paper-tag new" href="https://arxiv.org/abs/2507.06670">STARS 2507.06670</a>
         <a class="paper-tag new" href="https://arxiv.org/abs/2606.05852">UniVoice 2606.05852</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2607.26698">MPEcho 2607.26698</a>
         <a class="paper-tag new" href="https://arxiv.org/abs/2506.00045">ACE-Step 2506.00045</a>
         <a class="paper-tag new" href="https://arxiv.org/abs/2510.22950">DiffRhythm 2 2510.22950</a>
         <a class="paper-tag new" href="https://arxiv.org/abs/2404.09313">Melodist 2404.09313</a>
@@ -1043,12 +1044,17 @@ footer a:hover { color: var(--accent-bright); }
       Grad-TTS/Diff-TTS → DiffSinger/DiffSVC；
       VALL-E 编解码语言模型范式 → TokSing 将其引入 SVS。
       MaskGCT、CosyVoice 2、F5-TTS 等零样本 TTS 技术正在向 SVS 迁移。
+      <strong>V3 新增——反向迁移：</strong>MPEcho（arXiv 2607.26698）将 SVS 的音素级精确控制（phoneme encoder + length regulator）
+      反向引入翻唱歌曲生成（CSG），将 PER 从 SongEcho 的 45.62% 降到 18.65%。
+      证明了"SVS-derived priors can effectively enhance controllability in end-to-end full-song generation"
+      （SVS 衍生先验可有效增强端到端歌曲生成的可控性）。
     </p>
     <div class="ref-list">
       <a class="ref" href="https://arxiv.org/abs/1905.09263">1905.09263</a>
       <a class="ref" href="https://arxiv.org/abs/2010.05646">2010.05646</a>
       <a class="ref" href="https://arxiv.org/abs/2301.02111">2301.02111</a>
       <a class="ref" href="https://arxiv.org/abs/2406.08416">2406.08416</a>
+      <a class="ref" href="https://arxiv.org/abs/2607.26698">2607.26698</a>
     </div>
   </div>
 
@@ -1809,6 +1815,13 @@ footer a:hover { color: var(--accent-bright); }
         </tr>
       </thead>
       <tbody>
+        <tr data-tags="songgen,svs">
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2607.26698" target="_blank">2607.26698</a></td>
+          <td><div class="paper-title">MPEcho: A Melody and Phoneme-Aware Generative Framework for Controllable Cover Song Generation<span class="new-badge">NEW</span></div></td>
+          <td><div class="paper-authors">Wei-Jaw Lee, et al.</div></td>
+          <td>2026-07-29</td>
+          <td><span class="tag tag-songgen">歌曲生成</span> <span class="tag tag-svs">SVS</span></td>
+        </tr>
         <tr data-tags="songgen,diffusion">
           <td><a class="arxiv-link" href="https://arxiv.org/abs/2510.22950" target="_blank">2510.22950</a></td>
           <td><div class="paper-title">DiffRhythm 2: Efficient and High Fidelity Song Generation via Block Flow Matching<span class="new-badge">NEW</span></div></td>
