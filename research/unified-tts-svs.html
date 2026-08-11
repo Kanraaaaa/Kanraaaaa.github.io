@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>统一语音与歌声合成模型调研 · Unified TTS+SVS · 2019-2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090a;
+  --panel: #0f1011;
+  --surface: #191a1b;
+  --surface-2: #28282c;
+  --text: #f7f8f8;
+  --text-2: #d0d6e0;
+  --text-3: #8a8f98;
+  --text-4: #62666d;
+  --accent: #5e6ad2;
+  --accent-bright: #7170ff;
+  --accent-hover: #828fff;
+  --green: #27a644;
+  --emerald: #10b981;
+  --orange: #fb923c;
+  --rose: #fb7185;
+  --cyan: #22d3ee;
+  --amber: #fbbf24;
+  --violet: #a78bfa;
+  --border: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.05);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter','Noto Sans SC', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+code, .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,9,10,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 24px;
+  flex-wrap: wrap;
+}
+nav .logo { font-weight: 600; font-size: 15px; color: var(--text); letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+nav .logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-bright); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+nav ul { display: flex; list-style: none; gap: 20px; flex: 1; flex-wrap: wrap; }
+nav a { color: var(--text-3); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+nav a:hover { color: var(--text); }
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.hero { padding: 100px 0 80px; text-align: left; }
+.hero .eyebrow { display: inline-block; font-size: 12px; font-weight: 500; color: var(--accent-bright); background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3); padding: 4px 10px; border-radius: 9999px; margin-bottom: 24px; }
+.hero h1 { font-size: 52px; font-weight: 600; color: var(--text); letter-spacing: -1.08px; line-height: 1.05; margin-bottom: 20px; }
+.hero .subtitle { font-size: 18px; color: var(--text-3); line-height: 1.6; max-width: 640px; }
+.hero .meta { margin-top: 32px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--text-4); }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.hero .meta .badge { padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); color: var(--text-3); }
+
+section { padding: 64px 0; }
+.section-title { font-size: 32px; font-weight: 600; color: var(--text); letter-spacing: -0.704px; margin-bottom: 12px; }
+.section-desc { font-size: 16px; color: var(--text-3); margin-bottom: 40px; max-width: 720px; }
+
+.card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 16px; transition: border-color 0.2s, background 0.2s; }
+.card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
+.card h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.2px; }
+.card p { font-size: 14px; color: var(--text-3); line-height: 1.6; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } .hero h1 { font-size: 36px; } }
+
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, var(--accent), rgba(94,106,210,0.1)); }
+.timeline-item { position: relative; padding-bottom: 48px; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
+.timeline-item .year { font-size: 13px; font-weight: 600; color: var(--accent-bright); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+.timeline-item h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.timeline-item p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.timeline-item .papers { display: flex; flex-wrap: wrap; gap: 8px; }
+.timeline-item .paper-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; background: rgba(94,106,210,0.08); border: 1px solid rgba(94,106,210,0.2); color: var(--accent-hover); text-decoration: none; transition: all 0.2s; }
+.timeline-item .paper-tag.new { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: var(--emerald); }
+.timeline-item .paper-tag:hover { background: rgba(94,106,210,0.15); border-color: rgba(94,106,210,0.4); }
+
+.trend-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+.trend-card .trend-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.trend-card .icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.trend-card h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.trend-card .trend-sub { font-size: 13px; color: var(--text-4); }
+.trend-card p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.trend-card .ref-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.trend-card .ref { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; text-decoration: none; transition: all 0.2s; }
+
+.paper-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.paper-table th { text-align: left; font-weight: 500; color: var(--text-3); padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.paper-table td { padding: 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-2); vertical-align: top; }
+.paper-table tr:hover td { background: rgba(255,255,255,0.02); }
+.paper-table .arxiv-link { font-family: 'JetBrains Mono', monospace; color: var(--accent-hover); text-decoration: none; font-size: 12px; }
+.paper-table .arxiv-link:hover { text-decoration: underline; }
+.paper-table .paper-title { color: var(--text); font-weight: 500; }
+.paper-table .paper-authors { color: var(--text-4); font-size: 12px; }
+.paper-table .tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 500; margin: 1px; }
+
+.tag-unified { background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3); color:#7170ff; }
+.tag-vc { background: rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#a78bfa; }
+.tag-diffusion { background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3); color:#7170ff; }
+.tag-llm { background: rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.3); color:#fb7185; }
+.tag-e2e { background: rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; }
+.tag-ar { background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3); color:#818cf8; }
+.tag-flow { background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); color:#22d3ee; }
+.tag-zeroshot { background: rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.3); color:#fda4af; }
+.tag-codec { background: rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.3); color:#fdba74; }
+.tag-ssl { background: rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fcd34d; }
+.tag-tts { background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); color:#67e8f9; }
+.tag-svs { background: rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#c4b5fd; }
+.tag-musicgen { background: rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#c4b5fd; }
+.tag-opensource { background: rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; }
+.tag-survey { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#9ca3af; }
+
+.ref { background: rgba(255,255,255,0.04); border:1px solid var(--border-subtle); color: var(--text-3); }
+.ref:hover { background: rgba(94,106,210,0.1); border-color: rgba(94,106,210,0.3); color: var(--accent-hover); }
+
+.arch-diagram { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin: 24px 0; }
+.arch-flow { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.arch-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.arch-box { border-radius: 8px; padding: 12px 20px; font-size: 13px; font-weight: 500; text-align: center; min-width: 140px; }
+.arch-arrow { color: var(--text-4); font-size: 20px; display: flex; align-items: center; }
+.arch-input { background: rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.25); color:#22d3ee; }
+.arch-model { background: rgba(94,106,210,0.08); border:1px solid rgba(94,106,210,0.25); color:#7170ff; }
+.arch-output { background: rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); color:#10b981; }
+.arch-clone { background: rgba(251,113,133,0.08); border:1px solid rgba(251,113,133,0.25); color:#fb7185; }
+.arch-aux { background: rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); color:#fbbf24; }
+.arch-stage { background: rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.25); color:#a78bfa; }
+
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 40px 0; }
+@media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+.stat { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; }
+.stat .num { font-size: 36px; font-weight: 700; color: var(--text); letter-spacing: -1px; }
+.stat .label { font-size: 12px; color: var(--text-4); margin-top: 4px; }
+
+footer { border-top: 1px solid var(--border-subtle); padding: 48px 0 32px; text-align: center; color: var(--text-4); font-size: 13px; }
+footer a { color: var(--text-3); text-decoration: none; }
+footer a:hover { color: var(--accent-bright); }
+
+.callout { background: rgba(94,106,210,0.06); border: 1px solid rgba(94,106,210,0.2); border-radius: 8px; padding: 20px 24px; margin: 24px 0; font-size: 14px; color: var(--text-2); line-height: 1.7; }
+.callout strong { color: var(--text); }
+.callout.warn { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.2); }
+
+.divider { height: 1px; background: var(--border-subtle); margin: 64px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.compare-table th { text-align: left; font-weight: 500; color: var(--text-3); padding: 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.compare-table td { padding: 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-2); vertical-align: top; }
+.compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+.compare-table .yes { color: var(--emerald); }
+.compare-table .no { color: var(--rose); }
+.compare-table .partial { color: var(--amber); }
+.compare-table .model-name { color: var(--text); font-weight: 500; }
+
+.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+
+.highlight { color: var(--accent-bright); font-weight: 500; }
+.highlight-emerald { color: var(--emerald); font-weight: 500; }
+.highlight-rose { color: var(--rose); font-weight: 500; }
+.highlight-amber { color: var(--amber); font-weight: 500; }
+
+/* Route card */
+.route-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+.route-card .route-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.route-card .icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.route-card h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.route-card .route-sub { font-size: 13px; color: var(--text-4); }
+.route-card p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.route-card .papers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.route-card .paper-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; background: rgba(94,106,210,0.08); border: 1px solid rgba(94,106,210,0.2); color: var(--accent-hover); text-decoration: none; transition: all 0.2s; }
+.route-card .paper-tag:hover { background: rgba(94,106,210,0.15); border-color: rgba(94,106,210,0.4); }
+
+/* Deep dive card */
+.dive-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-bottom: 20px; }
+.dive-card .dive-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+.dive-card h3 { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.dive-card .dive-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-4); }
+.dive-card .dive-meta .meta-item { display: flex; align-items: center; gap: 4px; }
+.dive-card .dive-body { font-size: 14px; color: var(--text-3); line-height: 1.8; }
+.dive-card .dive-body strong { color: var(--text); }
+.dive-card .dive-body code { background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 12px; color: var(--accent-hover); }
+.dive-card .dive-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+
+.challenge-card { background: rgba(251,191,36,0.03); border: 1px solid rgba(251,191,36,0.15); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+.challenge-card h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.challenge-card p { font-size: 14px; color: var(--text-3); line-height: 1.7; }
+.challenge-card .challenge-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: var(--amber); margin-left: 8px; }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span> Research Hub</div>
+  <ul>
+    <li><a href="../index.html">← 返回首页</a></li>
+    <li><a href="#overview">概述</a></li>
+    <li><a href="#timeline">演进时间线</a></li>
+    <li><a href="#routes">技术路线</a></li>
+    <li><a href="#deep-dive">深度分析</a></li>
+    <li><a href="#comparison">对比</a></li>
+    <li><a href="#challenges">挑战</a></li>
+    <li><a href="#papers">论文列表</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+<!-- Hero -->
+<div class="hero">
+  <div class="eyebrow">Unified TTS + SVS · 统一语音与歌声合成</div>
+  <h1>一个模型，<span style="color: var(--accent-bright);">既说又唱</span></h1>
+  <p class="subtitle">
+    调研 2019–2026 年间学术界与工业界在"统一文本转语音 (TTS) 与歌声合成 (SVS)"方向的研究进展。
+    覆盖 25+ 篇 arXiv 论文、5 大技术路线、从早期共享嵌入到最新语音语言模型 (SLM) 的完整演进。
+    回答一个核心问题：能否用一个模型同时完成高质量语音合成与歌声合成？
+  </p>
+  <div class="meta">
+    <span>📅 2026.08</span>
+    <span>📄 25+ 篇论文</span>
+    <span>🔬 5 大技术路线</span>
+    <span>🏢 10+ 机构</span>
+    <span class="badge">V1</span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat">
+    <div class="num">25+</div>
+    <div class="label">收录论文</div>
+  </div>
+  <div class="stat">
+    <div class="num">5</div>
+    <div class="label">技术路线</div>
+  </div>
+  <div class="stat">
+    <div class="num">2019</div>
+    <div class="label">最早论文</div>
+  </div>
+  <div class="stat">
+    <div class="num">2026</div>
+    <div class="label">最新论文</div>
+  </div>
+</div>
+
+<!-- Overview -->
+<section id="overview">
+  <h2 class="section-title">核心问题与概述</h2>
+  <p class="section-desc">
+    TTS 和 SVS 本质上都是"从符号输入生成人声"，但它们对生成过程的要求截然不同——这是统一建模的根本矛盾。
+  </p>
+
+  <div class="callout">
+    <strong>核心矛盾：</strong>
+    语音合成 (TTS) 依赖灵活的、语言驱动的韵律，不需要显式的旋律控制；
+    而歌声合成 (SVS) 要求精确的旋律控制 (MIDI/乐谱) 和严格的节奏对齐。
+    统一模型面临的挑战是：<strong>旋律条件在歌声中必须强约束，但在语音中不应限制韵律自由度</strong>。
+    如果用同一个条件表示，歌声旋律条件会"过度约束"语音韵律，或语音韵律"破坏"歌声旋律的精确性。
+  </div>
+
+  <div class="grid-2" style="margin-top: 24px;">
+    <div class="card">
+      <h3>🎤 歌声合成 (SVS) 的要求</h3>
+      <p>
+        ① 精确的音高 (pitch) 控制，通常由 MIDI 音符序列提供<br>
+        ② 严格的节奏对齐，歌词音节与音符时间一一对应<br>
+        ③ 需要处理颤音 (vibrato)、花腔、转音等演唱技巧<br>
+        ④ 音域跨度大（可达 2 个以上八度）<br>
+        ⑤ 歌唱数据稀缺，标注成本极高
+      </p>
+    </div>
+    <div class="card">
+      <h3>🗣️ 语音合成 (TTS) 的要求</h3>
+      <p>
+        ① 韵律由语言上下文自然推导，不需显式旋律<br>
+        ② 音高范围窄，集中在说话基频区间<br>
+        ③ 节奏自由，由文本语义决定而非乐谱<br>
+        ④ 强调自然度、可懂度、情感表达<br>
+        ⑤ 大规模语音数据相对易得
+      </p>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top: 24px;">
+    <strong>为什么需要统一？</strong> 统一模型可以带来三重收益：<br>
+    ① <strong>数据互补</strong>：用丰富语音数据弥补歌唱数据稀缺，提升歌唱泛化能力<br>
+    ② <strong>共享表征</strong>：同一说话人可以自然地说和唱，共享音色表征空间<br>
+    ③ <strong>架构统一</strong>：减少维护多个独立模型的工程成本，支持语音-歌声无缝切换<br><br>
+    2019 年起，学术界从"共享嵌入"到"多任务自监督"再到"语音语言模型"，已经探索了至少 5 种技术路线。
+  </div>
+</section>
+
+<!-- Timeline -->
+<section id="timeline">
+  <h2 class="section-title">技术演进时间线</h2>
+  <p class="section-desc">从 2019 年的共享说话人嵌入，到 2026 年的语音语言模型统一语音与歌声——7 年间的关键里程碑。</p>
+
+  <div class="timeline">
+
+    <div class="timeline-item">
+      <div class="year">2019.12</div>
+      <h3>Learning Singing From Speech — 共享嵌入的开端</h3>
+      <p>
+        腾讯提出的算法首次将语音合成与歌声合成整合到统一框架中。核心思路：学习通用说话人嵌入 (speaker embeddings)，
+        在语音合成目标与歌声合成目标间共享。仅需说话人的<span class="highlight">语音样本</span>即可合成该说话人的歌声。
+        这是最早的"语音→歌声"跨域迁移工作之一。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/1912.10128" target="_blank">arXiv:1912.10128</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2022.04</div>
+      <h3>Karaoker — 仅用语音数据训练歌声合成</h3>
+      <p>
+        基于 Tacotron 的多说话人模型，<span class="highlight">完全在口语数据上训练</span>，不需要时间对齐和乐谱标注。
+        用连续特征（音高、强度、共振峰等）作为条件，从未见过的歌手/说话人波形中提取多维模板进行风格迁移。
+        证明了语音数据可以驱动歌声合成，但质量和控制精度有限。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2204.04127" target="_blank">arXiv:2204.04127</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2022.11–12</div>
+      <h3>UniSyn & NANSY++ — 显式统一框架出现</h3>
+      <p>
+        <strong>UniSyn</strong>（腾讯）提出端到端统一 TTS+SVS 模型，使用多条件变分自编码器 (MC-VAE) 构建说话人和风格
+        两个独立潜在子空间。关键突破：只需语音或歌唱数据（不需要同一人的两类数据）即可让该声音既说又唱。
+        <br><br>
+        <strong>NANSY++</strong> 提出基于神经分析与合成 (NANSY) 的统一框架，骨干网络以<span class="highlight">自监督方式</span>训练，
+        不需要配对标注。之后通过部分建模分析特征，同时处理语音转换、TTS、SVS 和声音设计四个任务。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2212.01546" target="_blank">arXiv:2212.01546</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2211.09407" target="_blank">arXiv:2211.09407</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2023.04–05</div>
+      <h3>NaturalSpeech 2 & Make-A-Voice & CoMoSpeech — 扩散与离散表征</h3>
+      <p>
+        <strong>NaturalSpeech 2</strong>（微软）使用潜在扩散模型 + 神经音频编解码器，在 44K 小时<span class="highlight">语音+歌唱</span>数据上训练，
+        实现零样本歌唱合成（仅需语音提示）。<br><br>
+        <strong>Make-A-Voice</strong>（腾讯）采用"粗到细"三层架构（语义→声学→生成），通过离散表征统一 TTS、VC、SVS 三个任务，
+        主干网络无需标注，可大规模扩展训练数据。<br><br>
+        <strong>CoMoSpeech</strong> 使用一致性模型将扩散采样的多步推理压缩为<span class="highlight">单步</span>，推理速度比实时快 150 倍，同时支持 TTS 和 SVS。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2304.09116" target="_blank">arXiv:2304.09116</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2305.19269" target="_blank">arXiv:2305.19269</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2305.06908" target="_blank">arXiv:2305.06908</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2023.10</div>
+      <h3>UniAudio — 音频基础模型</h3>
+      <p>
+        利用 LLM 的 next-token prediction 统一生成语音、声音、音乐和歌声。
+        将所有目标音频和条件模态 tokenize 后拼接为单一序列，使用多尺度 Transformer 处理长序列。
+        165K 小时音频、1B 参数，在 11 个任务上达到 SOTA 或竞争力水平。这是将 LLM 范式引入统一音频生成的里程碑。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2310.00704" target="_blank">arXiv:2310.00704</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2024.09</div>
+      <h3>Seed-Music — 工业级统一音乐生成</h3>
+      <p>
+        字节跳动提出的统一框架，结合自回归语言建模和扩散方法。支持从多模态输入（风格描述、音频参考、乐谱、声音提示）
+        进行受控声乐音乐生成，并提供歌词和旋律的交互式后期编辑工具。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2409.09214" target="_blank">arXiv:2409.09214</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2025.01–02</div>
+      <h3>Everyone-Can-Sing & Vevo & Step-Audio</h3>
+      <p>
+        <strong>Everyone-Can-Sing</strong>（CMU/腾讯）统一 SVS+SVC 框架，支持基于<span class="highlight">语音参考</span>的零样本歌声克隆。
+        混合训练语音+歌唱数据集，大幅提升音色相似度和音乐性。<br><br>
+        <strong>Vevo</strong>（腾讯）提出可控零样本声音模仿框架，两阶段架构：AR 内容-风格建模 + flow-matching 声学建模。
+        在 60K 小时有声书数据上纯自监督训练，通过 VQ-VAE 瓶颈渐进式解耦音色、风格和语言内容。<br><br>
+        <strong>Step-Audio</strong>（阶跃星辰）130B 统一语音-文本多模态模型，指令驱动控制方言、情感、<span class="highlight">歌唱和 RAP</span>。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2501.13870" target="_blank">arXiv:2501.13870</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2502.07243" target="_blank">arXiv:2502.07243</a>
+        <a class="paper-tag" href="https://arxiv.org/abs/2502.11946" target="_blank">arXiv:2502.11946</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2025.08</div>
+      <h3>Vevo2 — 统一语音与歌声的突破</h3>
+      <p>
+        Vevo 的升级版，明确将<span class="highlight">语音和歌声</span>统一到可控生成框架。引入两个音频 tokenizer：
+        (1) 统一无乐谱韵律 tokenizer（从语音、歌声甚至乐器声中捕获韵律和旋律）；
+        (2) 统一内容-风格 tokenizer（编码语言内容、韵律和风格，同时实现音色解耦）。
+        在 AR 模型的语音-歌声联合训练中，提出显式和隐式韵律学习策略桥接两种发声模式。
+        多目标任务后训练进一步提升文本和韵律跟随能力。实验证明统一建模对语音和歌声<span class="highlight-emerald">相互增益</span>。
+      </p>
+      <div class="papers">
+        <a class="paper-tag new" href="https://arxiv.org/abs/2508.16332" target="_blank">arXiv:2508.16332</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2025.12</div>
+      <h3>SLM 适配 SVS — 语音语言模型的新范式</h3>
+      <p>
+        将 1.7B 参数的 TTS 预训练语音语言模型 (SLM) 适配到 SVS，仅使用 135 小时合成歌唱语料 ACE-Opencpop。
+        基于 ESPNet-SpeechLM，流程包括：乐谱条件 token 化、多流 LM token 预测、条件 flow matching mel 频谱生成、
+        mel-to-wave vocoder。证明了 SLM 可以泛化到歌声合成，性能可与领先的离散 token SVS 模型媲美。
+      </p>
+      <div class="papers">
+        <a class="paper-tag" href="https://arxiv.org/abs/2512.14657" target="_blank">arXiv:2512.14657</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2026.05–06</div>
+      <h3>爆发期 — VITA-QinYu / UniVoice / UniVocal / VoxCPM2</h3>
+      <p>
+        <strong>VITA-QinYu</strong>（上海交大）：首个支持角色扮演和歌唱的端到端表达性 SLM。混合语音-文本范式 + 多码本音频 token，
+        15.8K 小时自然对话+角色扮演+歌唱数据。<br><br>
+        <strong>UniVoice</strong>（小米）：基于条件 flow matching 的统一语音和歌声生成。将条件<span class="highlight">因子化</span>为内容、旋律、音色，
+        歌声用 MIDI 音符序列，语音用学习到的<span class="highlight">空旋律 token</span>代替。30K 小时语音 + 35K 小时歌唱，语音 PER 5.26%（可比 F5-TTS），歌唱 PER 16.22%（优于 Vevo1.5 的 24.72%）。<br><br>
+        <strong>UniVocal</strong>（科大讯飞）：统一语音-歌声<span class="highlight">码切换</span>合成，从文本上下文隐式推断发声模式。两阶段课程学习 + CoT 生成规划韵律。<br><br>
+        <strong>VoxCPM2</strong>（OpenBMB/清华）：2B 参数、200万+小时、30 语言 + 9 方言的完全开源语音生成基础模型。层次扩散-自回归范式，Apache 2.0。
+      </p>
+      <div class="papers">
+        <a class="paper-tag new" href="https://arxiv.org/abs/2605.06765" target="_blank">arXiv:2605.06765</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2606.05852" target="_blank">arXiv:2606.05852</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2606.01677" target="_blank">arXiv:2606.01677</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2606.06928" target="_blank">arXiv:2606.06928</a>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="year">2026.06–07</div>
+      <h3>Bagpiper-TTS & UniSinger & 跨域适配</h3>
+      <p>
+        <strong>Bagpiper-TTS</strong>（CMU）：自然语言引导的通用语音合成系统，从自然语言提示推理用户意图生成详细描述，
+        支持多说话人、角色扮演、<span class="highlight">歌声合成</span>等。Seed-TTS-Eval 基准 WER 1.7%。<br><br>
+        <strong>UniSinger</strong>（西工大）：统一歌曲生成与歌声转换 + 伴奏共生成，多模态扩散 Transformer，统一说话人嵌入空间。<br><br>
+        <strong>跨域适配</strong>：将扩散乐器音乐合成模型适配到语音和歌声转换，用音素后验图 (PPG) + 音高轮廓扩展音符条件。
+      </p>
+      <div class="papers">
+        <a class="paper-tag new" href="https://arxiv.org/abs/2606.22811" target="_blank">arXiv:2606.22811</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2606.07015" target="_blank">arXiv:2606.07015</a>
+        <a class="paper-tag new" href="https://arxiv.org/abs/2607.13278" target="_blank">arXiv:2607.13278</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Technical Routes -->
+<section id="routes">
+  <h2 class="section-title">五大技术路线</h2>
+  <p class="section-desc">
+    统一 TTS+SVS 的技术路线可归纳为五大类。从最早的共享嵌入，到最新的语音语言模型范式，每条路线解决不同的核心矛盾。
+  </p>
+
+  <!-- Route 1: Shared Embedding -->
+  <div class="route-card">
+    <div class="route-header">
+      <div class="icon" style="background: rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3);">🔗</div>
+      <div>
+        <h3>路线 1：共享嵌入与多任务训练</h3>
+        <div class="route-sub">Shared Speaker Embedding + Multi-Task Training · 2019–2022</div>
+      </div>
+    </div>
+    <p>
+      <strong>核心思路：</strong>在 TTS 和 SVS 两个任务间共享说话人嵌入 (speaker embedding) 或分析特征。通过多任务训练让嵌入学习到
+      说话和歌唱的通用表征，实现跨域迁移。<br><br>
+      <strong>代表工作：</strong>Learning Singing From Speech 在统一训练框架中共享语音合成和歌声合成的说话人嵌入，
+      使从语音学到的音色可以用于歌声合成。Karaoker 更进一步，完全在语音数据上训练，通过连续声学特征条件化实现歌声合成。<br><br>
+      <strong>优势：</strong>简单直接，易于在现有 TTS 框架上扩展；对数据要求低（仅需语音或仅歌唱数据）。<br>
+      <strong>局限：</strong>无法精确控制旋律；歌声质量受限于语音数据的表现力；缺乏显式风格控制。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/1912.10128" target="_blank">Learning Singing From Speech (2019)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2204.04127" target="_blank">Karaoker (2022)</a>
+    </div>
+  </div>
+
+  <!-- Route 2: Disentanglement -->
+  <div class="route-card">
+    <div class="route-header">
+      <div class="icon" style="background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3);">🧩</div>
+      <div>
+        <h3>路线 2：解耦表征与自监督学习</h3>
+        <div class="route-sub">Disentangled Representation + Self-Supervised Learning · 2022–2023</div>
+      </div>
+    </div>
+    <p>
+      <strong>核心思路：</strong>将语音信号解耦为独立的子空间（音色、风格、内容等），通过自监督学习训练骨干网络无需配对标注。
+      之后再根据不同任务的需求部分建模分析特征。<br><br>
+      <strong>代表工作：</strong><br>
+      • <strong>UniSyn</strong>：MC-VAE 构建说话人和风格两个独立潜在子空间，通过 guided-VAE 和音色扰动 + Wasserstein 距离约束进一步解耦。<br>
+      • <strong>NANSY++</strong>：自监督骨干网络，部分建模分析特征处理 VC/TTS/SVS/声音设计四个任务。<br>
+      • <strong>Make-A-Voice</strong>：三层"粗到细"离散表征架构（语义→声学→生成），主干无需标注。<br>
+      • <strong>Vevo</strong>：VQ-VAE 瓶颈渐进式解耦音色/风格/内容，纯自监督训练 60K 小时。<br><br>
+      <strong>优势：</strong>数据效率高，可大规模无标注训练；可控性强，支持独立操控不同属性。<br>
+      <strong>局限：</strong>解耦不完美时会导致属性泄漏；训练和调参复杂。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2212.01546" target="_blank">UniSyn (2022)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2211.09407" target="_blank">NANSY++ (2022)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2305.19269" target="_blank">Make-A-Voice (2023)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2502.07243" target="_blank">Vevo (2025)</a>
+    </div>
+  </div>
+
+  <!-- Route 3: Diffusion/Flow -->
+  <div class="route-card">
+    <div class="route-header">
+      <div class="icon" style="background: rgba(94,106,210,0.1); border:1px solid rgba(94,106,210,0.3);">🌊</div>
+      <div>
+        <h3>路线 3：扩散模型与 Flow Matching</h3>
+        <div class="route-sub">Diffusion Models & Conditional Flow Matching · 2023–2026</div>
+      </div>
+    </div>
+    <p>
+      <strong>核心思路：</strong>使用扩散模型或条件 flow matching 作为生成骨干，在语音和歌声数据上联合训练。
+      通过不同的条件化策略处理两种模式的差异。<br><br>
+      <strong>代表工作：</strong><br>
+      • <strong>NaturalSpeech 2</strong>：潜在扩散模型，44K 小时语音+歌唱数据，零样本歌唱合成（仅需语音提示）。<br>
+      • <strong>CoMoSpeech</strong>：一致性模型将扩散采样压缩为单步，推理速度比实时快 150 倍。<br>
+      • <strong>UniVoice</strong>（小米）：条件 flow matching + <span class="highlight">条件因子化</span>。内容、旋律、音色分别编码，
+        歌声用 MIDI 条件，语音用学习的空旋律 token 代替（近似旋律边缘化）。共享 Diffusion Transformer (DiT) 骨干。<br>
+      • <strong>Vevo2</strong>：AR 内容-风格建模 + flow-matching 声学建模，双 tokenizer 统一语音和歌声。<br><br>
+      <strong>优势：</strong>生成质量高；flow matching 训练稳定；条件灵活。<br>
+      <strong>局限：</strong>扩散模型推理慢（CoMoSpeech 用一致性模型解决）；联合训练需要平衡两种数据的损失。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2304.09116" target="_blank">NaturalSpeech 2 (2023)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2305.06908" target="_blank">CoMoSpeech (2023)</a>
+      <a class="paper-tag new" href="https://arxiv.org/abs/2606.05852" target="_blank">UniVoice (2026)</a>
+      <a class="paper-tag new" href="https://arxiv.org/abs/2508.16332" target="_blank">Vevo2 (2025)</a>
+    </div>
+  </div>
+
+  <!-- Route 4: LLM/Codec -->
+  <div class="route-card">
+    <div class="route-header">
+      <div class="icon" style="background: rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.3);">🤖</div>
+      <div>
+        <h3>路线 4：语音语言模型 (SLM) 与 Codec Token</h3>
+        <div class="route-sub">Speech Language Models & Codec Tokens · 2023–2026</div>
+      </div>
+    </div>
+    <p>
+      <strong>核心思路：</strong>将音频 tokenize 为离散码本 token，使用 LLM 的 next-token prediction 统一建模所有音频类型。
+      语音、歌声、音乐甚至声音效果都被表示为同一序列空间中的 token。<br><br>
+      <strong>代表工作：</strong><br>
+      • <strong>UniAudio</strong>：1B 参数，165K 小时，统一语音/声音/音乐/歌声 11 个任务。多尺度 Transformer 处理长序列。<br>
+      • <strong>Adapting SLM to SVS</strong>：1.7B TTS 预训练 SLM 适配 SVS，仅 135 小时歌唱数据。乐谱 token 化 + 多流 LM + flow matching。<br>
+      • <strong>VITA-QinYu</strong>：端到端 SLM，混合语音-文本范式 + 多码本音频 token，支持角色扮演 + 歌唱。15.8K 小时。<br>
+      • <strong>Bagpiper-TTS</strong>：自然语言引导通用语音合成，从 NL 提示推理意图生成描述，支持歌声合成。WER 1.7%。<br>
+      • <strong>VoxCPM2</strong>：2B 参数，200万+小时，层次扩散-自回归，30 语言。完全开源 Apache 2.0。<br><br>
+      <strong>优势：</strong>统一的序列建模范式；可通过指令/提示灵活控制；预训练知识可迁移到歌声；可扩展到超大规模。<br>
+      <strong>局限：</strong>离散 token 量化损失信息；长序列建模计算昂贵；歌唱数据稀缺限制歌声质量。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2310.00704" target="_blank">UniAudio (2023)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2512.14657" target="_blank">Adapting SLM to SVS (2025)</a>
+      <a class="paper-tag new" href="https://arxiv.org/abs/2605.06765" target="_blank">VITA-QinYu (2026)</a>
+      <a class="paper-tag new" href="https://arxiv.org/abs/2606.22811" target="_blank">Bagpiper-TTS (2026)</a>
+      <a class="paper-tag new" href="https://arxiv.org/abs/2606.06928" target="_blank">VoxCPM2 (2026)</a>
+    </div>
+  </div>
+
+  <!-- Route 5: Code-switching -->
+  <div class="route-card">
+    <div class="route-header">
+      <div class="icon" style="background: rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3);">🔄</div>
+      <div>
+        <h3>路线 5：语音-歌声码切换与隐式模式推断</h3>
+        <div class="route-sub">Speech-Singing Code-Switching & Implicit Mode Inference · 2026</div>
+      </div>
+    </div>
+    <p>
+      <strong>核心思路：</strong>不需要用户显式指定"说"还是"唱"，模型从文本上下文自动推断发声模式，
+        实现语音和歌声的自然无缝切换——就像人类在日常对话中偶尔哼唱一样。<br><br>
+      <strong>代表工作：</strong><br>
+      • <strong>UniVocal</strong>（科大讯飞）：统一语音-歌声码切换合成 (SCS)。从文本上下文隐式推断发声模式，
+        不依赖切换控制标签。两阶段课程学习：先训练竞争性 TTS 系统，再逐步获得 SCS 能力。
+        引入 Chain-of-Thought (CoT) 生成在内容生成前规划韵律，增强共情语音和歌唱旋律。<br>
+      • <strong>SingingSDS</strong>：级联式语音对话系统，用歌声而非语音回应，支持角色扮演和交互娱乐。<br><br>
+      <strong>优势：</strong>最接近自然人类行为；用户体验最自然；不需指定模式标签。<br>
+      <strong>局限：</strong>数据稀缺（需要语音-歌声混合标注数据）；模式推断不稳定；需要合成训练数据。
+    </p>
+    <div class="papers">
+      <a class="paper-tag new" href="https://arxiv.org/abs/2606.01677" target="_blank">UniVocal (2026)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2511.20972" target="_blank">SingingSDS (2025)</a>
+    </div>
+  </div>
+
+</section>
+
+<!-- Architecture Diagram -->
+<section>
+  <h2 class="section-title">典型架构对比图</h2>
+  <p class="section-desc">三种代表性统一架构的数据流对比：解耦路线 (Vevo2)、因子化条件路线 (UniVoice)、SLM 路线 (UniAudio)。</p>
+
+  <div class="grid-3">
+    <div>
+      <h3 style="font-size:16px; color:var(--text); margin-bottom:16px; text-align:center;">Vevo2 架构</h3>
+      <div class="arch-diagram">
+        <div class="arch-flow">
+          <div class="arch-row"><div class="arch-box arch-input">文本/歌词</div></div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-stage">AR 内容-风格建模</div></div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row">
+            <div class="arch-box arch-model">韵律 tokenizer</div>
+            <div class="arch-box arch-model">内容-风格 tokenizer</div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-clone">flow-matching 声学</div></div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-output">语音/歌声</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="font-size:16px; color:var(--text); margin-bottom:16px; text-align:center;">UniVoice 架构</h3>
+      <div class="arch-diagram">
+        <div class="arch-flow">
+          <div class="arch-row">
+            <div class="arch-box arch-input">内容编码</div>
+            <div class="arch-box arch-aux">旋律 (MIDI/∅)</div>
+            <div class="arch-box arch-clone">音色参考</div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-stage">条件因子化</div></div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-model">共享 DiT 骨干</div></div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-output">语音/歌声</div></div>
+          <div style="font-size:11px; color:var(--text-4); margin-top:8px; text-align:center;">
+            歌声: MIDI 旋律条件<br>
+            语音: 空旋律 token (旋律边缘化)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="font-size:16px; color:var(--text); margin-bottom:16px; text-align:center;">UniAudio 架构</h3>
+      <div class="arch-diagram">
+        <div class="arch-flow">
+          <div class="arch-row">
+            <div class="arch-box arch-input">文本</div>
+            <div class="arch-box arch-aux">乐谱</div>
+            <div class="arch-box arch-clone">音频提示</div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-stage">Codec Tokenize</div></div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-model">多尺度 Transformer<br>next-token prediction</div></div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-row"><div class="arch-box arch-output">语音/歌声/音乐</div></div>
+          <div style="font-size:11px; color:var(--text-4); margin-top:8px; text-align:center;">
+            1B 参数 · 165K 小时<br>11 任务统一
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Deep Dive -->
+<section id="deep-dive">
+  <h2 class="section-title">重点论文深度分析</h2>
+  <p class="section-desc">对 6 篇代表性论文进行技术细节深度解读，揭示其解决统一建模核心矛盾的方法。</p>
+
+  <!-- UniSyn -->
+  <div class="dive-card">
+    <div class="dive-header">
+      <div>
+        <h3>UniSyn</h3>
+        <div class="dive-meta">
+          <span class="meta-item">📅 2022.12</span>
+          <span class="meta-item">🏢 腾讯</span>
+          <span class="meta-item">📄 arXiv:2212.01546</span>
+        </div>
+      </div>
+    </div>
+    <div class="dive-body">
+      <p>
+        <strong>问题：</strong>现有统一 TTS+SVS 方法要么需要同一个人的语音和歌唱数据（数据获取困难），
+        要么使用级联的多任务模型（架构复杂）。UniSyn 要解决的是：如何用仅有语音或仅有歌唱数据就让一个人既说又唱。
+      </p>
+      <p>
+        <strong>方法：</strong>提出多条件变分自编码器 <code>MC-VAE</code>，构建两个独立的潜在子空间：
+        说话人相关子空间和风格相关子空间（"说"或"唱"）。通过这两个子空间的灵活组合，可以用仅语音数据训练的说话人嵌入
+        配合"唱"风格条件，生成该说话人的歌声。
+      </p>
+      <p>
+        <strong>关键创新：</strong>
+        ① <strong>guided-VAE</strong>：监督引导 VAE 学习有意义的潜在空间；<br>
+        ② <strong>音色扰动</strong> + <strong>Wasserstein 距离约束</strong>：进一步解耦说话人音色和说/唱风格，
+        防止风格信息泄漏到音色表征中。
+      </p>
+      <p>
+        <strong>结果：</strong>在 2 个说话人和 2 个歌手上实验证明，UniSyn 可以在没有对应训练数据的情况下
+        生成自然的语音和歌声，超越当时的 SOTA 端到端语音生成工作。
+      </p>
+      <div class="dive-tags">
+        <span class="tag tag-unified">统一框架</span>
+        <span class="tag tag-e2e">端到端</span>
+        <span class="tag tag-zeroshot">跨域迁移</span>
+        <span class="tag tag-vc">MC-VAE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vevo2 -->
+  <div class="dive-card">
+    <div class="dive-header">
+      <div>
+        <h3>Vevo2</h3>
+        <div class="dive-meta">
+          <span class="meta-item">📅 2025.08 (v3: 2026.03)</span>
+          <span class="meta-item">🏢 腾讯</span>
+          <span class="meta-item">📄 arXiv:2508.16332</span>
+        </div>
+      </div>
+    </div>
+    <div class="dive-body">
+      <p>
+        <strong>问题：</strong>统一语音和歌声生成的两个核心挑战——歌唱标注数据稀缺，以及语音和歌声对生成条件的要求冲突
+        （歌声需要显式旋律控制，语音韵律应自由推导）。
+      </p>
+      <p>
+        <strong>方法：</strong>引入两个创新的音频 tokenizer：<br>
+        ① <strong>统一无乐谱韵律 tokenizer</strong>：从语音、歌声甚至乐器声中捕获韵律和旋律，不依赖 MIDI 乐谱标注；<br>
+        ② <strong>统一内容-风格 tokenizer</strong>：编码语言内容、韵律和风格，同时实现音色解耦。<br>
+        架构为两阶段：<code>AR 内容-风格建模</code> → <code>flow-matching 声学建模</code>。
+      </p>
+      <p>
+        <strong>关键创新：</strong>
+        ① <strong>显式+隐式韵律学习</strong>：在 AR 模型的语音-歌声联合训练中，同时使用显式韵律条件和隐式韵律推导，
+        桥接两种发声模式的韵律差异；<br>
+        ② <strong>多目标后训练</strong>：设计结合可懂度和韵律相似性对齐的后训练任务，提升文本和韵律跟随能力。
+      </p>
+      <p>
+        <strong>核心发现：</strong>实验证明统一建模对语音和歌声<span class="highlight-emerald">相互增益</span> (mutual benefits)——
+        歌唱数据提升了语音韵律表现力，语音数据弥补了歌唱数据稀缺。Vevo2 在广泛的合成、转换和编辑任务上展现了强泛化能力。
+      </p>
+      <div class="dive-tags">
+        <span class="tag tag-unified">统一框架</span>
+        <span class="tag tag-ar">AR + Flow Matching</span>
+        <span class="tag tag-zeroshot">零样本</span>
+        <span class="tag tag-ssl">自监督</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- UniVoice -->
+  <div class="dive-card">
+    <div class="dive-header">
+      <div>
+        <h3>UniVoice (小米)</h3>
+        <div class="dive-meta">
+          <span class="meta-item">📅 2026.06</span>
+          <span class="meta-item">🏢 小米</span>
+          <span class="meta-item">📄 arXiv:2606.05852</span>
+        </div>
+      </div>
+    </div>
+    <div class="dive-body">
+      <p>
+        <strong>问题：</strong>如果用同一个条件表示旋律，歌声旋律条件会"过度约束"语音韵律，或语音韵律"破坏"歌声旋律精确性。
+        这是统一建模的根本矛盾。
+      </p>
+      <p>
+        <strong>方法：</strong>基于条件 flow matching 的统一框架。核心创新是<span class="highlight">条件因子化</span>——
+        将条件分解为内容 (content)、旋律 (melody)、音色 (timbre) 三个独立分量，由模态适当的编码器分别编码，
+        最终由共享的 <code>Diffusion Transformer (DiT)</code> 骨干消费。
+      </p>
+      <p>
+        <strong>关键创新——空旋律 token：</strong>
+        歌声用 MIDI 音符序列作为旋律条件，精确控制音高和节奏；<br>
+        语音用学习到的<span class="highlight">空旋律 token (null melody token)</span>代替旋律条件，
+        允许模型从语言和声学上下文中推断韵律。<br>
+        论文分析了空旋律 token 近似于<span class="highlight">旋律边缘化</span> (melody marginalization) 的条件 flow 理论解释。
+      </p>
+      <p>
+        <strong>结果：</strong>30K 小时语音 + 35K 小时歌唱数据训练。<br>
+        语音 PER 5.26%（可比 F5-TTS 5.21%、CosyVoice3 5.30%）；<br>
+        歌唱 PER 16.22%（<span class="highlight-emerald">优于 Vevo1.5 的 24.72%</span>）。
+      </p>
+      <div class="dive-tags">
+        <span class="tag tag-unified">统一框架</span>
+        <span class="tag tag-flow">Flow Matching</span>
+        <span class="tag tag-diffusion">DiT 骨干</span>
+        <span class="tag tag-zeroshot">零样本克隆</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- UniVocal -->
+  <div class="dive-card">
+    <div class="dive-header">
+      <div>
+        <h3>UniVocal</h3>
+        <div class="dive-meta">
+          <span class="meta-item">📅 2026.06</span>
+          <span class="meta-item">🏢 科大讯飞</span>
+          <span class="meta-item">📄 arXiv:2606.01677</span>
+        </div>
+      </div>
+    </div>
+    <div class="dive-body">
+      <p>
+        <strong>问题：</strong>现有系统要么只能单一模式生成（只说或只唱），要么依赖切换控制标签
+        (switching-control tags) 来指定何时说、何时唱。如何让模型从文本上下文自动推断？
+      </p>
+      <p>
+        <strong>方法：</strong>提出语音-歌声码切换 (SCS) 合成任务——模型从文本上下文<span class="highlight">隐式推断</span>发声模式，
+        实现语音和歌声的自然无缝切换，类似人类在对话中偶尔哼唱。
+      </p>
+      <p>
+        <strong>关键创新：</strong>
+        ① <strong>两阶段课程学习</strong>：先训练竞争性 TTS 系统，再逐步获得 SCS 能力，数据高效；<br>
+        ② <strong>可扩展数据合成管线</strong>：生成语义和声学上都自然的码切换训练数据；<br>
+        ③ <strong>SCSBench</strong>：多场景基准测试集；<br>
+        ④ <strong>CoT 生成</strong>：Chain-of-Thought 生成在内容生成前规划韵律，增强共情语音和歌唱旋律。
+      </p>
+      <p>
+        <strong>结果：</strong>在 SCSBench 上达到 SOTA，同时在常规语音和歌声任务上保持竞争力。代码和数据集已开源。
+      </p>
+      <div class="dive-tags">
+        <span class="tag tag-unified">码切换</span>
+        <span class="tag tag-llm">CoT 生成</span>
+        <span class="tag tag-opensource">开源</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- VITA-QinYu -->
+  <div class="dive-card">
+    <div class="dive-header">
+      <div>
+        <h3>VITA-QinYu</h3>
+        <div class="dive-meta">
+          <span class="meta-item">📅 2026.05</span>
+          <span class="meta-item">🏢 上海交通大学</span>
+          <span class="meta-item">📄 arXiv:2605.06765</span>
+        </div>
+      </div>
+    </div>
+    <div class="dive-body">
+      <p>
+        <strong>问题：</strong>现有端到端语音语言模型 (SLM) 聚焦于自然对话，缺乏角色扮演和歌唱等表达性能力。
+      </p>
+      <p>
+        <strong>方法：</strong>首个支持角色扮演和歌唱的端到端表达性 SLM。采用混合语音-文本范式，
+        扩展交错文本-音频建模并使用多码本音频 token。
+      </p>
+      <p>
+        <strong>设计亮点：</strong>多码本音频 token 提供更丰富的副语言表征，同时保持模态间清晰分离以避免干扰。
+        构建了 15.8K 小时的自然对话、角色扮演和歌唱数据生成管线。
+      </p>
+      <p>
+        <strong>结果：</strong>角色扮演基准超越同类 SLM 7 个百分点；歌唱 MOS 超越同类模型 0.13 分（5 分制）。
+        同时对话准确性和流畅性达到 SOTA。<span class="highlight-emerald">完全开源</span>，提供流式和全双工交互 demo。
+      </p>
+      <div class="dive-tags">
+        <span class="tag tag-llm">SLM</span>
+        <span class="tag tag-e2e">端到端</span>
+        <span class="tag tag-opensource">开源</span>
+        <span class="tag tag-zeroshot">角色扮演+歌唱</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adapting SLM to SVS -->
+  <div class="dive-card">
+    <div class="dive-header">
+      <div>
+        <h3>Adapting Speech Language Model to SVS</h3>
+        <div class="dive-meta">
+          <span class="meta-item">📅 2025.12</span>
+          <span class="meta-item">🏢 CMU (Watanabe Lab)</span>
+          <span class="meta-item">📄 arXiv:2512.14657</span>
+        </div>
+      </div>
+    </div>
+    <div class="dive-body">
+      <p>
+        <strong>问题：</strong>SLM 已成为 TTS、语音增强、ASR 的统一范式，但其对歌声合成的泛化能力尚未探索。
+      </p>
+      <p>
+        <strong>方法：</strong>将 1.7B 参数的 TTS 预训练 SLM 适配到 SVS，仅使用 135 小时合成歌唱语料 <code>ACE-Opencpop</code>。
+        基于 <code>ESPNet-SpeechLM</code> 的适配流程：<br>
+        ① 乐谱条件和歌唱波形的 token 化；<br>
+        ② 多流语言模型 token 预测；<br>
+        ③ 条件 flow matching 的 mel 频谱图生成；<br>
+        ④ mel-to-wave vocoder。
+      </p>
+      <p>
+        <strong>意义：</strong>证明了大规模 TTS 预训练知识可以迁移到歌声合成，仅用极少量的歌唱数据
+        (<span class="highlight">135 小时</span>) 即可达到领先的离散 token SVS 模型水平。
+        这为"先 TTS 预训练 → 再 SVS 适配"的统一路线提供了实证支持。
+      </p>
+      <div class="dive-tags">
+        <span class="tag tag-llm">SLM 适配</span>
+        <span class="tag tag-ar">多流 LM</span>
+        <span class="tag tag-flow">Flow Matching</span>
+        <span class="tag tag-zeroshot">预训练迁移</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- Comparison Table -->
+<section id="comparison">
+  <h2 class="section-title">统一模型对比</h2>
+  <p class="section-desc">各统一模型在技术路线、训练数据规模、关键创新和开源状态上的横向对比。</p>
+
+  <div class="table-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>模型</th>
+          <th>年份</th>
+          <th>技术路线</th>
+          <th>训练数据</th>
+          <th>关键创新</th>
+          <th>开源</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="model-name">Learning Singing<br>From Speech</td>
+          <td>2019</td>
+          <td>共享嵌入</td>
+          <td>语音+歌唱</td>
+          <td>说话人嵌入跨域共享</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">Karaoker</td>
+          <td>2022</td>
+          <td>共享嵌入</td>
+          <td>仅语音</td>
+          <td>无需乐谱，语音数据训练 SVS</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">UniSyn</td>
+          <td>2022</td>
+          <td>解耦表征</td>
+          <td>语音/歌唱(可选)</td>
+          <td>MC-VAE 双子空间 + Wasserstein 解耦</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">NANSY++</td>
+          <td>2022</td>
+          <td>自监督解耦</td>
+          <td>无标注</td>
+          <td>自监督骨干 + 部分特征建模</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">Make-A-Voice</td>
+          <td>2023</td>
+          <td>离散表征</td>
+          <td>无标注(主干)</td>
+          <td>三层粗到细离散表征</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">NaturalSpeech 2</td>
+          <td>2023</td>
+          <td>潜在扩散</td>
+          <td>44K 小时</td>
+          <td>语音提示零样本歌唱</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">CoMoSpeech</td>
+          <td>2023</td>
+          <td>一致性模型</td>
+          <td>语音+歌唱</td>
+          <td>单步扩散，150x 实时速度</td>
+          <td class="partial">部分</td>
+        </tr>
+        <tr>
+          <td class="model-name">UniAudio</td>
+          <td>2023</td>
+          <td>LLM/Codec</td>
+          <td>165K 小时/1B 参数</td>
+          <td>11 任务统一音频生成</td>
+          <td class="yes">是</td>
+        </tr>
+        <tr>
+          <td class="model-name">Seed-Music</td>
+          <td>2024</td>
+          <td>AR + 扩散</td>
+          <td>未公开</td>
+          <td>工业级受控音乐生成</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">Vevo</td>
+          <td>2025</td>
+          <td>AR + Flow Matching</td>
+          <td>60K 小时</td>
+          <td>VQ-VAE 瓶颈自监督解耦</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">Everyone-Can-Sing</td>
+          <td>2025</td>
+          <td>扩散</td>
+          <td>语音+歌唱混合</td>
+          <td>语音参考零样本歌声克隆</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">Step-Audio</td>
+          <td>2025</td>
+          <td>多模态 LM</td>
+          <td>130B 参数</td>
+          <td>指令驱动方言/情感/歌唱/RAP</td>
+          <td class="yes">是</td>
+        </tr>
+        <tr>
+          <td class="model-name">Vevo2</td>
+          <td>2025</td>
+          <td>AR + Flow Matching</td>
+          <td>语音+歌唱</td>
+          <td>双 tokenizer + 显/隐韵律学习</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">Adapting SLM<br>to SVS</td>
+          <td>2025</td>
+          <td>SLM 适配</td>
+          <td>1.7B 参数/135h 歌唱</td>
+          <td>TTS 预训练 → SVS 适配</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">VITA-QinYu</td>
+          <td>2026</td>
+          <td>端到端 SLM</td>
+          <td>15.8K 小时</td>
+          <td>角色扮演 + 歌唱 SLM</td>
+          <td class="yes">是</td>
+        </tr>
+        <tr>
+          <td class="model-name">UniVoice<br>(小米)</td>
+          <td>2026</td>
+          <td>Flow Matching</td>
+          <td>65K 小时</td>
+          <td>条件因子化 + 空旋律 token</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">UniVocal</td>
+          <td>2026</td>
+          <td>码切换 SLM</td>
+          <td>合成数据</td>
+          <td>文本上下文隐式推断模式</td>
+          <td class="yes">是</td>
+        </tr>
+        <tr>
+          <td class="model-name">VoxCPM2</td>
+          <td>2026</td>
+          <td>层次扩散-AR</td>
+          <td>2B/200万+小时</td>
+          <td>30 语言 + 自然语言声音设计</td>
+          <td class="yes">是</td>
+        </tr>
+        <tr>
+          <td class="model-name">Bagpiper-TTS</td>
+          <td>2026</td>
+          <td>NL 引导 SLM</td>
+          <td>未公开</td>
+          <td>自然语言推理意图 → 通用合成</td>
+          <td class="no">否</td>
+        </tr>
+        <tr>
+          <td class="model-name">UniSinger</td>
+          <td>2026</td>
+          <td>多模态扩散</td>
+          <td>未公开</td>
+          <td>统一歌曲生成 + SVC + 伴奏共生成</td>
+          <td class="no">否</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top: 24px;">
+    <strong>趋势总结：</strong>
+    开源比例从 2019-2022 年的几乎为零，到 2025-2026 年的 5/8 模型开源（VITA-QinYu、UniVocal、VoxCPM2、Step-Audio、UniAudio），
+    反映了统一语音-歌声生成从学术探索走向开源生态的趋势。训练数据规模从早期的几 K 小时增长到 VoxCPM2 的 200 万+小时。
+  </div>
+</section>
+
+<!-- Challenges -->
+<section id="challenges">
+  <h2 class="section-title">关键挑战与未解问题</h2>
+  <p class="section-desc">统一 TTS+SVS 建模仍面临的核心挑战。</p>
+
+  <div class="challenge-card">
+    <h3>① 旋律条件的统一困境 <span class="challenge-tag">核心矛盾</span></h3>
+    <p>
+      歌声需要显式旋律控制（MIDI/乐谱），语音韵律应从语言推导而非受旋律约束。
+      如何用同一条件表示同时满足两种需求是根本矛盾。UniVoice 用"空旋律 token"近似旋律边缘化，
+      Vevo2 用"无乐谱韵律 tokenizer"绕过 MIDI 依赖——但两种方案都有局限：前者歌唱控制精度依赖 MIDI 质量，
+      后者牺牲了精确的音符级控制。最优解可能需要"条件可选化"设计：同一模型在给定 MIDI 时精确控制旋律，
+      不给 MIDI 时自由推导韵律。
+    </p>
+  </div>
+
+  <div class="challenge-card">
+    <h3>② 歌唱数据稀缺 <span class="challenge-tag">数据瓶颈</span></h3>
+    <p>
+      语音数据可达百万小时级（VoxCPM2: 200 万+小时），但高质量歌唱数据仍以百小时级计
+      (ACE-Opencpop: 135 小时)。Adapting SLM to SVS 证明少量歌唱数据 + 大规模 TTS 预训练可适配，
+      但"多少歌声数据足够"仍是开放问题。Make-A-Voice 和 NANSY++ 的自监督路线可减少标注需求，
+      但歌唱的技巧标注（颤音、花腔等）仍需人工。
+    </p>
+  </div>
+
+  <div class="challenge-card">
+    <h3>③ 音色一致性 <span class="challenge-tag">评估难题</span></h3>
+    <p>
+      统一模型需要保证同一说话人在说和唱时音色一致。但歌唱的音色本身会因音高、力度、技巧而变化
+      (歌手在高音区自然变亮)，这使得"音色一致性"的评估标准模糊。现有工作多用 MOS 评分，
+      缺乏定量的跨域音色一致性指标。OneVoice 使用 MoE 设计分离共享知识和场景特有表达，是一种有前景的方向。
+    </p>
+  </div>
+
+  <div class="challenge-card">
+    <h3>④ 演唱技巧建模 <span class="challenge-tag">技术空白</span></h3>
+    <p>
+      歌声合成需要建模颤音 (vibrato)、花腔、转音、气声、张力等演唱技巧，这些在语音合成中不存在。
+      统一模型如何在共享骨干上同时支持这些歌声独有的技巧？S²Voice（SVCC 2025 冠军）在 Vevo 基线上
+      加入风格嵌入和 DPO 优化，展示了风格控制的方向，但技巧级精细控制仍是未解难题。
+    </p>
+  </div>
+
+  <div class="challenge-card">
+    <h3>⑤ 推理效率 <span class="challenge-tag">工程挑战</span></h3>
+    <p>
+      扩散模型和大型 SLM 的推理速度是实际部署的瓶颈。CoMoSpeech 用一致性模型实现单步采样（150x 实时），
+      VoxCPM2 用层次扩散-自减少少步推理。但多码本离散 token + 大型 Transformer 的组合仍比专用 TTS/SVS 模型慢。
+      在统一模型的质量-速度权衡上，还有很大优化空间。
+    </p>
+  </div>
+
+  <div class="challenge-card">
+    <h3>⑥ 评估标准缺失 <span class="challenge-tag">标准缺失</span></h3>
+    <p>
+      TTS 用 WER/PER 评估可懂度，SVS 用音乐性 MOS 评估歌唱质量——但统一模型需要同时评估两者，
+      且需要跨域一致性指标。UniVocal 提出的 SCSBench 是首个码切换基准，但覆盖面有限。
+      建立标准化的统一 TTS+SVS 评估基准是亟待解决的社区需求。
+    </p>
+  </div>
+
+</section>
+
+<!-- Paper List -->
+<section id="papers">
+  <h2 class="section-title">完整论文列表</h2>
+  <p class="section-desc">本报告引用的 25+ 篇 arXiv 论文，按技术路线分类。</p>
+
+  <div class="table-wrap">
+    <table class="paper-table">
+      <thead>
+        <tr>
+          <th>arXiv ID</th>
+          <th>标题</th>
+          <th>机构</th>
+          <th>年份</th>
+          <th>路线</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/1912.10128" target="_blank">1912.10128</a></td>
+          <td><span class="paper-title">Learning Singing From Speech</span><br><span class="paper-authors">Liqiang Zhang et al. (Tencent)</span></td>
+          <td>腾讯</td>
+          <td>2019</td>
+          <td><span class="tag tag-unified">共享嵌入</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2204.04127" target="_blank">2204.04127</a></td>
+          <td><span class="paper-title">Karaoker: Alignment-free SVS with speech training data</span><br><span class="paper-authors">Kakoulidis et al. (Innovation Center)</span></td>
+          <td>Innovation Center</td>
+          <td>2022</td>
+          <td><span class="tag tag-unified">共享嵌入</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2212.01546" target="_blank">2212.01546</a></td>
+          <td><span class="paper-title">UniSyn: An End-to-End Unified Model for TTS and SVS</span><br><span class="paper-authors">Yi Lei, Shan Yang et al. (Tencent)</span></td>
+          <td>腾讯</td>
+          <td>2022</td>
+          <td><span class="tag tag-unified">解耦表征</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2211.09407" target="_blank">2211.09407</a></td>
+          <td><span class="paper-title">NANSY++: Unified Voice Synthesis with Neural Analysis and Synthesis</span><br><span class="paper-authors">Hyeong-Seok Choi et al.</span></td>
+          <td>韩国团队</td>
+          <td>2022</td>
+          <td><span class="tag tag-ssl">自监督</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2305.19269" target="_blank">2305.19269</a></td>
+          <td><span class="paper-title">Make-A-Voice: Unified Voice Synthesis With Discrete Representation</span><br><span class="paper-authors">Rongjie Huang et al. (Tencent)</span></td>
+          <td>腾讯</td>
+          <td>2023</td>
+          <td><span class="tag tag-codec">离散表征</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2305.06908" target="_blank">2305.06908</a></td>
+          <td><span class="paper-title">CoMoSpeech: One-Step Speech and Singing Voice Synthesis via Consistency Model</span><br><span class="paper-authors">Zhen Ye et al.</span></td>
+          <td>Imperial College</td>
+          <td>2023</td>
+          <td><span class="tag tag-diffusion">一致性模型</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2304.09116" target="_blank">2304.09116</a></td>
+          <td><span class="paper-title">NaturalSpeech 2: Latent Diffusion Models are Natural and Zero-Shot Speech and Singing Synthesizers</span><br><span class="paper-authors">Kai Shen et al. (MSRA)</span></td>
+          <td>微软</td>
+          <td>2023</td>
+          <td><span class="tag tag-diffusion">潜在扩散</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2310.00704" target="_blank">2310.00704</a></td>
+          <td><span class="paper-title">UniAudio: An Audio Foundation Model Toward Universal Audio Generation</span><br><span class="paper-authors">Dongchao Yang et al. (MSRA/Tsinghua)</span></td>
+          <td>微软/清华</td>
+          <td>2023</td>
+          <td><span class="tag tag-llm">LLM/Codec</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2409.09214" target="_blank">2409.09214</a></td>
+          <td><span class="paper-title">Seed-Music: A Unified Framework for High Quality and Controlled Music Generation</span><br><span class="paper-authors">Ye Bai et al. (ByteDance)</span></td>
+          <td>字节跳动</td>
+          <td>2024</td>
+          <td><span class="tag tag-ar">AR + 扩散</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2409.06029" target="_blank">2409.06029</a></td>
+          <td><span class="paper-title">SongCreator: Lyrics-based Universal Song Generation</span><br><span class="paper-authors">Shun Lei et al. (Tsinghua)</span></td>
+          <td>清华</td>
+          <td>2024</td>
+          <td><span class="tag tag-llm">双序列 LM</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2501.13870" target="_blank">2501.13870</a></td>
+          <td><span class="paper-title">Everyone-Can-Sing: Zero-Shot SVS and Conversion with Speech Reference</span><br><span class="paper-authors">Shuqi Dai et al. (CMU/Tencent)</span></td>
+          <td>CMU/腾讯</td>
+          <td>2025</td>
+          <td><span class="tag tag-diffusion">扩散</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2502.07243" target="_blank">2502.07243</a></td>
+          <td><span class="paper-title">Vevo: Controllable Zero-Shot Voice Imitation with Self-Supervised Disentanglement</span><br><span class="paper-authors">Xueyao Zhang et al. (Tencent)</span></td>
+          <td>腾讯</td>
+          <td>2025</td>
+          <td><span class="tag tag-ssl">自监督解耦</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2502.11946" target="_blank">2502.11946</a></td>
+          <td><span class="paper-title">Step-Audio: Unified Understanding and Generation in Intelligent Speech Interaction</span><br><span class="paper-authors">StepFun (阶跃星辰)</span></td>
+          <td>阶跃星辰</td>
+          <td>2025</td>
+          <td><span class="tag tag-llm">多模态 LM</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2508.16332" target="_blank">2508.16332</a></td>
+          <td><span class="paper-title">Vevo2: A Unified and Controllable Framework for Speech and Singing Voice Generation</span><br><span class="paper-authors">Xueyao Zhang et al. (Tencent)</span></td>
+          <td>腾讯</td>
+          <td>2025</td>
+          <td><span class="tag tag-ar">AR + Flow</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2508.02038" target="_blank">2508.02038</a></td>
+          <td><span class="paper-title">Marco-Voice Technical Report</span><br><span class="paper-authors">Marco (Khan's Academy?)</span></td>
+          <td>Marco</td>
+          <td>2025</td>
+          <td><span class="tag tag-diffusion">统一框架</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2512.14657" target="_blank">2512.14657</a></td>
+          <td><span class="paper-title">Adapting Speech Language Model to Singing Voice Synthesis</span><br><span class="paper-authors">Yiwen Zhao et al. (CMU)</span></td>
+          <td>CMU</td>
+          <td>2025</td>
+          <td><span class="tag tag-llm">SLM 适配</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2512.20151" target="_blank">2512.20151</a></td>
+          <td><span class="paper-title">QuarkAudio Technical Report</span><br><span class="paper-authors">Chengwei Liu et al.</span></td>
+          <td>Quark</td>
+          <td>2025</td>
+          <td><span class="tag tag-llm">AR LM</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2601.13629" target="_blank">2601.13629</a></td>
+          <td><span class="paper-title">S²Voice: Style-Aware Autoregressive Modeling for Singing Style Conversion</span><br><span class="paper-authors">Ziqian Wang et al. (SVCC 2025 Winner)</span></td>
+          <td>西工大</td>
+          <td>2026</td>
+          <td><span class="tag tag-ar">AR + Flow</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2601.18094" target="_blank">2601.18094</a></td>
+          <td><span class="paper-title">OneVoice: One Model, Triple Scenarios-Towards Unified Zero-shot Voice Conversion</span><br><span class="paper-authors">Zhichao Wang et al. (China Mobile)</span></td>
+          <td>中国移动</td>
+          <td>2026</td>
+          <td><span class="tag tag-flow">Continuous LM</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2605.06765" target="_blank">2605.06765</a></td>
+          <td><span class="paper-title">VITA-QinYu: Expressive Spoken Language Model for Role-Playing and Singing</span><br><span class="paper-authors">Jiacheng Xu et al. (SJTU)</span></td>
+          <td>上海交大</td>
+          <td>2026</td>
+          <td><span class="tag tag-llm">端到端 SLM</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.01677" target="_blank">2606.01677</a></td>
+          <td><span class="paper-title">UniVocal: Unified Speech-Singing Code-Switching Synthesis</span><br><span class="paper-authors">Yufei Shi et al. (iFlytek)</span></td>
+          <td>科大讯飞</td>
+          <td>2026</td>
+          <td><span class="tag tag-llm">码切换</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.05852" target="_blank">2606.05852</a></td>
+          <td><span class="paper-title">UniVoice: A Unified Model for Speech and Singing Voice Generation</span><br><span class="paper-authors">Junjie Zheng et al. (Xiaomi)</span></td>
+          <td>小米</td>
+          <td>2026</td>
+          <td><span class="tag tag-flow">Flow Matching</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.06928" target="_blank">2606.06928</a></td>
+          <td><span class="paper-title">VoxCPM2 Technical Report</span><br><span class="paper-authors">OpenBMB/Tsinghua</span></td>
+          <td>清华/OpenBMB</td>
+          <td>2026</td>
+          <td><span class="tag tag-llm">层次扩散-AR</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.07015" target="_blank">2606.07015</a></td>
+          <td><span class="paper-title">Towards Unified Song Generation and Singing Voice Conversion with Accompaniment Co-Generation</span><br><span class="paper-authors">Ziyu Zhang et al. (NWPU)</span></td>
+          <td>西工大</td>
+          <td>2026</td>
+          <td><span class="tag tag-diffusion">多模态扩散</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2606.22811" target="_blank">2606.22811</a></td>
+          <td><span class="paper-title">Bagpiper-TTS: Natural Language Guided Universal Speech Synthesis</span><br><span class="paper-authors">Jinchuan Tian et al. (CMU)</span></td>
+          <td>CMU</td>
+          <td>2026</td>
+          <td><span class="tag tag-llm">NL 引导</span></td>
+        </tr>
+        <tr>
+          <td><a class="arxiv-link" href="https://arxiv.org/abs/2607.13278" target="_blank">2607.13278</a></td>
+          <td><span class="paper-title">Adapting Diffusion-Based Music Synthesis to Speech and Singing Voice Conversion</span><br><span class="paper-authors">Ben Maman et al. (Fraunhofer)</span></td>
+          <td>Fraunhofer</td>
+          <td>2026</td>
+          <td><span class="tag tag-diffusion">跨域适配</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top: 24px;">
+    <strong>补充参考：</strong>以下论文虽非直接统一 TTS+SVS，但对理解领域有重要价值：<br>
+    • <a class="arxiv-link" href="https://arxiv.org/abs/2403.03100" target="_blank">NaturalSpeech 3</a> (2024) — 因子化编解码与扩散<br>
+    • <a class="arxiv-link" href="https://arxiv.org/abs/2511.20972" target="_blank">SingingSDS</a> (2025) — 歌声对话系统<br>
+    • <a class="arxiv-link" href="https://arxiv.org/abs/2511.21045" target="_blank">CartoonSing</a> (2025) — 人/非人音色统一<br>
+    • <a class="arxiv-link" href="https://arxiv.org/abs/2510.04593" target="_blank">UniVoice (ASR+TTS)</a> (2025) — 识别+生成统一<br>
+    • <a class="arxiv-link" href="https://arxiv.org/abs/2601.13910" target="_blank">Synthetic Singers (综述)</a> (2026) — SVS 深度学习综述
+  </div>
+</section>
+
+<!-- Conclusion -->
+<section>
+  <h2 class="section-title">总结与展望</h2>
+  <p class="section-desc">统一 TTS+SVS 建模的当前状态与未来方向。</p>
+
+  <div class="callout">
+    <strong>当前状态：已可行，但尚未成熟。</strong>
+    从 2019 年的 Learning Singing From Speech 到 2026 年的 UniVoice、VITA-QinYu、VoxCPM2，
+    统一 TTS+SVS 建模已从概念验证发展为多技术路线并行的活跃研究领域。
+    腾讯 (Vevo2, UniSyn, Make-A-Voice)、微软 (NaturalSpeech 2, UniAudio)、小米 (UniVoice)、
+    CMU (Adapting SLM, Bagpiper-TTS)、上海交大 (VITA-QinYu)、科大讯飞 (UniVocal)、
+    清华/OpenBMB (VoxCPM2) 等机构均有重要贡献。
+  </div>
+
+  <div class="grid-2" style="margin-top: 24px;">
+    <div class="card">
+      <h3>✅ 已解决的问题</h3>
+      <p>
+        ① 统一架构可行——AR + Flow Matching 的两阶段设计 (Vevo2) 被证明有效<br>
+        ② 语音数据可辅助歌声——自监督预训练 + 少量歌唱微调即可 (Adapting SLM)<br>
+        ③ 条件冲突可调和——UniVoice 的空旋律 token 提供了优雅解法<br>
+        ④ 开源生态初现——VITA-QinYu、UniVocal、VoxCPM2、UniAudio 已开源<br>
+        ⑤ 码切换可行——UniVocal 证明文本上下文可隐式推断发声模式
+      </p>
+    </div>
+    <div class="card">
+      <h3>❌ 未解决的问题</h3>
+      <p>
+        ① 精确旋律控制与自由韵律的完美统一——尚无方案同时满足两者<br>
+        ② 演唱技巧的精细控制——颤音、花腔、转音等建模仍薄弱<br>
+        ③ 统一评估基准——缺乏标准化的 TTS+SVS 联合评估<br>
+        ④ 推理效率——大型 SLM 仍比专用模型慢<br>
+        ⑤ 歌唱数据的长尾覆盖——小语种、特殊风格歌唱数据严重不足
+      </p>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top: 24px;">
+    <strong>未来方向预测：</strong><br>
+    ① <strong>SLM 路线将成为主流</strong>——大规模 TTS 预训练 + 歌唱适配的路线已被 Adapting SLM 和 VITA-QinYu 验证，
+    随着开源大模型 (VoxCPM2 2B/200万+小时) 的出现，这一路线的门槛将大幅降低。<br>
+    ② <strong>自然语言控制统一</strong>——Bagpiper-TTS 展示了"自然语言→意图推理→统一合成"的范式，
+    未来用户可能用一句话控制"说还是唱、唱什么旋律、什么情感"。<br>
+    ③ <strong>跨域统一</strong>——从语音+歌声扩展到语音+歌声+音乐+声音效果的完全统一 (UniAudio, QuarkAudio)，
+    最终实现通用音频生成。<br>
+    ④ <strong>条件可选化设计</strong>——解决旋律条件统一困境的可能方向：同一模型在给定 MIDI 时精确控制，
+    不给 MIDI 时自由推导，类似于条件 dropout 或 classifier-free guidance 的思路。
+  </div>
+
+  <div class="callout warn" style="margin-top: 24px;">
+    <strong>对你项目的启示：</strong> 你的 SVS 调研项目关注"曲谱歌声合成+歌声克隆"。从统一模型调研来看：<br>
+    ① <strong>Vevo2 和 UniVoice</strong> 是最直接相关的参考——它们展示了如何用统一框架同时处理语音和歌声，
+    且支持零样本克隆。你已有的曲谱标注数据可以作为 MIDI 条件输入。<br>
+    ② <strong>Adapting SLM to SVS</strong> 的路线值得重点关注——先在大量语音数据上预训练 TTS 模型，
+    再用你的歌唱数据适配，可以极大降低对歌唱数据量的需求。<br>
+    ③ <strong>VITA-QinYu 和 UniVocal</strong> 开源且支持歌声——可以直接作为基线系统或参考实现。
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<footer>
+  <p>统一语音与歌声合成模型调研 · Unified TTS+SVS Survey · 由 Hermes Agent 生成 · 2026.08</p>
+  <p style="margin-top: 8px;"><a href="../index.html">← 返回首页</a> · <a href="https://arxiv.org" target="_blank">arXiv</a></p>
+</footer>
+
+</div>
+
+</body>
+</html>
