@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero-Shot SVC 歌声转换评估指标调研 · Evaluation Metrics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090a;
+  --panel: #0f1011;
+  --surface: #191a1b;
+  --surface-2: #28282c;
+  --text: #f7f8f8;
+  --text-2: #d0d6e0;
+  --text-3: #8a8f98;
+  --text-4: #62666d;
+  --accent: #5e6ad2;
+  --accent-bright: #7170ff;
+  --accent-hover: #828fff;
+  --green: #27a644;
+  --emerald: #10b981;
+  --orange: #fb923c;
+  --rose: #fb7185;
+  --cyan: #22d3ee;
+  --amber: #fbbf24;
+  --violet: #a78bfa;
+  --border: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.05);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter','Noto Sans SC', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+code, .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,9,10,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 24px;
+  flex-wrap: wrap;
+}
+nav .logo { font-weight: 600; font-size: 15px; color: var(--text); letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+nav .logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-bright); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+nav ul { display: flex; list-style: none; gap: 20px; flex: 1; flex-wrap: wrap; }
+nav a { color: var(--text-3); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+nav a:hover { color: var(--text); }
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.hero { padding: 100px 0 80px; text-align: left; }
+.hero .eyebrow { display: inline-block; font-size: 12px; font-weight: 500; color: var(--accent-bright); background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3); padding: 4px 10px; border-radius: 9999px; margin-bottom: 24px; }
+.hero h1 { font-size: 48px; font-weight: 600; color: var(--text); letter-spacing: -1.08px; line-height: 1.05; margin-bottom: 20px; }
+.hero .subtitle { font-size: 18px; color: var(--text-3); line-height: 1.6; max-width: 640px; }
+.hero .meta { margin-top: 32px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--text-4); }
+.hero .meta span { display: flex; align-items: center; gap: 6px; }
+.hero .meta .badge { padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); color: var(--text-3); }
+
+section { padding: 64px 0; }
+.section-title { font-size: 32px; font-weight: 600; color: var(--text); letter-spacing: -0.704px; margin-bottom: 12px; }
+.section-desc { font-size: 16px; color: var(--text-3); margin-bottom: 40px; max-width: 720px; }
+
+.card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 16px; transition: border-color 0.2s, background 0.2s; }
+.card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
+.card h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.2px; }
+.card p { font-size: 14px; color: var(--text-3); line-height: 1.6; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } .hero h1 { font-size: 36px; } }
+
+/* Metric card */
+.metric-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+.metric-card .metric-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.metric-card .icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.metric-card h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.metric-card .metric-sub { font-size: 13px; color: var(--text-4); font-family: 'JetBrains Mono', monospace; }
+.metric-card p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.metric-card .papers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.metric-card .paper-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; background: rgba(94,106,210,0.08); border: 1px solid rgba(94,106,210,0.2); color: var(--accent-hover); text-decoration: none; transition: all 0.2s; }
+.metric-card .paper-tag:hover { background: rgba(94,106,210,0.15); border-color: rgba(94,106,210,0.4); }
+
+/* Summary table */
+.metric-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.metric-table th { text-align: left; font-weight: 500; color: var(--text-3); padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-table td { padding: 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-2); vertical-align: top; }
+.metric-table tr:hover td { background: rgba(255,255,255,0.02); }
+.metric-table .arxiv-link { font-family: 'JetBrains Mono', monospace; color: var(--accent-hover); text-decoration: none; font-size: 12px; }
+.metric-table .arxiv-link:hover { text-decoration: underline; }
+.metric-table .paper-name { color: var(--text); font-weight: 500; }
+
+/* Dimension card */
+.dimension-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+.dimension-card .dim-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.dimension-card .icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.dimension-card h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.dimension-card .dim-sub { font-size: 13px; color: var(--text-4); }
+.dimension-card p { font-size: 14px; color: var(--text-3); line-height: 1.7; margin-bottom: 12px; }
+.dimension-card .metric-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.dimension-card .metric-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; }
+
+/* Tag colors */
+.tag-subjective { background: rgba(251,113,133,0.08); border:1px solid rgba(251,113,133,0.25); color:#fb7185; }
+.tag-objective { background: rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.25); color:#22d3ee; }
+.tag-timbre { background: rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.25); color:#a78bfa; }
+.tag-pitch { background: rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); color:#fbbf24; }
+.tag-content { background: rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); color:#10b981; }
+.tag-quality { background: rgba(94,106,210,0.08); border:1px solid rgba(94,106,210,0.25); color:#7170ff; }
+.tag-leakage { background: rgba(251,146,60,0.08); border:1px solid rgba(251,146,60,0.25); color:#fb923c; }
+
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 40px 0; }
+@media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+.stat { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; }
+.stat .num { font-size: 36px; font-weight: 700; color: var(--text); letter-spacing: -1px; }
+.stat .label { font-size: 12px; color: var(--text-4); margin-top: 4px; }
+
+footer { border-top: 1px solid var(--border-subtle); padding: 48px 0 32px; text-align: center; color: var(--text-4); font-size: 13px; }
+footer a { color: var(--text-3); text-decoration: none; }
+footer a:hover { color: var(--accent-bright); }
+
+.callout { background: rgba(94,106,210,0.06); border: 1px solid rgba(94,106,210,0.2); border-radius: 8px; padding: 20px 24px; margin: 24px 0; font-size: 14px; color: var(--text-2); line-height: 1.7; }
+.callout strong { color: var(--text); }
+.callout.warn { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.2); }
+.callout.warn strong { color: var(--amber); }
+
+.divider { height: 1px; background: var(--border-subtle); margin: 64px 0; }
+
+.highlight { color: var(--accent-bright); font-weight: 500; }
+.highlight-emerald { color: var(--emerald); font-weight: 500; }
+.highlight-rose { color: var(--rose); font-weight: 500; }
+.highlight-amber { color: var(--amber); font-weight: 500; }
+.highlight-violet { color: var(--violet); font-weight: 500; }
+
+.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span> Research Hub</div>
+  <ul>
+    <li><a href="../index.html">← 返回主页</a></li>
+    <li><a href="#subjective">主观指标</a></li>
+    <li><a href="#objective">客观指标</a></li>
+    <li><a href="#dimensions">评估维度</a></li>
+    <li><a href="#summary">汇总表</a></li>
+    <li><a href="#notes">注意事项</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+<!-- Hero -->
+<div class="hero">
+  <span class="eyebrow">Zero-Shot SVC · Evaluation Metrics</span>
+  <h1>Zero-Shot 歌声转换评估指标调研</h1>
+  <p class="subtitle">
+    系统梳理 zero-shot 歌声转换 (SVC) 领域的主观与客观评估指标，涵盖音色相似度、旋律准确度、内容保真度、音质自然度等核心维度。
+    所有指标均从论文正文实验章节提取，标注具体 arXiv ID 出处。
+  </p>
+  <div class="meta">
+    <span>📅 <span class="badge">2026.08</span></span>
+    <span>📄 <span class="badge">12 篇论文</span></span>
+    <span>🔧 <span class="badge">20+ 评估指标</span></span>
+    <span>📊 <span class="badge">5 大评估维度</span></span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat"><div class="num">12</div><div class="label">调研论文数</div></div>
+  <div class="stat"><div class="num">6</div><div class="label">主观指标</div></div>
+  <div class="stat"><div class="num">10+</div><div class="label">客观指标</div></div>
+  <div class="stat"><div class="num">5</div><div class="label">评估维度</div></div>
+</div>
+
+<!-- Intro -->
+<section id="intro">
+  <h2 class="section-title">概述</h2>
+  <p class="section-desc">
+    Zero-shot 歌声转换 (SVC) 要求模型仅凭数秒参考音频即可将源歌者声音转换为目标歌者音色，同时保持旋律和歌词内容不变。
+    评估这一任务需要从多个维度衡量转换质量：音色是否像目标歌者、旋律是否准确、歌词是否清晰、音频是否自然。
+    本调研基于 12 篇 arXiv 论文全文，提取各论文实验章节中使用的具体评估指标及其计算方法。
+  </p>
+  <div class="callout">
+    <strong>核心发现：</strong>
+    歌声领域主观评估仍是金标准。Everyone-Can-Sing [2501.13870] 明确指出
+    "Given the lack of reliable objective evaluation methods for singing, particularly for cross-domain similarity between singing and speech, we conduct subjective evaluations" —
+    即歌声领域缺乏可靠的客观指标，特别是跨域 (speech→singing) 相似度评估。
+    但 SECS、WER、F0 相关指标作为客观参考仍被广泛使用。
+  </div>
+</section>
+
+<!-- Subjective Metrics -->
+<section id="subjective">
+  <h2 class="section-title">主观评估指标 (Subjective Evaluation)</h2>
+  <p class="section-desc">主观听辨测试是 SVC 评估的金标准，通常通过众包平台或专业人员评分完成。</p>
+
+  <!-- MOS -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.25);">📊</div>
+      <div>
+        <h3>MOS (Mean Opinion Score)</h3>
+        <div class="metric-sub">自然度 / 音质 · 5分制 Likert 量表</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>评分者在 5 分制 Likert 量表 (1=Bad, 2=Poor, 3=Fair, 4=Good, 5=Excellent) 上评估转换后歌声的自然度和音质。
+      评分者通过众包平台 (如 MTurk) 或招募专业人员完成评分。
+    </p>
+    <p>
+      <strong>变体：</strong>NMOS (Naturalness MOS) 专指自然度评分；QMOS (Quality MOS) 评估音质、清晰度和自然度的综合质量。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2501.05586" target="_blank">FreeSVC [2501.05586] · 46名参与者</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2210.11096" target="_blank">Robust-1Shot-SVC [2210.11096] · 34名音频工程师</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2303.12197" target="_blank">SelfSup-SVC [2303.12197] · 300名MTurk评分者</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2406.05692" target="_blank">SPA-SVC [2406.05692] · 13名志愿者</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2008.12527" target="_blank">VCC2020 [2008.12527] · 众包听辨</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2502.05471" target="_blank">PFlow-VC [2502.05471] · QMOS变体</a>
+    </div>
+  </div>
+
+  <!-- SMOS -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.25);">🎯</div>
+      <div>
+        <h3>SMOS (Similarity MOS)</h3>
+        <div class="metric-sub">音色 / 歌者相似度 · 5分制</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>评分者在 5 分制 (1=完全不同, 5=完全相同歌者) 上评估转换后歌声与目标参考歌者的音色相似度。
+      评分时需忽略音质失真，仅关注音色匹配程度。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2406.05325" target="_blank">LDM-SVC [2406.05325] · seen/unseen singer</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2210.11096" target="_blank">Robust-1Shot-SVC [2210.11096] · 1-5分</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2301.02111" target="_blank">VALL-E [2301.02111] · LibriSpeech +0.93 SMOS</a>
+    </div>
+  </div>
+
+  <!-- CMOS -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.25);">⚖️</div>
+      <div>
+        <h3>CMOS (Comparative MOS)</h3>
+        <div class="metric-sub">对比平均意见分 · 相对评分</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>对比模型输出与基线/ground truth 的相对评分。评分者在两个样本间比较，给出相对偏好评分 (正值表示优于参考，负值表示劣于参考)。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2301.02111" target="_blank">VALL-E [2301.02111] · CMOS +0.12 (LibriSpeech), +0.23 (VCTK vs GT)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2502.05471" target="_blank">PFlow-VC [2502.05471] · CMOS-Q + CMOS-S</a>
+    </div>
+  </div>
+
+  <!-- SIM-MOS -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.25);">🔄</div>
+      <div>
+        <h3>SIM-MOS (Cross-Domain Similarity MOS)</h3>
+        <div class="metric-sub">语音-歌声跨域相似度 · SVC特有</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>专门评估 <strong>speech reference</strong> 与 <strong>singing output</strong> 之间的跨域音色相似度。
+      评分者综合考虑 <span class="highlight">musicality</span> (音乐性)、<span class="highlight">pronunciation</span> (发音)、<span class="highlight">pitch accuracy</span> (音准)、<span class="highlight">naturalness</span> (自然度) 和 <span class="highlight">expressiveness</span> (表现力) 进行综合评分。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2501.13870" target="_blank">Everyone-Can-Sing [2501.13870] · 503份问卷, 487份有效</a>
+    </div>
+  </div>
+
+  <!-- AB/ABX -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.25);">🔀</div>
+      <div>
+        <h3>AB / ABX Test</h3>
+        <div class="metric-sub">强制选择偏好测试</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>听者在两个 (AB) 或三个 (ABX) 样本间强制选择更好的一个。ABX 中 X 是参考样本，听者判断 A 或 B 更接近 X。
+      结果通常报告偏好比例 (%) 和 95% 置信区间。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2008.12527" target="_blank">VCC2020 [2008.12527] · 系统间对比</a>
+    </div>
+  </div>
+
+  <!-- MUSHRA -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.25);">📈</div>
+      <div>
+        <h3>MUSHRA (Multiple Stimuli with Hidden Reference and Anchors)</h3>
+        <div class="metric-sub">多刺激隐藏参考测试 · 0-100分</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>标准化的多刺激听辨测试方法 (ITU-R BS.1534)。听者同时听到多个样本 (含隐藏参考和锚点)，在 0-100 分量表上评分。
+      在 VC 领域使用较少，但 VCC 系列挑战赛有使用。
+    </p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Objective Metrics -->
+<section id="objective">
+  <h2 class="section-title">客观评估指标 (Objective Evaluation)</h2>
+  <p class="section-desc">客观指标通过算法自动计算，无需人工评分。虽然方便快捷，但在歌声领域与主观感受的相关性存在局限。</p>
+
+  <!-- SECS -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);">🎵</div>
+      <div>
+        <h3>SECS (Speaker Encoder Cosine Similarity)</h3>
+        <div class="metric-sub">音色相似度 · 最常用客观指标</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>用预训练 speaker verification 模型提取音频的 speaker embedding，计算转换音频与目标参考音频 embedding 之间的 cosine similarity。
+      公式：<code>SECS = (A · B) / (||A|| · ||B||)</code>，其中 A 和 B 分别是转换音频和参考音频的 speaker embedding。
+    </p>
+    <p>
+      <strong>常用模型：</strong>WavLM-based speaker verification (microsoft/wavlm-base-plus-sv), ECAPA2, d-vector-based speaker verification。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2502.05471" target="_blank">PFlow-VC [2502.05471] · WavLM SV模型</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2501.05586" target="_blank">FreeSVC [2501.05586] · known/unknown speaker</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2009.03554" target="_blank">VCC2020-Predictions [2009.03554]</a>
+    </div>
+  </div>
+
+  <!-- SSIM -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);">📐</div>
+      <div>
+        <h3>SSIM (Structural Similarity Index)</h3>
+        <div class="metric-sub">结构相似度 · 音色相似度变体</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>通过 speaker verification 模型提取 embedding 后计算 cosine similarity，用于评估转换音频与目标歌者的音色相似度。
+      SPA-SVC 将 SSIM loss 引入训练过程以提升音色保持。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2406.05325" target="_blank">LDM-SVC [2406.05325] · ASV模型 cosine sim</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2406.05692" target="_blank">SPA-SVC [2406.05692] · SSIM loss + 评估</a>
+    </div>
+  </div>
+
+  <!-- F0 Metrics -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);">🎶</div>
+      <div>
+        <h3>F0 系列指标</h3>
+        <div class="metric-sub">旋律 / 音高准确度</div>
+      </div>
+    </div>
+    <p>
+      <strong>FPC (F0 Pearson Correlation)</strong> — 转换前后 F0 轨迹的皮尔逊相关系数，评估旋律保持度。<br>
+      <strong>F0PPC (F0 Pearson Correlation Coefficient with DTW)</strong> — 先用 DTW 对齐原始和生成音频，再计算 F0 Pearson 相关，更准确评估 prosody 保持。<br>
+      <strong>PMAE (Pitch Mean Absolute Error)</strong> — 转换后 F0 与目标 F0 之间的平均绝对误差。无显式 pitch conditioning 时使用 mPMAE (minimum PMAE)。<br>
+      <strong>F0 RMSE</strong> — 基频均方根误差。<br>
+      <strong>V/UV Error</strong> — 清浊音判断错误率 (voicing decision error 的帧比例)。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2406.05325" target="_blank">LDM-SVC [2406.05325] · FPC</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2501.05586" target="_blank">FreeSVC [2501.05586] · F0PPC (DTW对齐)</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2210.11096" target="_blank">Robust-1Shot-SVC [2210.11096] · PMAE, mPMAE, V/UV</a>
+    </div>
+  </div>
+
+  <!-- WER/CER -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);">📝</div>
+      <div>
+        <h3>WER / CER (Word/Character Error Rate)</h3>
+        <div class="metric-sub">内容 / 歌词保真度</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>用 ASR 模型对转换后音频做语音识别，计算识别结果与源文本之间的词错率 (WER) 或字符错率 (CER)。
+      WER 越低表示转换过程中歌词内容保持越好。
+    </p>
+    <p>
+      <strong>常用 ASR 模型：</strong>Whisper-large-v3, HuBERT-Large (fine-tuned on LibriSpeech 960h), MMS (Massively Multilingual Speech)。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2501.05586" target="_blank">FreeSVC [2501.05586] · WER+CER, MMS ASR</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2301.02111" target="_blank">VALL-E [2301.02111] · WER, HuBERT-Large</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2502.05471" target="_blank">PFlow-VC [2502.05471] · WER, Whisper-large-v3</a>
+      <a class="paper-tag" href="https://arxiv.org/abs/2009.03554" target="_blank">VCC2020-Predictions [2009.03554] · ASR engine</a>
+    </div>
+  </div>
+
+  <!-- MCD -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.25);">📉</div>
+      <div>
+        <h3>MCD (Mel Cepstral Distortion)</h3>
+        <div class="metric-sub">梅尔倒谱失真 · 音质</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>计算转换音频与参考音频之间的梅尔倒谱特征距离，衡量声学特征层面的失真程度。MCD 越低表示失真越小。
+    </p>
+    <div class="callout warn">
+      <strong>局限性：</strong>Robust One-Shot SVC [2210.11096] 明确指出 "GAN-based methods obtain lower MR-STFT and MCD values, which is inconsistent with the subjective results" —
+      即 MCD 等频谱失真指标与主观感受 <strong>不一致</strong>，GAN 方法 MCD 更低但主观质量不一定更好。
+    </div>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2210.11096" target="_blank">Robust-1Shot-SVC [2210.11096]</a>
+    </div>
+  </div>
+
+  <!-- MR-STFT -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.25);">📡</div>
+      <div>
+        <h3>MR-STFT (Multi-Resolution STFT Error)</h3>
+        <div class="metric-sub">多分辨率短时傅里叶变换误差</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>在多个 FFT 窗口大小下计算 STFT 频谱误差，综合评估多尺度频谱层面的失真。与 MCD 类似，存在与主观不一致的问题。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2210.11096" target="_blank">Robust-1Shot-SVC [2210.11096]</a>
+    </div>
+  </div>
+
+  <!-- ASV/EER -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);">🔐</div>
+      <div>
+        <h3>ASV / EER (Automatic Speaker Verification / Equal Error Rate)</h3>
+        <div class="metric-sub">说话人验证系统指标</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>用 ASV 系统判断转换音频是否被识别为目标歌者。EER 是 ASV 系统的等错误率 (FAR=FRR 时的阈值)，
+      EER 越低表示转换音频越容易被 ASV 系统识别为目标歌者。还使用 minDCF (Minimum Detection Cost Function)。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2009.03554" target="_blank">VCC2020-Predictions [2009.03554]</a>
+    </div>
+  </div>
+
+  <!-- SrcSIM -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.25);">⚠️</div>
+      <div>
+        <h3>SrcSIM (Source Speaker Similarity)</h3>
+        <div class="metric-sub">源音色泄漏评估 · SVC特有</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>评估转换后音频中残留源歌者音色的程度 (timbre leakage)。计算 pitch-converted 波形与 source 波形之间的 speaker cosine similarity。
+      SrcSIM 越低表示源音色泄漏越少，转换越彻底。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2409.08039" target="_blank">ZeroShot-SVC-Clustering [2409.08039] · timbre leakage评估</a>
+    </div>
+  </div>
+
+  <!-- MOSNet/UTMOS -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.25);">🤖</div>
+      <div>
+        <h3>MOSNet / UTMOS / NISQA</h3>
+        <div class="metric-sub">客观 MOS 预测模型</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>用预训练的神经网络模型直接预测主观 MOS 分数，无需人工评分。MOSNet 是 VCC2020 中使用的预测模型；
+      UTMOS 和 NISQA 是较新的客观音质评估模型。可大规模自动评估，但预测精度有限。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2009.03554" target="_blank">VCC2020-Predictions [2009.03554] · MOSNet</a>
+    </div>
+  </div>
+
+  <!-- Identity -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);">🆔</div>
+      <div>
+        <h3>Identity (D-vector Cosine Similarity)</h3>
+        <div class="metric-sub">d-vector 音色相似度</div>
+      </div>
+    </div>
+    <p>
+      <strong>定义：</strong>用 speaker verification 模型提取 d-vector，计算转换音频与参考音频 d-vector 的 cosine similarity。
+      与 SECS 类似但使用的 embedding 提取方式不同。
+    </p>
+    <div class="papers">
+      <a class="paper-tag" href="https://arxiv.org/abs/2210.11096" target="_blank">Robust-1Shot-SVC [2210.11096]</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Evaluation Dimensions -->
+<section id="dimensions">
+  <h2 class="section-title">评估维度分类</h2>
+  <p class="section-desc">将上述指标按评估维度归类，形成完整的评估体系。</p>
+
+  <div class="dimension-card">
+    <div class="dim-header">
+      <div class="icon" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);">🎤</div>
+      <div>
+        <h3>A. 音色相似度 (Timbre/Speaker Similarity)</h3>
+        <div class="dim-sub">转换后声音是否像目标歌者</div>
+      </div>
+    </div>
+    <p>评估转换后歌声的音色是否成功匹配到目标参考歌者。这是 zero-shot SVC 最核心的评估维度。</p>
+    <div class="metric-list">
+      <span class="metric-tag tag-subjective">SMOS (主观)</span>
+      <span class="metric-tag tag-subjective">SIM-MOS (主观, 跨域)</span>
+      <span class="metric-tag tag-subjective">CMOS-S (主观, 对比)</span>
+      <span class="metric-tag tag-objective">SECS (客观, cosine sim)</span>
+      <span class="metric-tag tag-objective">SSIM (客观)</span>
+      <span class="metric-tag tag-objective">Identity / d-vector (客观)</span>
+      <span class="metric-tag tag-objective">ASV EER (客观)</span>
+      <span class="metric-tag tag-leakage">SrcSIM (客观, 泄漏)</span>
+    </div>
+  </div>
+
+  <div class="dimension-card">
+    <div class="dim-header">
+      <div class="icon" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);">🎶</div>
+      <div>
+        <h3>B. 旋律/音高准确度 (Melody/Pitch Accuracy)</h3>
+        <div class="dim-sub">转换后旋律是否准确保持</div>
+      </div>
+    </div>
+    <p>评估转换过程中旋律 (F0 轨迹) 的保持度和准确度。包括 F0 相关性、音高误差和清浊音判断。</p>
+    <div class="metric-list">
+      <span class="metric-tag tag-subjective">包含在 MOS 综合评分中 (pitch accuracy 子项)</span>
+      <span class="metric-tag tag-objective">FPC / F0 Pearson Correlation</span>
+      <span class="metric-tag tag-objective">F0PPC (DTW对齐后)</span>
+      <span class="metric-tag tag-objective">PMAE / mPMAE (Pitch MAE)</span>
+      <span class="metric-tag tag-objective">F0 RMSE</span>
+      <span class="metric-tag tag-objective">V/UV Error</span>
+    </div>
+  </div>
+
+  <div class="dimension-card">
+    <div class="dim-header">
+      <div class="icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);">📝</div>
+      <div>
+        <h3>C. 内容/歌词保真度 (Content/Lyrics Intelligibility)</h3>
+        <div class="dim-sub">歌词是否清晰可辨</div>
+      </div>
+    </div>
+    <p>评估转换后歌词内容是否保持不变。通过 ASR 模型识别并计算词/字符错率。</p>
+    <div class="metric-list">
+      <span class="metric-tag tag-subjective">包含在 MOS 综合评分中 (pronunciation 子项)</span>
+      <span class="metric-tag tag-objective">WER (Word Error Rate)</span>
+      <span class="metric-tag tag-objective">CER (Character Error Rate)</span>
+    </div>
+  </div>
+
+  <div class="dimension-card">
+    <div class="dim-header">
+      <div class="icon" style="background:rgba(94,106,210,0.1);border:1px solid rgba(94,106,210,0.25);">🔊</div>
+      <div>
+        <h3>D. 音质/自然度 (Audio Quality/Naturalness)</h3>
+        <div class="dim-sub">音频是否清晰自然</div>
+      </div>
+    </div>
+    <p>评估转换后音频的整体音质、清晰度和自然度。包括主观听辨评分和客观频谱失真指标。</p>
+    <div class="metric-list">
+      <span class="metric-tag tag-subjective">MOS / NMOS (主观)</span>
+      <span class="metric-tag tag-subjective">CMOS (主观, 对比)</span>
+      <span class="metric-tag tag-subjective">QMOS (主观, 综合质量)</span>
+      <span class="metric-tag tag-objective">MCD (客观, 频谱失真)</span>
+      <span class="metric-tag tag-objective">MR-STFT (客观)</span>
+      <span class="metric-tag tag-objective">MOSNet / UTMOS (客观, MOS预测)</span>
+    </div>
+  </div>
+
+  <div class="dimension-card">
+    <div class="dim-header">
+      <div class="icon" style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.25);">🎭</div>
+      <div>
+        <h3>E. 表现力/风格 (Expressiveness/Style)</h3>
+        <div class="dim-sub">演唱表现力和风格保持</div>
+      </div>
+    </div>
+    <p>评估转换后歌声的音乐性 (musicality)、表现力 (expressiveness) 和韵律保持 (prosody)。</p>
+    <div class="metric-list">
+      <span class="metric-tag tag-subjective">包含在 quality 综合评分中 (expressiveness, musicality)</span>
+      <span class="metric-tag tag-objective">F0PPC (客观, prosody保持)</span>
+      <span class="metric-tag tag-objective">Emotion Accuracy (客观, PFlow-VC)</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Summary Table -->
+<section id="summary">
+  <h2 class="section-title">各论文评估指标汇总表</h2>
+  <p class="section-desc">各论文使用的评估指标一览，便于横向对比。</p>
+
+  <div class="table-wrap">
+  <table class="metric-table">
+    <thead>
+      <tr>
+        <th>论文</th>
+        <th>arXiv ID</th>
+        <th>主观指标</th>
+        <th>客观指标</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="paper-name">LDM-SVC<br><span style="font-size:11px;color:var(--text-4);">Latent Diffusion SVC</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2406.05325" target="_blank">2406.05325</a></td>
+        <td>NMOS, SMOS</td>
+        <td>SSIM, FPC</td>
+      </tr>
+      <tr>
+        <td class="paper-name">FreeSVC<br><span style="font-size:11px;color:var(--text-4);">Multilingual Zero-Shot SVC</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2501.05586" target="_blank">2501.05586</a></td>
+        <td>MOS (naturalness, 46人)</td>
+        <td>WER, CER, Cosine Sim, F0PPC</td>
+      </tr>
+      <tr>
+        <td class="paper-name">Everyone-Can-Sing<br><span style="font-size:11px;color:var(--text-4);">Zero-Shot SVS+SVC</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2501.13870" target="_blank">2501.13870</a></td>
+        <td>MOS, SIM-MOS (503问卷)</td>
+        <td>纯主观评估</td>
+      </tr>
+      <tr>
+        <td class="paper-name">ZeroShot-SVC-Clustering<br><span style="font-size:11px;color:var(--text-4);">Clustering-based Phoneme Rep</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2409.08039" target="_blank">2409.08039</a></td>
+        <td>MOS (naturalness, 25人)</td>
+        <td>SrcSIM, Cosine Sim</td>
+      </tr>
+      <tr>
+        <td class="paper-name">SelfSup-SVC<br><span style="font-size:11px;color:var(--text-4);">Self-Supervised Representations</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2303.12197" target="_blank">2303.12197</a></td>
+        <td>MOS (quality + similarity, 300人 MTurk)</td>
+        <td>4个 MOS Study</td>
+      </tr>
+      <tr>
+        <td class="paper-name">Robust-1Shot-SVC (ROSVC)<br><span style="font-size:11px;color:var(--text-4);">Robust One-Shot SVC</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2210.11096" target="_blank">2210.11096</a></td>
+        <td>MOS (naturalness + similarity, 34音频工程师)</td>
+        <td>MCD, MR-STFT, PMAE/mPMAE, V/UV, Identity</td>
+      </tr>
+      <tr>
+        <td class="paper-name">SPA-SVC<br><span style="font-size:11px;color:var(--text-4);">Pitch Augmentation SVC</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2406.05692" target="_blank">2406.05692</a></td>
+        <td>MOS (naturalness + similarity, 13人)</td>
+        <td>SSIM</td>
+      </tr>
+      <tr>
+        <td class="paper-name">PFlow-VC<br><span style="font-size:11px;color:var(--text-4);">Pitch-Conditioned Flow Matching</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2502.05471" target="_blank">2502.05471</a></td>
+        <td>QMOS, CMOS-Q, CMOS-S</td>
+        <td>WER, SECS, Emotion Accuracy</td>
+      </tr>
+      <tr>
+        <td class="paper-name">VALL-E<br><span style="font-size:11px;color:var(--text-4);">Zero-Shot TTS/VC (语言模型)</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2301.02111" target="_blank">2301.02111</a></td>
+        <td>CMOS, SMOS</td>
+        <td>WER (HuBERT-Large ASR)</td>
+      </tr>
+      <tr>
+        <td class="paper-name">VCC 2020<br><span style="font-size:11px;color:var(--text-4);">Voice Conversion Challenge</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2008.12527" target="_blank">2008.12527</a></td>
+        <td>MOS (naturalness + similarity), AB</td>
+        <td>以主观为主</td>
+      </tr>
+      <tr>
+        <td class="paper-name">VCC2020-Predictions<br><span style="font-size:11px;color:var(--text-4);">Objective Evaluation of VCC2020</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2009.03554" target="_blank">2009.03554</a></td>
+        <td>预测主观评分</td>
+        <td>ASV/EER, Cosine Sim, MOSNet, ASR/WER</td>
+      </tr>
+      <tr>
+        <td class="paper-name">OpenVoice<br><span style="font-size:11px;color:var(--text-4);">Versatile Voice Cloning</span></td>
+        <td><a class="arxiv-link" href="https://arxiv.org/abs/2312.01479" target="_blank">2312.01479</a></td>
+        <td>(以 demo 为主)</td>
+        <td>(客观评估有限)</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Notes -->
+<section id="notes">
+  <h2 class="section-title">关键发现与注意事项</h2>
+  <p class="section-desc">基于论文调研的总结性发现。</p>
+
+  <div class="card">
+    <h3>1. 主观评估是金标准</h3>
+    <p>歌声领域主观评估仍是主流。Everyone-Can-Sing [2501.13870] 明确指出歌声领域缺乏可靠的客观评估方法，
+    特别是跨域 (speech→singing) 相似度评估。多篇论文以主观实验为主，客观指标仅作辅助参考。</p>
+  </div>
+
+  <div class="card">
+    <h3>2. SECS 是最常用的音色相似度客观指标</h3>
+    <p>几乎所有 zero-shot VC/SVC 论文都使用 SECS (cosine similarity via speaker verification model) 评估音色相似度。
+    常用模型包括 WavLM-based SV、ECAPA2、d-vector-based SV。但 SECS 也不能完全反映 cross-domain (speech→singing) 的音色相似度。</p>
+  </div>
+
+  <div class="card">
+    <h3>3. WER 是内容保真度的标准指标</h3>
+    <p>通过 ASR 模型 (Whisper, HuBERT, MMS) 识别转换后音频并计算 WER/CER 是评估歌词保真度的标准做法。
+    不同论文使用的 ASR 模型不同，结果不直接可比。</p>
+  </div>
+
+  <div class="card">
+    <h3>4. F0 系列指标评估旋律准确度</h3>
+    <p>F0 Pearson correlation (FPC/F0PPC) 评估旋律保持度，PMAE 评估音高误差，V/UV error 评估清浊音判断。
+    FreeSVC 提出的 F0PPC 结合 DTW 对齐，更准确评估 prosody 保持。</p>
+  </div>
+
+  <div class="card">
+    <h3>5. MCD 等频谱失真指标有局限性</h3>
+    <p>Robust One-Shot SVC [2210.11096] 明确指出 MCD 和 MR-STFT 等频谱失真指标与主观结果不一致 —
+    GAN 方法 MCD 更低但主观质量不一定更好。这些指标应谨慎使用。</p>
+  </div>
+
+  <div class="card">
+    <h3>6. Timbre Leakage 是 SVC 特有指标</h3>
+    <p>ZeroShot-SVC-Clustering [2409.08039] 提出的 SrcSIM 专门评估源歌者音色泄漏程度 (timbre leakage)，
+    这是 SVC 区别于普通 VC 的重要评估维度。timbre leakage 是 SVC 领域的核心挑战之一。</p>
+  </div>
+
+  <div class="card">
+    <h3>7. 评估规模差异大</h3>
+    <p>不同论文的评估规模差异很大：从 13 人 (SPA-SVC) 到 503 人 (Everyone-Can-Sing) 不等。
+    评分者可以是众包平台用户 (MTurk)、音频工程师、或志愿者。评估规模和评分者专业度直接影响结果可靠性。</p>
+  </div>
+
+  <div class="callout">
+    <strong>推荐评估方案：</strong>
+    <br><br>
+    对于 zero-shot SVC 评估，建议采用以下指标组合：
+    <br><br>
+    <strong>主观 (必做)：</strong>MOS (自然度) + SMOS (音色相似度)，评分者 ≥ 20 人，5 分制 Likert 量表。
+    <br><br>
+    <strong>客观 (辅助)：</strong>
+    <br>· 音色相似度：SECS (WavLM SV 模型 cosine sim)
+    <br>· 内容保真度：WER (Whisper-large-v3 ASR)
+    <br>· 旋律准确度：F0PPC (DTW 对齐后 Pearson 相关) + PMAE
+    <br>· 音色泄漏：SrcSIM (source cosine sim, 越低越好)
+    <br>· 音质参考：UTMOS (客观 MOS 预测)
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>深度研究 · Research Hub · 由 Hermes Agent 生成 · <a href="../index.html">返回主页</a></p>
+</footer>
+
+</body>
+</html>
