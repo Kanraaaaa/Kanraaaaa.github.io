@@ -134,6 +134,31 @@ section { padding: 48px 0; }
 }
 .research-card.coming-soon:hover { opacity: 0.7; }
 
+/* Trends section */
+.trends-latest { display: flex; flex-direction: column; gap: 12px; }
+.trends-card {
+  background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px 28px; text-decoration: none;
+  transition: all 0.25s; display: block; position: relative; overflow: hidden;
+}
+.trends-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+.trends-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #10b981, #22d3ee); border-radius: 12px 12px 0 0; opacity: 0.8;
+}
+.trends-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.trends-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 9999px;
+  background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #10b981; }
+.trends-week { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+.trends-summary { font-size: 15px; color: var(--text-3); line-height: 1.6; margin-bottom: 12px; }
+.trends-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--text-4); }
+.trends-archive-link {
+  display: inline-flex; align-items: center; gap: 4px; padding: 8px 16px;
+  border: 1px solid var(--border); border-radius: 8px; color: var(--text-3);
+  text-decoration: none; font-size: 13px; transition: all 0.2s; align-self: flex-start;
+}
+.trends-archive-link:hover { color: var(--text); border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.02); }
+
 /* Footer */
 footer { border-top: 1px solid var(--border-subtle); padding: 48px 0; text-align: center; color: var(--text-4); font-size: 13px; margin-top: 40px; }
 footer a { color: var(--text-3); text-decoration: none; }
@@ -307,32 +332,29 @@ footer a:hover { color: var(--accent-bright); }
   </div>
 </section>
 
-</div>
-
-
 <!-- BEGIN TRENDS SECTION -->
-<section id="trends">
+<section id="trends" style="border-top: 1px solid var(--border-subtle);">
   <h2 class="section-title">📊 GitHub 趋势周报</h2>
-  <p class="section-desc">每周自动追踪 GitHub 上最热门的技术项目，按赛道分类整理。</p>
+  <p class="section-desc">每周自动追踪 GitHub 上最热门的技术项目，按赛道分类整理。每周一更新。</p>
 
-  <a href="trends/2026-W34.html" class="research-card" style="margin-bottom:16px;">
-    <div class="card-glow" style="background: linear-gradient(90deg, #10b981, #22d3ee);"></div>
-    <div class="card-icon">📈</div>
-    <h3>最新一期 · 2026-W34</h3>
-    <p class="card-desc">2026年8月17日 - 8月23日 · 收录 25 个项目，覆盖 6 个赛道，最高周增长 +14,397 ⭐</p>
-    <div class="card-tags">
-      <span class="tag tag-ai">自动生成</span>
-      <span class="tag tag-data">趋势追踪</span>
-    </div>
-    <div class="card-meta" style="margin-top:12px;">
-      <span class="meta-item">📅 2026-W34</span>
-      <span class="meta-item">🔄 每周更新</span>
-    </div>
-  </a>
-
-  <a href="trends/archive.html" style="display:inline-block;padding:8px 16px;border:1px solid var(--border);border-radius:8px;color:var(--text-3);text-decoration:none;font-size:13px;transition:all 0.2s;">📋 往期归档 →</a>
+  <div class="trends-latest">
+    <a href="trends/2026-W34.html" class="trends-card">
+      <div class="trends-card-header">
+        <span class="trends-badge">最新</span>
+        <span class="trends-week">2026-W34</span>
+      </div>
+      <p class="trends-summary">收录 25 个项目 · 覆盖 6 个赛道 · 最高周增长 +14,397 ⭐</p>
+      <div class="trends-meta">
+        <span>📅 2026.8.17 - 8.23</span>
+        <span>🔄 每周一更新</span>
+      </div>
+    </a>
+    <a href="trends/archive.html" class="trends-archive-link">📋 往期归档 →</a>
+  </div>
 </section>
 <!-- END TRENDS SECTION -->
+
+</div>
 
 <footer>
   <p>深度研究 · Research Hub · 由 Hermes Agent 生成 · <a href="https://github.com">GitHub</a></p>
