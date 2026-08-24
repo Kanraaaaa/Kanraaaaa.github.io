@@ -1346,6 +1346,71 @@ a:hover{text-decoration:underline}
     </ul>
   </div>
 
+  <!-- Language Identification -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">前置问题：如何自动检测歌曲语种？</h3>
+
+  <div class="card" style="border-color: rgba(16,185,129,0.3);">
+    <h3>方案对比：从 hack 到原生支持</h3>
+    <p>
+      上述多语言方案的前提是知道每首歌的语种。但实际面对一批混合语种的 WAV 文件时，
+      需要自动检测语种再路由到对应分支。以下按可靠性排序。
+      <br><br>
+      <strong>方案 1（推荐）：Qwen3-ASR 原生 LID + ASR — 一步到位</strong><br>
+      Qwen3-ASR（VocalParse 的基座模型）本身就是一个 all-in-one 模型——同时做语种识别和 ASR。
+      官方明确支持 <strong>Chinese (zh)、English (en)、Cantonese (yue)</strong> 三种语言的自动检测，
+      且 Audio Types 列写明支持 <strong>Singing Voice 和 Songs with BGM</strong>（歌声和带伴奏的歌）。
+      <br><br>
+      用法极简：
+      <br>
+      &nbsp;&nbsp;<code>results = model.transcribe(audio="song.wav", language=None)</code><br>
+      &nbsp;&nbsp;<code>print(results[0].language)</code> → "Chinese" / "Cantonese" / "English"<br>
+      &nbsp;&nbsp;<code>print(results[0].text)</code> → 同时输出转写文本<br><br>
+      <strong>优势：</strong><br>
+      &nbsp;&nbsp;• 一步完成 LID + ASR，无需额外模型<br>
+      &nbsp;&nbsp;• 官方支持歌声和带 BGM 音频，不需要先分离<br>
+      &nbsp;&nbsp;• 能直接区分普通话和粤语（不同于 Whisper 把粤语归为 zh）<br>
+      &nbsp;&nbsp;• 配套 Qwen3-ForcedAligner-0.6B 支持 11 语言强制对齐（含 zh/en/yue）<br>
+      &nbsp;&nbsp;• 与 VocalParse 同源，检测结果可直接喂给后续 pipeline<br><br>
+      <strong>方案 2（备选）：Whisper auto-detect + 粤语用字检测</strong><br>
+      Whisper 内置自动语言检测，但倾向于把粤语归为 "zh"（中文），因为两者共用汉字。
+      需要额外用字检测来区分普通话和粤语：<br>
+      &nbsp;&nbsp;• 跑 Whisper (language=None) → 检测到 "en" → 英文分支<br>
+      &nbsp;&nbsp;• 检测到 "zh" → 检查转写文本中粤语专用字频率（嘅、咗、喺、嚟、噉、嘢、瞓、返、咁、嗰）<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;→ 粤语字占比 > 2% → 粤语分支<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;→ 否则 → 普通话分支<br><br>
+      <strong>劣势：</strong>依赖粤语用字特征，混合语种歌词（如国语歌中夹粤语词）可能误判；Whisper 在歌声上转写精度下降<br><br>
+      <strong>方案 3（最简单但最粗放）：SoulX-Singer 手动指定</strong><br>
+      SoulX-Singer 的 preprocess pipeline 不做自动检测——<code>--language</code> 参数由用户手动传入
+      （"Mandarin" / "Cantonese" / "English"）。适合已知语种的批量处理，不适合混合语种自动分流。
+      <br><br>
+      <strong>方案 4（学术级）：SpeechBrain ECAPA-TDNN LID</strong><br>
+      SpeechBrain 提供基于 ECAPA-TDNN 的语言识别模型，支持 40+ 语言。但它是针对语音训练的，
+      在歌声上精度会下降（旋律和唱法干扰声学特征）。不推荐用于歌声场景。
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://github.com/QwenLM/Qwen3-ASR">Qwen3-ASR (LID+ASR) ⭐</a>
+      <a class="ref" href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B">Qwen3-ASR-1.7B Model</a>
+      <a class="ref" href="https://huggingface.co/Qwen/Qwen3-ForcedAligner-0.6B">Qwen3-ForcedAligner (11语言对齐)</a>
+      <a class="ref" href="https://arxiv.org/abs/2601.21337">Qwen3-ASR Paper</a>
+    </div>
+  </div>
+
+  <div class="callout" style="background: rgba(94,106,210,0.06); border-color: rgba(94,106,210,0.3); margin-top: 24px;">
+    <strong>推荐语种检测流程（整合 Qwen3-ASR）：</strong>
+    <br><br>
+    <code>WAV → Qwen3-ASR (language=None) → 检测语种 + 同时转写歌词</code>
+    <br><br>
+    <ul style="margin-top:8px; padding-left:20px; line-height:1.8;">
+      <li><code>.language == "Chinese"</code> → Mandarin 分支：VocalParse/SOME 提取 MIDI + G2pM 转拼音 + MFA 对齐</li>
+      <li><code>.language == "Cantonese"</code> → Cantonese 分支：VocalParse/SOME 提取 MIDI + ToJyutping 转粤拼 + MFA 自训练模型对齐</li>
+      <li><code>.language == "English"</code> → English 分支：VocalParse/SOME 提取 MIDI + g2p_en 转音素 + MFA 英文模型对齐</li>
+    </ul>
+    <br>
+    由于 VocalParse 本身基于 Qwen3-ASR，语种检测结果天然兼容后续 VocalParse 旋律提取。
+    进一步可配合 Qwen3-ForcedAligner-0.6B 直接做强制对齐（支持 zh/en/yue），
+    理论上可以跳过 MFA，用 Qwen 全家桶完成 LID → ASR → 对齐 → VocalParse 旋律提取的完整链路。
+  </div>
+
 </section>
 
 <div class="divider"></div>
