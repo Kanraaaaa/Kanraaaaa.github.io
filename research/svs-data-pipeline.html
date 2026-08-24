@@ -1150,7 +1150,205 @@ a:hover{text-decoration:underline}
 
 <div class="divider"></div>
 
-<!-- Summary -->
+<!-- Multilingual Data Processing -->
+<section id="multilingual">
+  <h2 class="section-title">多语言数据处理：英文与粤语</h2>
+  <p class="section-desc">
+    VocalParse 基于 Qwen3-ASR 多语言基座，但训练数据以中文为主（Opencpop + M4Singer），
+    GTSinger 虽含 9 语言但中文占比最高。本节调研英文和粤语歌声数据的处理方案，
+    作为 VocalParse 中文 pipeline 的多语言补充。
+  </p>
+
+  <div class="callout" style="background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.3);">
+    <strong>核心问题：</strong>VocalParse 的训练数据中，Opencpop（3,756 条）和 M4Singer（20,896 条）纯中文，
+    GTSinger（7,139 条）虽含 9 语言但每语言样本量有限。模型输出的 AST token 格式（<code>感 &lt;P_68&gt; &lt;NOTE_4&gt; 受 &lt;P_60&gt; &lt;NOTE_8&gt;</code>）
+    是<strong>字符级</strong>的——中文每字一个 token 自然贴合，但英文需要词级→音素级拆分，粤语需要 Jyutping 转写。
+    这意味着 VocalParse 在英文/粤语上的<strong>输出格式可用但 G2P 后处理链不同</strong>。
+  </div>
+
+  <!-- English Data -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">英文歌声数据处理方案</h3>
+
+  <div class="card" style="border-color: rgba(34,211,238,0.3);">
+    <h3>英文 Pipeline：工具链成熟，数据相对充足</h3>
+    <p>
+      英文歌声数据处理是中文之外最成熟的赛道，工具链和预训练模型覆盖完整。
+      <br><br>
+      <strong>① 歌词对齐 / G2P</strong><br>
+      • <strong>MFA + 英文声学模型</strong>：MFA 官方提供英文预训练声学模型（librispeech_acoustic_model），
+      配合 <strong>librispeech-lexicon</strong>（CMU 发音词典）或 <strong>g2p_en</strong> 工具做 G2P 转换。
+      对齐精度在英文歌声上表现良好，但建议用歌声数据微调声学模型（参考 Opencpop 做法）<br>
+      • <strong>Whisper / Parakeet-TDT</strong>：SoulX-Singer 的 preprocess pipeline 已用 Parakeet-TDT-0.6b-v2
+      （NVIDIA NeMo）做英文歌词转写，效果比传统 MFA 更端到端<br>
+      • <strong>g2p_en</strong>（Python 库）：将英文单词转音素（IPA），可直接对接 MFA<br>
+      • <strong>espeak-ng</strong>：多语言 G2P 引擎，英文支持完善<br><br>
+      <strong>② 可用数据集</strong><br>
+      • <strong>GTSinger</strong>：含英文歌声数据，专业人工标注，含曲谱和技巧标签<br>
+      • <strong>DeepSinger</strong>：从网络挖掘的英文歌声数据，自动转谱<br>
+      • <strong>HifiSinger</strong>：英文歌声合成数据集<br>
+      • <strong>NNSVS / Sinsy</strong>：基于 MIDI 的英文 SVS 工具链，含示例数据<br>
+      • <strong>smixer / HERCULES</strong>：英文歌声数据集<br><br>
+      <strong>③ VocalParse 用于英文的可行性</strong><br>
+      VocalParse 基于 Qwen3-ASR，基座模型本身支持多语言（含英文）。GTSinger 训练数据中包含英文样本，
+      因此 VocalParse <strong>理论上可以处理英文歌声</strong>，但需注意：<br>
+      &nbsp;&nbsp;• 输出格式是<strong>字符级</strong>的，英文需要按词拆分后再做 G2P<br>
+      &nbsp;&nbsp;• 英文样本在训练数据中占比低，OOD 泛化精度未经验证<br>
+      &nbsp;&nbsp;• 建议用 GTSinger 英文子集做少量微调（fine-tune）后使用<br>
+      &nbsp;&nbsp;• 或用 VocalParse 提取旋律+粗歌词，再用 MFA+g2p_en 做精确音素对齐<br><br>
+      <strong>④ 推荐英文 Pipeline</strong><br>
+      原始英文歌曲 → Demucs 分离 → <strong>Whisper/Parakeet 歌词转写</strong> →
+      <strong>VocalParse 旋律+音符提取</strong>（或 SOME 提取 MIDI）→
+      <strong>g2p_en 音素转换</strong> → <strong>MFA 音素对齐</strong>（用英文声学模型）→ 质量过滤
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner">MFA ⭐1.9K</a>
+      <a class="ref" href="https://github.com/Kyubyong/g2p_en">g2p_en</a>
+      <a class="ref" href="https://github.com/espeak-ng/espeak-ng">espeak-ng</a>
+      <a class="ref" href="https://arxiv.org/abs/2409.13832">GTSinger (含英文数据)</a>
+      <a class="ref" href="https://arxiv.org/abs/2007.04590">DeepSinger (含英文+粤语)</a>
+    </div>
+  </div>
+
+  <!-- Cantonese Data -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">粤语歌声数据处理方案</h3>
+
+  <div class="card" style="border-color: rgba(251,113,133,0.3);">
+    <h3>粤语 Pipeline：最大挑战，工具链不成熟，需组合方案</h3>
+    <p>
+      粤语是三语言中处理难度最大的——没有标准歌声数据集、没有 MFA 预训练粤语声学模型、
+      G2P 工具稀缺。但粤语歌在华语乐坛占重要地位，DeepSinger 是唯一显式处理粤语的主流系统。
+      <br><br>
+      <strong>① 粤语的独特挑战</strong><br>
+      • <strong>声调系统</strong>：粤语有 6-9 个声调（取决于分析框架），远比普通话 4 声复杂。
+      歌声中声调会被旋律覆盖，但声调信息影响音素 realization<br>
+      • <strong>G2P 困难</strong>：粤语用<strong>粤拼（Jyutping）</strong>罗马化，但标准 G2P 工具不支持<br>
+      • <strong>无预训练模型</strong>：MFA 没有粤语声学模型，Whisper 对粤语（yue）支持有限<br>
+      • <strong>数据稀缺</strong>：没有公开的粤语歌声标注数据集，Opencpop/M4Singer/GTSinger 均不含粤语<br><br>
+      <strong>② 可用工具和方案</strong><br><br>
+      <strong>方案 A：DeepSinger 路线（自动挖掘 + DTW+CTC 对齐）</strong><br>
+      DeepSinger 原文明确提到支持中文/粤语/英文三种语言。其对齐模型从粗粒度句子级（DTW）
+      到细粒度音素级（CTC），<strong>不需要语言专用声学模型</strong>——这恰好解决了粤语无 MFA 模型的问题。
+      但 DeepSinger 代码未完全开源，需要复现其对齐模型。<br><br>
+      <strong>方案 B：Whisper 转写 + 字符级对齐</strong><br>
+      • <strong>Whisper</strong>（large-v3）支持粤语（language="yue"），可直接从歌声转写粤语歌词文本<br>
+      &nbsp;&nbsp;- 但 Whisper 在歌声上的转写精度下降严重，需人工校验<br>
+      &nbsp;&nbsp;- 输出是<strong>中文字符</strong>（粤语口语用字与普通话不同，如「嘅」「咗」「喺」）<br>
+      • <strong>VocalParse</strong>：理论上 Qwen3-ASR 基座支持粤语，但<strong>训练数据中无粤语样本</strong>，
+      OOD 泛化风险高。可以尝试 zero-shot，但建议用少量粤语数据微调<br>
+      • 字符级歌词转写后，用<strong>字符-时间对齐</strong>（MFA + 粤语发音词典，或直接用 Whisper 的 timestamp）<br><br>
+      <strong>方案 C：粤拼 + 自建 MFA 声学模型</strong><br>
+      • <strong>pycantonese</strong>（Python 库）：提供粤拼转写和 NLP 工具，可将中文字符转粤拼音素<br>
+      • <strong>jyutping</strong>（Python 库）：字符→粤拼转换<br>
+      • 用粤拼音素构建<strong>自定义发音词典</strong>（lexicon）<br>
+      • 用少量粤语歌声数据（如自行录制 10-20 小时）<strong>训练 MFA 声学模型</strong>（MFA 支持自定义模型训练）<br>
+      • 这是最精确但成本最高的方案<br><br>
+      <strong>方案 D：粤语→普通话迁移</strong>（快速但不精确）<br>
+      • 粤语歌的很多字与普通话共享，可以先用普通话 MFA 声学模型做粗对齐<br>
+      • 对粤语特有字（「嘅」「咗」等）做人工补充标注<br>
+      • 适合快速验证，不适合生产级数据制作<br><br>
+      <strong>③ 推荐粤语 Pipeline（组合方案）</strong><br>
+      原始粤语歌曲 → Demucs 分离 → <strong>Whisper(yue) 歌词转写</strong> + 人工校验 →
+      <strong>pycantonese/jyutping 转粤拼音素</strong> → 构建粤语发音词典 →
+      <strong>MFA 自定义声学模型对齐</strong>（用 10-20h 粤语数据训练）→
+      <strong>SOME 提取 MIDI</strong> → 质量过滤<br><br>
+      <strong>④ 备选：SoulX-Singer preprocess 改造</strong><br>
+      SoulX-Singer 的 preprocess pipeline 设计为可插拔式——LyricTranscriber 模块可替换。
+      原生支持中文（SeaOaraParaformer）和英文（Parakeet-TDT），粤语可尝试：
+      &nbsp;&nbsp;• 用 Whisper(yue) 替换 LyricTranscriber 的 ASR 模型<br>
+      &nbsp;&nbsp;• NoteTranscriber（ROSVOT）语言无关，可直接用于粤语<br>
+      &nbsp;&nbsp;• 这条路线需要改 SoulX-Singer 代码，但 pipeline 其他环节（分离、F0、MIDI）可直接复用
+    </p>
+    <div class="ref-list">
+      <a class="ref" href="https://arxiv.org/abs/2007.04590">DeepSinger (支持粤语)</a>
+      <a class="ref" href="https://github.com/jacksonllee/pycantonese">pycantonese</a>
+      <a class="ref" href="https://github.com/openai/whisper">Whisper (支持 yue)</a>
+      <a class="ref" href="https://github.com/Soul-AILab/SoulX-Singer">SoulX-Singer (可插拔 ASR)</a>
+    </div>
+  </div>
+
+  <!-- Multilingual Comparison Table -->
+  <h3 style="color:var(--text);font-size:20px;margin:32px 0 16px;">三语言数据处理工具链对比</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>环节</th>
+          <th>中文</th>
+          <th>英文</th>
+          <th>粤语</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>歌词转写 (ASR)</strong></td>
+          <td>SeaOaraParaformer / VocalParse</td>
+          <td>Parakeet-TDT / Whisper</td>
+          <td class="partial">Whisper(yue) + 人工校验</td>
+        </tr>
+        <tr>
+          <td><strong>G2P / 发音词典</strong></td>
+          <td>pypinyin / Opencpop lexicon</td>
+          <td>g2p_en / CMU dict / espeak-ng</td>
+          <td class="no">pycantonese / 自建粤拼词典</td>
+        </tr>
+        <tr>
+          <td><strong>音素对齐</strong></td>
+          <td>MFA (歌声声学模型)</td>
+          <td class="yes">MFA (英文预训练模型)</td>
+          <td class="no">MFA 自训练 / DeepSinger CTC</td>
+        </tr>
+        <tr>
+          <td><strong>MIDI 提取</strong></td>
+          <td>SOME / ROSVOT</td>
+          <td>SOME / ROSVOT (语言无关)</td>
+          <td>SOME / ROSVOT (语言无关)</td>
+        </tr>
+        <tr>
+          <td><strong>F0 估计</strong></td>
+          <td>RMVPE / FCPE / CREPE</td>
+          <td>RMVPE / FCPE / CREPE</td>
+          <td>RMVPE / FCPE / CREPE</td>
+        </tr>
+        <tr>
+          <td><strong>VocalParse 可用性</strong></td>
+          <td class="yes">原生支持 (训练数据)</td>
+          <td class="partial">理论可用，需微调</td>
+          <td class="no">无训练数据，需大量微调</td>
+        </tr>
+        <tr>
+          <td><strong>公开数据集</strong></td>
+          <td class="yes">Opencpop/M4Singer/GTSinger</td>
+          <td class="yes">GTSinger/DeepSinger/HifiSinger</td>
+          <td class="no">无公开粤语歌声数据集</td>
+        </tr>
+        <tr>
+          <td><strong>整体成熟度</strong></td>
+          <td class="yes">★★★★★ 完整工具链</td>
+          <td class="yes">★★★★☆ 工具齐全</td>
+          <td class="partial">★★☆☆☆ 需大量自建</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.3); margin-top: 24px;">
+    <strong>多语言策略建议：</strong>
+    <ul style="margin-top:8px; padding-left:20px; line-height:1.8;">
+      <li><strong>中文</strong>：继续用 VocalParse + OpenVPI 工具链，这是最成熟的路线</li>
+      <li><strong>英文</strong>：VocalParse 提取旋律+粗歌词 → g2p_en 转音素 → MFA 英文模型精确对齐。
+      或直接用 SoulX-Singer preprocess（已内置 Parakeet-TDT 英文 ASR）</li>
+      <li><strong>粤语</strong>：分两阶段——先用 Whisper(yue)+人工校验获得歌词文本，
+      pycantonese 转粤拼音素，再用 10-20h 自录数据训练 MFA 粤语声学模型。
+      MIDI 提取和 F0 估计语言无关，直接复用 SOME + RMVPE</li>
+      <li><strong>统一方案</strong>：以 SoulX-Singer preprocess 为框架，替换 LyricTranscriber 模块实现多语言——
+      中文用 SeaOaraParaformer，英文用 Parakeet-TDT，粤语用 Whisper(yue)。
+      其他模块（分离/F0/MIDI）语言无关，一套代码三种语言</li>
+    </ul>
+  </div>
+
+</section>
+
+<div class="divider"></div>
 <section id="summary">
   <h2 class="section-title">总结与关键洞察</h2>
 
