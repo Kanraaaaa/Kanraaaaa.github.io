@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>GitHub 趋势周报 · 2026-W36</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090a; --panel: #0f1011; --surface: #191a1b;
+  --text: #f7f8f8; --text-2: #d0d6e0; --text-3: #8a8f98; --text-4: #62666d;
+  --accent: #5e6ad2; --accent-bright: #7170ff; --accent-hover: #828fff;
+  --green: #27a644; --emerald: #10b981; --orange: #fb923c; --rose: #fb7185;
+  --cyan: #22d3ee; --amber: #fbbf24; --violet: #a78bfa;
+  --border: rgba(255,255,255,0.08); --border-subtle: rgba(255,255,255,0.05);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter','Noto Sans SC', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text-2);
+  font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh;
+}
+body::before {
+  content: ''; position: fixed; top:0; left:0; right:0; bottom:0;
+  background: radial-gradient(ellipse 800px 600px at 20% 0%, rgba(94,106,210,0.08), transparent),
+              radial-gradient(ellipse 600px 400px at 80% 100%, rgba(16,185,129,0.05), transparent);
+  pointer-events: none; z-index: 0;
+}
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-3);
+  text-decoration: none; font-size: 14px; margin-top: 32px; transition: color 0.2s; }
+.back-link:hover { color: var(--accent-hover); }
+header { padding: 40px 0 32px; }
+header h1 { font-size: 38px; font-weight: 600; color: var(--text); letter-spacing: -1px; margin-bottom: 8px; }
+header .subtitle { font-size: 17px; color: var(--text-3); }
+.stats { display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap; }
+.stats .stat .num { font-size: 28px; font-weight: 700; color: var(--text); }
+.stats .stat .label { font-size: 13px; color: var(--text-4); }
+
+/* Sections with divider */
+section { padding: 32px 0; }
+section + section { border-top: 1px solid var(--border-subtle); }
+.section-title { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 4px; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+.section-desc { font-size: 14px; color: var(--text-3); margin-bottom: 20px; }
+
+/* Highlight cards (top 3) */
+.highlights { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 700px) { .highlights { grid-template-columns: 1fr 1fr 1fr; } }
+.highlight-card {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; text-decoration: none; transition: all 0.25s;
+  display: block; position: relative; overflow: hidden;
+}
+.highlight-card:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+.highlight-card .rank { font-size: 32px; font-weight: 700; color: var(--text-4); margin-bottom: 8px; line-height: 1; }
+.highlight-card .repo-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; word-break: break-all; }
+.highlight-card .repo-cn { font-size: 14px; color: #a5b4fc; margin-bottom: 6px; font-weight: 600; }
+.highlight-card .repo-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.highlight-card .repo-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-4); }
+.highlight-card .stars-week { color: var(--emerald); font-weight: 600; }
+
+/* Track section */
+.track-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.track-header h2 { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+.track-header .track-count { font-size: 13px; color: var(--text-4); }
+.track-desc { font-size: 13px; color: var(--text-4); margin-bottom: 16px; }
+
+/* Repo list (per track) */
+.repo-list { display: flex; flex-direction: column; gap: 8px; }
+.repo-card {
+  background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 14px 18px; text-decoration: none; transition: all 0.2s;
+  display: block;
+}
+.repo-card:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
+.repo-card .repo-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.repo-card .repo-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.repo-card .repo-name:hover { color: var(--accent-hover); }
+.repo-card .lang-badge { font-size: 10px; padding: 2px 7px; border-radius: 9999px; white-space: nowrap; }
+.repo-card .repo-cn { font-size: 13px; color: #a5b4fc; margin-bottom: 4px; font-weight: 600; }
+.repo-card .repo-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; margin-bottom: 6px; }
+.repo-card .repo-stats { display: flex; gap: 16px; font-size: 11px; color: var(--text-4); }
+.repo-card .repo-stats .delta { color: var(--emerald); font-weight: 600; }
+
+/* Archive list */
+.archive-list { display: flex; flex-direction: column; gap: 8px; }
+.archive-item { background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 14px 20px; text-decoration: none; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+.archive-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
+.archive-item .week-id { font-size: 15px; font-weight: 500; color: var(--text); }
+.archive-item .week-date { font-size: 13px; color: var(--text-4); }
+
+/* Archive link button */
+.archive-link-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 10px 20px;
+  border: 1px solid var(--border); border-radius: 8px; color: var(--text-3);
+  text-decoration: none; font-size: 14px; transition: all 0.2s;
+}
+.archive-link-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.02); }
+
+footer { border-top: 1px solid var(--border-subtle); padding: 40px 0; text-align: center; color: var(--text-4); font-size: 13px; margin-top: 40px; }
+footer a { color: var(--text-3); text-decoration: none; }
+footer a:hover { color: var(--accent-bright); }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="../index.html" class="back-link">← 返回主页</a>
+
+  <header>
+    <h1>GitHub 趋势周报</h1>
+    <p class="subtitle">2026-W36 · 2026年8月31日 - 9月6日</p>
+    <div class="stats">
+      <div class="stat"><div class="num">24</div><div class="label">收录项目</div></div>
+      <div class="stat"><div class="num">5</div><div class="label">赛道覆盖</div></div>
+      <div class="stat"><div class="num">+22,095</div><div class="label">最高周增长</div></div>
+    </div>
+  </header>
+
+  <section id="highlights">
+    <h2 class="section-title">🏆 本周焦点</h2>
+    <p class="section-desc">本周 GitHub 增长最快的 3 个项目</p>
+    <div class="highlights">
+
+    <a class="highlight-card" href="https://github.com/tt-a1i/archify" target="_blank">
+      <div class="rank">🥇</div>
+      <div class="repo-name">tt-a1i/archify</div>
+      <div class="repo-cn">Agent 架构图技能，生成自包含 HTML 架构图、工作流图、时序图，支持动画和导出</div>
+      <p class="repo-desc">Agent skill for beautiful, verifiable architecture, workflow, sequence, data-flow, and lifecycle diagrams—self-contained HTML with motion and crisp export.</p>
+      <div class="repo-meta">
+        <span class="stars-week">+22,095 ⭐/周</span>
+        <span style="color:#f1e05a">● JavaScript</span>
+      </div>
+    </a>
+    <a class="highlight-card" href="https://github.com/freestylefly/awesome-gpt-image-2" target="_blank">
+      <div class="rank">🥈</div>
+      <div class="repo-name">freestylefly/awesome-gpt-image-2</div>
+      <div class="repo-cn">GPT-Image2 工业级提示词引擎与模板库，530+ 案例逆向工程，20+ 套工业模板</div>
+      <p class="repo-desc">Prompt as Code | GPT-Image2 工业级提示词引擎与模板库，530+ 个案例逆向工程，20+ 套工业级模板，并提炼出Skills，持续更新中</p>
+      <div class="repo-meta">
+        <span class="stars-week">+11,711 ⭐/周</span>
+        <span style="color:#f1e05a">● JavaScript</span>
+      </div>
+    </a>
+    <a class="highlight-card" href="https://github.com/omacom/omarchy" target="_blank">
+      <div class="rank">🥉</div>
+      <div class="repo-name">omacom/omarchy</div>
+      <div class="repo-cn">Basecamp 出品的精美现代 Linux 桌面发行版</div>
+      <p class="repo-desc">Beautiful, Modern & Opinionated Linux</p>
+      <div class="repo-meta">
+        <span class="stars-week">+6,382 ⭐/周</span>
+        <span style="color:#89e051">● Shell</span>
+      </div>
+    </a>
+    </div>
+  </section>
+
+    <section id="track-agent">
+      <div class="track-header">
+        <h2>🤖 AI Agent / Agentic</h2>
+        <span class="track-count">5 个项目</span>
+      </div>
+      <p class="track-desc">本周 Agent 赛道爆发，涌现多个高增长应用方向。scientific-agent-skills（+6,248⭐）将 Agent Skills 扩展到科研领域，ai-job-search（+5,463⭐）把 Agent 用于求职全流程，OpenMAIC（+5,014⭐）来自清华大学做多 Agent 教学场景。freellmapi 聚合 34 个免费 LLM 供应商降低 Agent 部署成本，claude-mem 和 Apache Maka 分别解决 Agent 记忆持久化和工作区日志问题。趋势：Agent 正从通用编程向垂直领域（科研/教育/求职）渗透，Skills 生态快速标准化。</p>
+      <div class="repo-list">
+
+        <a class="repo-card" href="https://github.com/K-Dense-AI/scientific-agent-skills" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">K-Dense-AI/scientific-agent-skills</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">面向科研的 Agent Skills 库，165 个经验证技能覆盖生物/化学/医学/药物发现，兼容 Cursor/Claude Code/Codex</div>
+          <p class="repo-desc">Turn any AI agent into an AI Scientist. The #1 Agent Skills library for science, used by 190,000+ scientists worldwide. 165 ready-to-use validated skills plus 100+ scientific databases covering biology, chemistry, medicine, and drug discovery. Compatible with Cursor, Claude Code, Codex, Pi, Antigravity, and the open Agent Skills standard.</p>
+          <div class="repo-stats">
+            <span class="delta">+6,248 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/MadsLorentzen/ai-job-search" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">MadsLorentzen/ai-job-search</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">基于 Claude Code 的本地 AI 求职框架，自动评估职位、定制简历、写求职信、准备面试</div>
+          <p class="repo-desc">The job search that runs on your machine. AI job application framework built on Claude Code: evaluate postings, tailor CVs, write cover letters, prep interviews. Fork it and own it.</p>
+          <div class="repo-stats">
+            <span class="delta">+5,463 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/THU-MAIC/OpenMAIC" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">THU-MAIC/OpenMAIC</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">清华大学开源的多 Agent 交互式课堂平台，一键获得沉浸式多 Agent 学习体验</div>
+          <p class="repo-desc">Open Multi-Agent Interactive Classroom — Get an immersive, multi-agent learning experience in just one click</p>
+          <div class="repo-stats">
+            <span class="delta">+5,014 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/tashfeenahmed/freellmapi" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">tashfeenahmed/freellmapi</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">聚合 34 个免费 LLM 供应商、635 个模型端点的统一 /v1 接口，支持智能路由和自动故障转移</div>
+          <p class="repo-desc">7.4 billion tokens per month. 34 free LLM providers. 635 free model endpoints. All behind one /v1 endpoint, plus any custom OpenAI-compatible endpoint. Smart routing, automatic failover, encrypted keys. Personal experimentation only.</p>
+          <div class="repo-stats">
+            <span class="delta">+3,640 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/apache/maka" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">apache/maka</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">Apache 孵化项目，本地优先的 AI Agent 工作区，以追加日志记录所有工具调用和权限决策</div>
+          <p class="repo-desc">Apache Maka (Incubating) is a local-first AI agent workspace. Model messages, tool calls, tool results, permission decisions, and termination events are recorded as an append-only log.</p>
+          <div class="repo-stats">
+            <span class="delta">+1,697 ⭐/周</span>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section id="track-llm">
+      <div class="track-header">
+        <h2>🧠 LLM 训练与推理</h2>
+        <span class="track-count">5 个项目</span>
+      </div>
+      <p class="track-desc">本周 LLM 推理赛道以学习资源和极限优化为主。qwen38-27b-rtx3090 展示了单卡消费级 GPU 跑 27B 模型的极致优化方案，DeepSeek 桌面客户端降低了本地部署门槛。学习资源方面，AI-Engineering-Lab（24 周课程）和 llm-inference-engineering 提供了系统性的 LLM 推理工程学习路线。整体趋势：推理优化从学术走向工程实践，学习资源需求旺盛说明大量开发者正在涌入 LLM 部署领域。</p>
+      <div class="repo-list">
+
+        <a class="repo-card" href="https://github.com/zouyuxuan122/DSH-Desktop-EAC" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">zouyuxuan122/DSH-Desktop-EAC</span>
+            <span class="lang-badge" style="background:#f1e05a1a;color:#f1e05a;border:1px solid #f1e05a40">JavaScript</span>
+          </div>
+          <div class="repo-cn">DeepSeek 桌面客户端，内置 Node.js 运行时和完整 CLI 内核，一键启动，10 套 UI 主题</div>
+          <p class="repo-desc">DeepSeek Harness Desktop (dsh-desktop). EAC: Embracing All Creation (揽尽万象). Bundled Node.js runtime with full dsh-CLI kernel, one-click startup, 10 built-in UI themes.</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 1,482</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/syv-ai/qwen38-27b-rtx3090" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">syv-ai/qwen38-27b-rtx3090</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">单卡 RTX 3090 跑 Qwen3.8-27B，64 并发下 ~1000 tok/s，支持 262k 上下文</div>
+          <p class="repo-desc">Qwen3.8-27B on a single RTX 3090 with vLLM: ~1,000 tok/s at 64 concurrent (int8 tensor-core GEMMs, fp16 DeltaNet state), ~114 tok/s single-user at default sampling / ~124 greedy (MTP drafts, own-output draft vocab, calibrated int4 lm_head, split-KV verify attention), 150k-262k context; patches, requant scripts, benchmarks</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 987</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/zorost/AI-Engineering-Lab" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">zorost/AI-Engineering-Lab</span>
+            <span class="lang-badge" style="background:#8a8f981a;color:#8a8f98;border:1px solid #8a8f9840">Jupyter Notebook</span>
+          </div>
+          <div class="repo-cn">24 周自定节奏 AI 工程课程，覆盖 Python/ML/LLM/RAG/微调/Agent/MCP，含 43 个可运行 notebook</div>
+          <p class="repo-desc">A free, self-paced 24-week AI engineering course: Python, machine learning, LLMs, RAG, fine-tuning, agents and MCP, Azure and Vertex and Bedrock, and Databricks. 43 runnable notebooks, one continuous case study. MIT licensed, no signup. By Zorost Intelligence AI Lab.</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 303</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/amitshekhariitbhu/llm-inference-engineering" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">amitshekhariitbhu/llm-inference-engineering</span>
+            <span class="lang-badge" style="background:#8a8f981a;color:#8a8f98;border:1px solid #8a8f9840">Markdown</span>
+          </div>
+          <div class="repo-cn">LLM 推理工程学习指南，从 KV Cache、PagedAttention 到 vLLM、SGLang 逐步讲解</div>
+          <p class="repo-desc">Learn LLM Inference Engineering step by step - from KV cache, PagedAttention, and continuous batching to vLLM, SGLang, and GPUs.</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 237</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/Hebbian-Robotics/hflow" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">Hebbian-Robotics/hflow</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">面向机器人团队的 SDK，验证 AI 模型训练数据质量</div>
+          <p class="repo-desc">SDK for robotics teams to verify the quality of their data used for AI model training.</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 221</span>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section id="track-devtools">
+      <div class="track-header">
+        <h2>🛠️ 开发者工具</h2>
+        <span class="track-count">5 个项目</span>
+      </div>
+      <p class="track-desc">本周开发者工具赛道侧重 AI 编程和技能化。ai-engineering-from-scratch（+3,735⭐）以教程形式覆盖 AI 工程全链路，OpenLogi（+2,565⭐）持续增长说明去账号化外设工具需求旺盛。terminal-code 和 VelaTerm 都在尝试将 AI 编程能力整合进终端，mono-color-skill 则代表了 Agent Skills 向设计领域的扩展。趋势：开发工具正在全面 AI 化，终端不再是执行命令的工具而是 AI 编程的前端。</p>
+      <div class="repo-list">
+
+        <a class="repo-card" href="https://github.com/rohitg00/ai-engineering-from-scratch" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">rohitg00/ai-engineering-from-scratch</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">从零学 AI 工程的完整教程，从基础到部署全流程覆盖</div>
+          <p class="repo-desc">Learn it. Build it. Ship it for others.</p>
+          <div class="repo-stats">
+            <span class="delta">+3,735 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/AprilNEA/OpenLogi" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">AprilNEA/OpenLogi</span>
+            <span class="lang-badge" style="background:#dea5841a;color:#dea584;border:1px solid #dea58440">Rust</span>
+          </div>
+          <div class="repo-cn">用 Rust 编写的罗技 Options+ 替代品，支持按键重映射、DPI 和 SmartShift，无需账号无遥测</div>
+          <p class="repo-desc">⚡️A native, local-first alternative to Logitech Options+, written in Rust 🦀 — remap buttons, DPI, and SmartShift over HID++. No account, no telemetry.</p>
+          <div class="repo-stats">
+            <span class="delta">+2,565 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/yanliudesign/mono-color-skill" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">yanliudesign/mono-color-skill</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">单色编辑印刷图像技能，生成暖纸质感、半色调摄影风格图片</div>
+          <p class="repo-desc">One-ink editorial print image skill — warm paper, halftone photography, active negative space, and restrained typography.</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 2,585</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/zenbu-labs/terminal-code" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">zenbu-labs/terminal-code</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">终端里的 VS Code，在命令行中获得完整 IDE 体验</div>
+          <p class="repo-desc">VS Code in the terminal</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 1,818</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/vlinx-io/VelaTerm" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">vlinx-io/VelaTerm</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">专为 AI 编程设计的终端工具，整合 iTerm2 和 Codex</div>
+          <p class="repo-desc">VelaTerm = iTerm2 + Codex, The Best Terminal for AI Coding</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 111</span>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section id="track-audio">
+      <div class="track-header">
+        <h2>🎵 音频/多模态 AI</h2>
+        <span class="track-count">4 个项目</span>
+      </div>
+      <p class="track-desc">本周音频赛道以本地化 TTS 和语音工具为主。Talkify 延续 macOS 本地语音听写方向，nari-qwen3-tts 基于 Qwen3-TTS 实现超低延迟推理（<50ms 首音频）。studynarrator-ai 提供本地脚本转音频方案，touhou-osu-index 则是音乐游戏数据索引。本赛道本周无 trending 新项目，热度仍属小众，但 Qwen3-TTS 的超低延迟推理值得持续关注。</p>
+      <div class="repo-list">
+
+        <a class="repo-card" href="https://github.com/tornikegomareli/Talkify" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">tornikegomareli/Talkify</span>
+            <span class="lang-badge" style="background:#F051381a;color:#F05138;border:1px solid #F0513840">Swift</span>
+          </div>
+          <div class="repo-cn">macOS 上的本地语音听写工具，设备端转录，快速且免费不联网</div>
+          <p class="repo-desc">Lightning-fast, free, local first voice dictation for macOS with on-device transcription</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 532</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/nari-labs/nari-qwen3-tts" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">nari-labs/nari-qwen3-tts</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">超快 Qwen3-TTS 推理，首音频延迟低于 50ms，10 并发请求</div>
+          <p class="repo-desc">Ultrafast Qwen3-TTS: sub-50 ms time-to-first-audio at 10 requests per second. </p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 132</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/N0zoM1z0/touhou-osu-index" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">N0zoM1z0/touhou-osu-index</span>
+            <span class="lang-badge" style="background:#3572A51a;color:#3572A5;border:1px solid #3572A540">Python</span>
+          </div>
+          <div class="repo-cn">东方 Project 音乐在 osu! 中的开放可复现索引</div>
+          <p class="repo-desc">Open, reproducible index of Touhou Project music mapped in osu!</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 72</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/drofnas/studynarrator-ai" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">drofnas/studynarrator-ai</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">本地优先的脚本转音频工具，对接外部 Speaches TTS 服务器</div>
+          <p class="repo-desc">Local-first script-to-audio authoring and rendering for external Speaches text-to-speech servers.</p>
+          <div class="repo-stats">
+            <span class="delta">⭐ 1</span>
+          </div>
+        </a>
+      </div>
+    </section>
+    <section id="track-ecosystem">
+      <div class="track-header">
+        <h2>🌱 新兴生态</h2>
+        <span class="track-count">5 个项目</span>
+      </div>
+      <p class="track-desc">本周生态赛道大爆发。archify 以 +22,095⭐ 领跑全站，说明 Agent Skills 对高质量图表模板的需求极其旺盛。awesome-gpt-image-2（+11,711⭐）展示了 GPT-Image2 提示词工程的工业化趋势。OpenCut（开源剪映）和 open-seo（开源 Semrush）持续增长反映开源替代商业软件的趋势。omarchy 稳定增长。整体趋势：Agent Skills 生态正在快速形成，图表/设计类 Skills 成为新热点。</p>
+      <div class="repo-list">
+
+        <a class="repo-card" href="https://github.com/tt-a1i/archify" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">tt-a1i/archify</span>
+            <span class="lang-badge" style="background:#f1e05a1a;color:#f1e05a;border:1px solid #f1e05a40">JavaScript</span>
+          </div>
+          <div class="repo-cn">Agent 架构图技能，生成自包含 HTML 架构图、工作流图、时序图，支持动画和导出</div>
+          <p class="repo-desc">Agent skill for beautiful, verifiable architecture, workflow, sequence, data-flow, and lifecycle diagrams—self-contained HTML with motion and crisp export.</p>
+          <div class="repo-stats">
+            <span class="delta">+22,095 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/freestylefly/awesome-gpt-image-2" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">freestylefly/awesome-gpt-image-2</span>
+            <span class="lang-badge" style="background:#f1e05a1a;color:#f1e05a;border:1px solid #f1e05a40">JavaScript</span>
+          </div>
+          <div class="repo-cn">GPT-Image2 工业级提示词引擎与模板库，530+ 案例逆向工程，20+ 套工业模板</div>
+          <p class="repo-desc">Prompt as Code | GPT-Image2 工业级提示词引擎与模板库，530+ 个案例逆向工程，20+ 套工业级模板，并提炼出Skills，持续更新中</p>
+          <div class="repo-stats">
+            <span class="delta">+11,711 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/omacom/omarchy" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">omacom/omarchy</span>
+            <span class="lang-badge" style="background:#89e0511a;color:#89e051;border:1px solid #89e05140">Shell</span>
+          </div>
+          <div class="repo-cn">Basecamp 出品的精美现代 Linux 桌面发行版</div>
+          <p class="repo-desc">Beautiful, Modern & Opinionated Linux</p>
+          <div class="repo-stats">
+            <span class="delta">+6,382 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/OpenCut-app/OpenCut" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">OpenCut-app/OpenCut</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">开源版剪映替代品，免费的视频编辑工具</div>
+          <p class="repo-desc">The open-source CapCut alternative</p>
+          <div class="repo-stats">
+            <span class="delta">+2,540 ⭐/周</span>
+          </div>
+        </a>
+        <a class="repo-card" href="https://github.com/every-app/open-seo" target="_blank">
+          <div class="repo-top">
+            <span class="repo-name">every-app/open-seo</span>
+            <span class="lang-badge" style="background:#3178c61a;color:#3178c6;border:1px solid #3178c640">TypeScript</span>
+          </div>
+          <div class="repo-cn">开源版 Semrush/Ahrefs 替代品，免费 SEO 分析工具</div>
+          <p class="repo-desc">Open source alternative to Semrush and Ahrefs</p>
+          <div class="repo-stats">
+            <span class="delta">+2,308 ⭐/周</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  <section id="archive-link">
+    <a href="archive.html" class="archive-link-btn">📋 查看往期归档 →</a>
+  </section>
+</div>
+
+<footer>
+  <p>GitHub 趋势周报 · 由 Hermes Agent 自动生成 · <a href="https://github.com/trending">GitHub Trending</a></p>
+</footer>
+</body>
+</html>
