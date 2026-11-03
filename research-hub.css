@@ -31,7 +31,7 @@ header { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr
 .hero-copy { max-width:660px; }
 .eyebrow { display:flex; align-items:center; gap:10px; margin-bottom:20px; color:var(--green); font:11px 'JetBrains Mono',monospace; letter-spacing:.16em; text-transform:uppercase; }
 .eyebrow::before { content:''; width:24px; height:1px; background:var(--green); }
-header h1 { font-size:clamp(46px,6vw,70px); font-weight:600; color:var(--text); letter-spacing:-2.8px; line-height:1.12; margin-bottom:18px; }
+header h1 { font-size:clamp(42px,4.8vw,56px); font-weight:600; color:var(--text); letter-spacing:-1.4px; line-height:1.2; margin-bottom:16px; }
 header h1 span { color:var(--green); }
 header .subtitle { font-size:17px; color:var(--text-3); line-height:1.75; max-width:570px; }
 header .links { margin-top:24px; display:flex; gap:11px; flex-wrap:wrap; }
@@ -51,12 +51,6 @@ header .links a svg { width:16px; height:16px; }
 .visual-node.n1 { left:calc(50% - 22px);top:19px; }.visual-node.n2 { right:34px;top:calc(50% - 22px); }.visual-node.n3 { left:calc(50% - 22px);bottom:19px; }.visual-node.n4 { left:34px;top:calc(50% - 22px); }
 .visual-caption { position:absolute;left:20px;bottom:16px;color:var(--text-4);font:10px 'JetBrains Mono',monospace;letter-spacing:.12em; }
 .hero-note { position:absolute;right:18px;bottom:14px;color:var(--text-4);font:10px 'JetBrains Mono',monospace; }
-
-/* Small, contextual metrics */
-.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; margin:0 0 20px; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--border); }
-.stats .stat { min-height:88px; padding:16px 20px; background:rgba(13,21,29,.94); }
-.stats .stat .num { font:600 25px Inter,sans-serif; color:var(--text); letter-spacing:-.7px; }
-.stats .stat .label { margin-top:3px; font-size:11px; color:var(--text-4); }
 
 /* Library sections and tools */
 section { padding:68px 0; }
@@ -116,5 +110,5 @@ footer a { color:var(--text-3);text-decoration:none;margin-left:9px; }
 footer a:hover { color:var(--accent-bright); }
 
 @media(max-width:1000px) { .research-grid{grid-template-columns:repeat(2,minmax(0,1fr))}header{gap:32px} }
-@media(max-width:720px) { .container{padding:0 22px}header{grid-template-columns:1fr;padding:56px 0 38px;gap:30px}.hero-visual{min-height:250px}.stats{grid-template-columns:repeat(2,1fr)}.tools-row{align-items:stretch;flex-direction:column}.search-box{width:100%}.research-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trends-latest{grid-template-columns:1fr}.trends-archive-link{justify-self:start}.top-nav{gap:15px} }
-@media(max-width:520px) { .container{padding:0 17px}.topbar{min-height:60px}.top-nav{gap:11px}.top-nav a{font-size:11px}.brand{font-size:11px}.brand-mark{width:27px;height:27px}header{padding:44px 0 32px}header h1{font-size:45px;letter-spacing:-1.8px}header .subtitle{font-size:15px}.hero-visual{min-height:225px}.stats .stat{min-height:76px;padding:13px 14px}.stats .stat .num{font-size:22px}.stats .stat .label{font-size:10px}section{padding:49px 0}.section-head{align-items:start;flex-direction:column;gap:7px}.section-title{font-size:24px}.section-desc{font-size:13px}.filter-bar{gap:3px}.filter-btn{padding:7px 9px;font-size:11px}.research-grid{grid-template-columns:1fr}.research-card{min-height:0;padding:19px}.research-card .card-desc{font-size:13px}.trends-card{padding:20px}.trends-week{font-size:16px} }
+@media(max-width:720px) { .container{padding:0 22px}header{grid-template-columns:1fr;padding:56px 0 38px;gap:30px}.hero-visual{min-height:250px}.tools-row{align-items:stretch;flex-direction:column}.search-box{width:100%}.research-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trends-latest{grid-template-columns:1fr}.trends-archive-link{justify-self:start}.top-nav{gap:15px} }
+@media(max-width:520px) { .container{padding:0 17px}.topbar{min-height:60px}.top-nav{gap:11px}.top-nav a{font-size:11px}.brand{font-size:11px}.brand-mark{width:27px;height:27px}header{padding:44px 0 32px}header h1{font-size:40px;letter-spacing:-1px}header .subtitle{font-size:15px}.hero-visual{min-height:225px}section{padding:49px 0}.section-head{align-items:start;flex-direction:column;gap:7px}.section-title{font-size:24px}.section-desc{font-size:13px}.filter-bar{gap:3px}.filter-btn{padding:7px 9px;font-size:11px}.research-grid{grid-template-columns:1fr}.research-card{min-height:0;padding:19px}.research-card .card-desc{font-size:13px}.trends-card{padding:20px}.trends-week{font-size:16px} }
