@@ -42,6 +42,19 @@ github-pages/
 2. 把 `github-pages/` 目录下所有文件推送上去
 3. 等待 1-2 分钟，访问 `https://<你的用户名>.github.io`
 
+## 趋势周报自动更新
+
+`.github/workflows/weekly-trends.yml` 每周一北京时间 08:30 运行，采集刚结束的完整 ISO 周，并将周报 HTML、来源快照、首页最新入口和归档列表提交到 `main`。GitHub Pages 从该分支发布后，主页即可看到新一期。
+
+采集来源：
+
+- GitHub Trending 周榜：项目发现和榜单星数（仅在源页面提供时记录）
+- arXiv API：`cs.AI`、`cs.CL`、`cs.LG`、`cs.DC`、`cs.SE` 本周新稿
+- Hugging Face Papers：逐日热榜，单独记录最佳排名、上榜天数和票数
+- GitHub Releases Atom：vLLM Ascend、Triton-Ascend、Ascend for PyTorch、SGLang Ascend、vLLM 和 SGLang
+
+每期原始结构化快照保存在 `trends/data/`，HTML 报告保存在 `trends/`。如需手动补生成某周，可在 GitHub Actions 中运行 **Weekly ecosystem trends** 并输入 ISO 周，例如 `2026-W45`。
+
 ## 当前报告
 
 | 报告 | 日期 | 论文数 | 产品数 | 版本 |
