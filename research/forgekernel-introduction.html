@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="用中文介绍 OpenBMB ForgeKernel 的组成、agent 分工、GPU kernel 优化流程与适用边界。">
+<title>ForgeKernel：仓库介绍与工作流程 · Research Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08090a;--panel:#101214;--surface:#191c20;--text:#f7f8f8;--text2:#d0d6e0;--muted:#9299a5;--faint:#656c77;--accent:#818cf8;--cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--border:rgba(255,255,255,.09);--subtle:rgba(255,255,255,.045)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text2);font:16px/1.75 Inter,'Noto Sans SC',system-ui,sans-serif;-webkit-font-smoothing:antialiased}body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 800px 520px at 18% 0%,rgba(94,106,210,.13),transparent),radial-gradient(ellipse 700px 500px at 90% 70%,rgba(16,185,129,.06),transparent)}a{color:var(--cyan);text-decoration:none}a:hover{color:#a5f3fc;text-decoration:underline}.container{max-width:980px;margin:auto;padding:0 24px;position:relative}.back{display:inline-block;margin:34px 0 30px;color:var(--muted);font-size:14px}.hero{padding:24px 0 42px;border-bottom:1px solid var(--border);margin-bottom:38px}.badge{display:inline-block;border:1px solid rgba(129,140,248,.35);background:rgba(129,140,248,.1);color:#b7bcff;padding:4px 11px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.03em}.hero h1{font-size:clamp(32px,6vw,48px);line-height:1.2;letter-spacing:-1.2px;color:var(--text);margin:18px 0 14px}.hero p{max-width:790px;color:var(--muted);font-size:17px;margin:0}.meta{display:flex;gap:18px;flex-wrap:wrap;color:var(--faint);font-size:13px;margin-top:20px}.summary{padding:24px 26px;background:linear-gradient(135deg,rgba(129,140,248,.09),rgba(34,211,238,.035));border:1px solid rgba(129,140,248,.2);border-radius:14px;margin:30px 0 44px}.summary strong{color:var(--text)}.section{margin:0 0 52px}.section h2{color:var(--text);font-size:26px;line-height:1.35;margin:0 0 19px;padding-bottom:12px;border-bottom:1px solid var(--border);letter-spacing:-.4px}.section h3{color:var(--text);font-size:18px;margin:28px 0 10px}.section p{margin:0 0 14px}.section strong{color:var(--text)}.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.role,.part{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 19px}.role h3,.part h3{margin:0 0 6px;font-size:16px}.role p,.part p{margin:0;color:var(--muted);font-size:14px}.role .emoji{font-size:20px;margin-right:7px}.flow{list-style:none;counter-reset:step;margin:22px 0;padding:0;display:grid;gap:10px}.flow li{counter-increment:step;display:grid;grid-template-columns:42px 1fr;gap:13px;align-items:start;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:14px 17px}.flow li:before{content:counter(step,decimal-leading-zero);font:500 13px 'JetBrains Mono',monospace;color:var(--cyan);padding-top:3px}.flow strong{color:var(--text)}.flow span{color:var(--muted);font-size:14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.table-wrap{overflow-x:auto;margin:18px 0}table{border-collapse:collapse;width:100%;font-size:14px;min-width:580px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top}th{color:var(--text);background:var(--subtle)}td:first-child{color:var(--text);font-weight:600}.callout{padding:17px 20px;border-left:3px solid var(--amber);background:rgba(251,191,36,.055);border-radius:0 9px 9px 0;margin:20px 0}.callout strong{color:#fde68a}.quote{padding:18px 21px;border-left:3px solid var(--green);background:rgba(52,211,153,.055);border-radius:0 9px 9px 0;color:var(--text);font-weight:500}.sources{display:grid;gap:8px}.sources a{font-size:14px}.footer{border-top:1px solid var(--border);padding:24px 0 44px;color:var(--faint);font-size:13px}.footer a{margin-right:16px}code{font:13px 'JetBrains Mono',monospace;color:#b7bcff;background:rgba(129,140,248,.1);padding:2px 5px;border-radius:4px}
+@media(max-width:680px){.container{padding:0 18px}.roles,.grid{grid-template-columns:1fr}.hero{padding-top:10px}.section h2{font-size:23px}.flow li{grid-template-columns:34px 1fr;padding:13px}}
+</style>
+</head>
+<body>
+<main class="container">
+  <a class="back" href="../index.html#research">← 返回调研报告</a>
+  <header class="hero">
+    <span class="badge">AI 工程 · 开源项目解析</span>
+    <h1>ForgeKernel：仓库介绍与工作流程</h1>
+    <p>把 GPU kernel 的分析、编码、正确性检查和性能测量组织成一个由 coding agent 驱动的迭代优化流程。</p>
+    <div class="meta"><span>📅 调研日期：2026 年 11 月 3 日</span><span>📦 OpenBMB/ForgeKernel</span><span>📄 中文仓库解读</span></div>
+  </header>
+
+  <div class="summary"><strong>先记住这一句：</strong>人定义任务，Teacher 规划，Student 写 kernel，ForgeKernel 组织实验，GPU 验证结果；验证结果再决定下一轮怎么做。ForgeKernel 不是大模型本身，也不只是 skill，而是围绕 agent 和 GPU 实测构建的优化框架。</div>
+
+  <section class="section">
+    <h2>它由什么组成？</h2>
+    <p>可以把 ForgeKernel 想成一套自动化实验室：agent 负责思考和写代码，框架负责安排实验与记录，GPU 负责给出可测量的结果。</p>
+    <div class="roles">
+      <article class="role"><h3><span class="emoji">🧑‍💻</span>用户：定义任务</h3><p>描述算子语义、测试输入、参考实现、目标 GPU 和优化目标。</p></article>
+      <article class="role"><h3><span class="emoji">🧭</span>Teacher agent：做规划</h3><p>分析参考实现和硬件表现，制定 milestone；遇到停滞时诊断并调整计划。</p></article>
+      <article class="role"><h3><span class="emoji">🛠️</span>Student agent：写实现</h3><p>根据 milestone 逐项修改 kernel 代码。</p></article>
+      <article class="role"><h3><span class="emoji">⚙️</span>ForgeKernel：管流程</h3><p>启动 agent、提交 GPU 作业、读取判定、保存最佳版本与报告。</p></article>
+      <article class="role"><h3><span class="emoji">🎛️</span>GPU 与分析工具：做验证</h3><p>实际运行候选 kernel，提供正确性、耗时和可选的 profiling 数据。</p></article>
+      <article class="role"><h3><span class="emoji">📚</span>Skills 与硬件知识库</h3><p>为 agent 提供操作规范和经硬件探针验证的知识，供后续任务复用。</p></article>
+    </div>
+    <p>Teacher 和 Student 是两个逻辑角色，可以配置成不同模型，也可以使用同一个模型。当前主线的 agent 适配代码通过外部 Claude Code CLI 启动 agent；agent 并不是打包在 ForgeKernel 里的模型服务。</p>
+  </section>
+
+  <section class="section">
+    <h2>一次优化任务怎么跑？</h2>
+    <p>以仓库自带的 RMSNorm 示例为例，用户先描述算子和目标输入，再由 agent 与 GPU 反复协作：</p>
+    <ol class="flow">
+      <li><div><strong>准备任务</strong><br><span><code>description.md</code> 描述语义，<code>shapes.json</code> 列出测试形状，<code>task.toml</code> 配置语言、GPU、参考实现、模型与预算。</span></div></li>
+      <li><div><strong>创建运行并测参考实现</strong><br><span>ForgeKernel 检查配置、创建独立运行目录，并建立本次比较基线。</span></div></li>
+      <li><div><strong>Teacher 制定 milestone</strong><br><span>分析任务和参考实现，确定架构方向与分阶段的优化决策。</span></div></li>
+      <li><div><strong>Student 修改 kernel</strong><br><span>按计划逐步实现，而不是一次性生成整套代码后就结束。</span></div></li>
+      <li><div><strong>GPU 检查正确性与性能</strong><br><span>运行 judge、测量耗时，并在配置时采集 Nsight Compute 等性能数据。</span></div></li>
+      <li><div><strong>按测量结果继续、回退或重规划</strong><br><span>错误改动会回退；正确且有收益的版本保留为当前最佳；持续停滞时 Teacher 重新诊断。</span></div></li>
+      <li><div><strong>确认并交付</strong><br><span>保存最佳 kernel 与运行报告。可选地把最佳版本变成下一轮参考，继续自进化。</span></div></li>
+    </ol>
+    <div class="callout"><strong>关键点：</strong>agent 提出的代码不自动算成功。是否接受，要看它在目标 GPU 上是否通过正确性检查、是否达到设定的性能目标。</div>
+  </section>
+
+  <section class="section">
+    <h2>Milestone 和“自进化”是什么？</h2>
+    <p><strong>Milestone</strong> 是某个算子的优化课程：描述要做的决策、参数和约束。项目设计的思路是先确定影响最大的结构与编排，再在这个结构内逐步调优。</p>
+    <p><strong>自进化</strong>是把一轮确认通过的最佳 kernel 作为下一轮参考，要求新一轮继续超过它。流程在收益落入测量噪声范围，或没有确认的新最佳版本时停止。</p>
+    <p>这个停止条件是工程上的搜索判据，不是已经证明找到了数学意义上的全局最优。</p>
+  </section>
+
+  <section class="section">
+    <h2>ForgeKernel 和 skill 有什么区别？</h2>
+    <div class="table-wrap"><table><thead><tr><th>组成</th><th>是什么</th><th>负责什么</th></tr></thead><tbody>
+      <tr><td>ForgeKernel</td><td>Python 框架与实验流程</td><td>调度 agent 和 GPU 验证，管理运行状态、结果和报告。</td></tr>
+      <tr><td>Agent</td><td>外部 coding agent</td><td>分析任务、规划优化、编写和修改 kernel。</td></tr>
+      <tr><td>Skill</td><td>说明文档与工具脚本</td><td>指导 agent 如何按项目流程完成工作。</td></tr>
+      <tr><td>GPU 工具链</td><td>运行与性能测量环境</td><td>执行候选代码，产生正确性和性能证据。</td></tr>
+    </tbody></table></div>
+    <div class="quote">更贴切的说法：ForgeKernel 是实验平台；agent 是使用平台设计和实现优化的参与者；skill 是给 agent 的操作手册和辅助工具。</div>
+  </section>
+
+  <section class="section">
+    <h2>使用前要准备什么？</h2>
+    <ul>
+      <li>完整的算子定义：输入输出、数学语义、数据类型与合法输入范围。</li>
+      <li>代表目标使用场景的 shapes 和测试输入。</li>
+      <li>可选但通常有帮助的参考实现；ForgeKernel 更擅长在已有实现上继续优化。</li>
+      <li>运行环境：Linux 或 macOS、Python 3.11+、Git、Claude Code CLI，以及本机或 SSH 可访问的 GPU 环境。</li>
+      <li>按任务准备对应工具链和预算。仓库快速开始面向 NVIDIA Hopper（H100，<code>sm90</code>）与 Blackwell（B200，<code>sm100</code>），常用 CuTe DSL 或 CUDA C++。</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>能力与边界</h2>
+    <div class="grid">
+      <article class="part"><h3>适合的场景</h3><p>已经有可运行的参考实现，希望针对明确的 GPU、shape 和正确性要求持续优化 kernel。</p></article>
+      <article class="part"><h3>不保证从零成功</h3><p>项目说明指出，有参考实现时效果通常更好；从零写出第一版 kernel 并非它最有把握的场景。</p></article>
+      <article class="part"><h3>结果依赖实验条件</h3><p>性能数字取决于 workload、参考实现、GPU 和软件版本。仓库公布的提升数据没有在本文中独立复现。</p></article>
+      <article class="part"><h3>成本不低</h3><p>完整运行可能需要数小时 GPU 时间和较多模型调用；优化搜索也不等于证明全局最优。</p></article>
+    </div>
+    <div class="callout"><strong>昇腾范围需核实：</strong>README 动态栏提到 CANN/昇腾榜单成绩，但快速开始、任务配置和主线代码文档主要描述 NVIDIA、CUDA 与 CuTe DSL。仅凭榜单动态无法确认当前 <code>forge run</code> 已具备通用昇腾后端；若目标是昇腾，应先核实对应代码路径和复现步骤。</div>
+  </section>
+
+  <section class="section">
+    <h2>最后这样记就够了</h2>
+    <div class="quote">人定义任务 → Teacher 规划 → Student 写 kernel → ForgeKernel 组织实验 → GPU 验证结果 → 根据证据进入下一轮。</div>
+    <p style="margin-top:18px">所以 ForgeKernel 不是一个专门生成 kernel 的模型，而是一个围绕 agent 和 GPU 实测构建的自动化 kernel 优化流程框架。</p>
+  </section>
+
+  <section class="section">
+    <h2>资料来源</h2>
+    <div class="sources">
+      <a href="https://github.com/OpenBMB/ForgeKernel">ForgeKernel GitHub 仓库</a>
+      <a href="https://github.com/OpenBMB/ForgeKernel/blob/main/README_zh.md">中文 README：快速开始、工作原理与限制</a>
+      <a href="https://github.com/OpenBMB/ForgeKernel/blob/main/src/forgekernel/loop/driver.py">运行循环源码</a>
+      <a href="https://github.com/OpenBMB/ForgeKernel/blob/main/src/forgekernel/agents.py">Agent 调用适配器</a>
+      <a href="https://github.com/OpenBMB/ForgeKernel/blob/main/docs/design/v1-launch.md">启动与运行设计文档</a>
+      <a href="https://github.com/OpenBMB/ForgeKernel/blob/main/docs/design/milestone-distillation.md">Milestone 蒸馏设计文档</a>
+      <a href="https://github.com/OpenBMB/ForgeKernel/blob/main/skills/README.md">Skills 目录说明</a>
+      <a href="https://arxiv.org/abs/2610.36434">JustGoal 论文（项目动态中提及；不等同于 ForgeKernel 全部性能结果）</a>
+    </div>
+  </section>
+  <footer class="footer"><a href="../index.html#research">返回 Research Hub</a><a href="forgekernel-introduction.md">查看 Markdown 原稿</a><span>调研整理：2026.11</span></footer>
+</main>
+</body>
+</html>
