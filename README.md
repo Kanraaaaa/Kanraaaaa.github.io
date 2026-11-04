@@ -53,8 +53,11 @@ github-pages/
 - Hugging Face Papers：逐日热榜，单独记录最佳排名、上榜天数和票数
 - GitHub Releases Atom：vLLM Ascend、Triton-Ascend、Ascend for PyTorch、SGLang Ascend、vLLM 和 SGLang
 - 科技 RSS/Atom：OpenAI News、Google DeepMind、Hugging Face Blog、NVIDIA Developer、GitHub Blog、Simon Willison，以及机器之心（第三方转换源）；每周条目按发布时间过滤，媒体内容作为线索
+- 优质文章页：从 Simon Willison、Jeff Geerling、Mitchell Hashimoto、Paul Graham 的博客源整理每周最多 5 篇阅读候选，并保留来源背景和原文链接
 
 每期原始结构化快照保存在 `trends/data/`，HTML 报告保存在 `trends/`。如需手动补生成某周，可在 GitHub Actions 中运行 **Weekly ecosystem trends** 并输入 ISO 周，例如 `2026-W45`。
+
+主页的“优质文章”入口指向 `trends/reading.html`。该页从周报快照归档精选博客条目；只纳入小型作者清单，不导入完整的 92 源 OPML。
 
 ## 当前报告
 

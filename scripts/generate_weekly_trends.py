@@ -45,7 +45,16 @@ NEWS_FEEDS = [
     ("NVIDIA Developer Blog", "https://developer.nvidia.com/blog/feed", "official"),
     ("GitHub Blog", "https://github.blog/feed/", "official"),
     ("Simon Willison's Weblog", "https://simonwillison.net/atom/everything/", "independent"),
+    ("Jeff Geerling", "https://www.jeffgeerling.com/blog.xml", "independent"),
+    ("Mitchell Hashimoto", "https://mitchellh.com/feed.xml", "independent"),
+    ("Paul Graham Essays", "http://www.aaronsw.com/2002/feeds/pgessays.rss", "independent"),
     ("机器之心（第三方 RSS）", "http://feedmaker.kindle4rss.com/feeds/almosthuman2014.weixin.xml", "media"),
+]
+READING_SOURCES = [
+    ("Simon Willison's Weblog", "LLM 落地、AI 工具与开发实践", "https://simonwillison.net/atom/everything/"),
+    ("Jeff Geerling", "开源硬件、Linux 与系统工程", "https://www.jeffgeerling.com/blog.xml"),
+    ("Mitchell Hashimoto", "开发者工具、基础设施与软件工程", "https://mitchellh.com/feed.xml"),
+    ("Paul Graham Essays", "技术创业与商业思考", "http://www.aaronsw.com/2002/feeds/pgessays.rss"),
 ]
 ATOM = {"atom": "http://www.w3.org/2005/Atom"}
 
@@ -431,6 +440,53 @@ def update_archive() -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def update_reading_page() -> None:
+    """Build a rolling shortlist from the selected personal blogs in saved weekly snapshots."""
+    source_by_name = {name: (description, feed) for name, description, feed in READING_SOURCES}
+    by_week: dict[str, list[dict]] = {}
+    for snapshot_path in SNAPSHOTS.glob("20??-W??.json"):
+        try:
+            snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        week = snapshot.get("week", snapshot_path.stem)
+        candidates = [item for item in snapshot.get("technology_news", []) if item.get("source_name") in source_by_name and item.get("url")]
+        candidates.sort(key=lambda item: item.get("date", ""), reverse=True)
+        by_week[week] = candidates[:5]
+
+    week_sections = []
+    for week in sorted(by_week, reverse=True):
+        if not by_week[week]:
+            continue
+        cards = []
+        for item in by_week[week]:
+            source_desc, _feed = source_by_name[item["source_name"]]
+            body = item.get("summary") or "打开原文查看内容。"
+            cards.append(
+                f'<article class="article-card"><div class="article-meta">{e(item.get("date", ""))} · {e(item["source_name"])}</div>'
+                f'<h3><a href="{e(item["url"])}" target="_blank" rel="noopener noreferrer">{e(item.get("title", "无标题"))}</a></h3>'
+                f'<p>{e(body[:800])}</p><div class="why">来源关注点：{e(source_desc)}</div></article>'
+            )
+        week_sections.append(f'<section><h2>{e(week)}</h2><div class="article-grid">{"".join(cards)}</div></section>')
+
+    if not week_sections:
+        week_sections.append('<section class="empty"><h2>首批文章将在下一期周报采集后出现</h2><p>本页会从 Simon Willison、Jeff Geerling、Mitchell Hashimoto 和 Paul Graham 的精选订阅源中整理每周候选文章，每周最多 5 篇。</p></section>')
+
+    sources = "".join(
+        f'<article class="source-card"><h3>{e(name)}</h3><p>{e(description)}</p><a href="{e(feed)}" target="_blank" rel="noopener noreferrer">订阅源 ↗</a></article>'
+        for name, description, feed in READING_SOURCES
+    )
+    page = f'''<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>优质文章 · Research Hub</title>
+<style>
+:root{{--bg:#08090a;--panel:#111315;--text:#f7f8f8;--muted:#a0a6b0;--line:#292d33;--accent:#7c83ff}}*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:#d4d8df;font:16px/1.65 Inter,"Noto Sans SC",system-ui,sans-serif}}.wrap{{max-width:960px;margin:auto;padding:0 24px}}a{{color:#a5b4fc}}.back{{display:inline-block;margin-top:28px;text-decoration:none;color:var(--muted)}}header{{padding:34px 0 24px}}h1{{font-size:36px;color:var(--text);margin:12px 0 6px}}h2{{font-size:21px;color:var(--text);margin:0 0 14px}}h3{{font-size:16px;color:#fff;margin:0 0 8px}}.muted{{color:var(--muted)}}section{{padding:24px 0;border-top:1px solid var(--line)}}.source-grid,.article-grid{{display:grid;grid-template-columns:1fr 1fr;gap:12px}}.source-card,.article-card,.empty{{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}}.source-card p,.article-card p,.empty p{{font-size:14px;color:#b5bac3;margin:0 0 9px}}.article-meta,.why{{font-size:12px;color:var(--muted)}}.article-card h3{{margin:7px 0}}footer{{border-top:1px solid var(--line);margin-top:20px;padding:26px 0;color:var(--muted);font-size:13px}}@media(max-width:680px){{.source-grid,.article-grid{{grid-template-columns:1fr}}h1{{font-size:30px}}}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回主页</a><header><span class="muted">精选个人博客 · 每周更新 · 原文可追溯</span><h1>优质文章</h1><p class="muted">从少量长期关注的技术作者中筛选值得读的文章。这里是阅读候选清单，按主题和作者背景提供线索，不替代原文判断。</p></header>
+<section><h2>精选来源</h2><div class="source-grid">{sources}</div></section>
+{''.join(week_sections)}
+<footer>Research Hub · 每周随生态趋势周报采集更新 · 每周最多收录 5 篇个人博客文章</footer></div></body></html>'''
+    (TRENDS / "reading.html").write_text(page, encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--week", help="ISO week to collect, e.g. 2026-W45; defaults to the previous completed week")
@@ -467,6 +523,7 @@ def main() -> int:
         "technology_news": news,
     }
     (SNAPSHOTS / f"{week}.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    update_reading_page()
     cann_releases = sum(item["track"] == "cann" for item in releases)
     (TRENDS / f"{week}.html").write_text(report_html(week, start, end, trending, arxiv, hf, releases, news, statuses), encoding="utf-8")
     update_home(week, start, end, len(arxiv), cann_releases)
