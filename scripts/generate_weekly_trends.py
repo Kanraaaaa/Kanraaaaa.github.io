@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import email.utils
 import html
 import json
 import re
@@ -37,6 +38,15 @@ RELEASE_REPOS = [
     ("sgl-project/sglang", "SGLang", "llm"),
 ]
 ARXIV_CATEGORIES = ("cs.AI", "cs.CL", "cs.LG", "cs.DC", "cs.SE")
+NEWS_FEEDS = [
+    ("OpenAI News", "https://openai.com/news/rss.xml", "official"),
+    ("Google DeepMind Blog", "https://deepmind.google/blog/rss.xml", "official"),
+    ("Hugging Face Blog", "https://huggingface.co/blog/feed.xml", "official"),
+    ("NVIDIA Developer Blog", "https://developer.nvidia.com/blog/feed", "official"),
+    ("GitHub Blog", "https://github.blog/feed/", "official"),
+    ("Simon Willison's Weblog", "https://simonwillison.net/atom/everything/", "independent"),
+    ("机器之心（第三方 RSS）", "http://feedmaker.kindle4rss.com/feeds/almosthuman2014.weixin.xml", "media"),
+]
 ATOM = {"atom": "http://www.w3.org/2005/Atom"}
 
 
@@ -73,7 +83,11 @@ def parse_date(value: str | None) -> date | None:
     try:
         return datetime.fromisoformat(value.replace("Z", "+00:00")).date()
     except ValueError:
-        return None
+        try:
+            parsed = email.utils.parsedate_to_datetime(value)
+            return parsed.date() if parsed else None
+        except (TypeError, ValueError, OverflowError):
+            return None
 
 
 def plain(value: str | None) -> str:
@@ -246,6 +260,42 @@ def collect_releases(start: date, end: date) -> tuple[list[dict], list[dict]]:
     return releases, statuses
 
 
+def collect_news_feeds(start: date, end: date) -> tuple[list[dict], list[dict]]:
+    """Collect dated RSS/Atom entries from official and independent technology sources."""
+    items, statuses = [], []
+    for label, url, source_kind in NEWS_FEEDS:
+        try:
+            root = ET.fromstring(http_get(url, "application/atom+xml,application/rss+xml,application/xml,text/xml"))
+            entries = root.findall("atom:entry", ATOM) or root.findall(".//item")
+            found = 0
+            for entry in entries:
+                title = plain(entry.findtext("atom:title", default="", namespaces=ATOM) or entry.findtext("title", default=""))
+                date_text = (entry.findtext("atom:published", default="", namespaces=ATOM)
+                             or entry.findtext("atom:updated", default="", namespaces=ATOM)
+                             or entry.findtext("pubDate", default="")
+                             or entry.findtext("{http://purl.org/dc/elements/1.1/}date", default=""))
+                published = parse_date(date_text)
+                if not title or not published or not (start <= published <= end):
+                    continue
+                link_node = entry.find("atom:link", ATOM)
+                link = link_node.attrib.get("href", "") if link_node is not None else entry.findtext("link", default="")
+                summary = (entry.findtext("atom:summary", default="", namespaces=ATOM)
+                           or entry.findtext("atom:content", default="", namespaces=ATOM)
+                           or entry.findtext("description", default=""))
+                items.append({
+                    "title": title, "url": link.strip(), "date": published.isoformat(),
+                    "summary": plain(summary)[:1600], "source_name": label,
+                    "source_kind": source_kind, "track": classify(f"{title} {summary}"),
+                    "source": f"RSS/Atom · {label}",
+                })
+                found += 1
+            statuses.append({"source": f"RSS/Atom · {label}", "status": "ok", "items": found})
+        except Exception as exc:
+            statuses.append({"source": f"RSS/Atom · {label}", "status": f"failed: {str(exc)[:160]}", "items": 0})
+    items.sort(key=lambda item: item["date"], reverse=True)
+    return items, statuses
+
+
 def fetch_optional(name: str, collector, *args):
     try:
         items, status = collector(*args)
@@ -265,7 +315,7 @@ def card(title: str, url: str, body: str, badges: list[str] | None = None, meta:
     return f'<article class="card"><h3>{title_html}</h3>{badge_html}<p>{e(body)}</p>{meta_html}</article>'
 
 
-def report_html(week: str, start: date, end: date, trending: list[dict], arxiv: list[dict], hf: list[dict], releases: list[dict], statuses: list[dict]) -> str:
+def report_html(week: str, start: date, end: date, trending: list[dict], arxiv: list[dict], hf: list[dict], releases: list[dict], news: list[dict], statuses: list[dict]) -> str:
     counts = {key: sum(item["track"] == key for item in trending) for key in TRACKS}
     top_growth = max((item["stars_week"] for item in trending if item.get("stars_week") is not None), default=None)
     last_week_theme = ", ".join(f"{TRACKS[k][0].split(' ', 1)[1]} {v}" for k, v in counts.items() if v)
@@ -309,6 +359,14 @@ def report_html(week: str, start: date, end: date, trending: list[dict], arxiv: 
         release_cards.append(card("本周未发现跟踪仓库的正式 Release", "", "跟踪源包括 vLLM Ascend、Triton-Ascend、Ascend for PyTorch 和 SGLang Ascend。未发现正式 Release 不代表没有代码提交或公告。"))
     release_cards.append(card("本周新模型首发支持 CANN", "", "自动流程只把框架 Release 中明确列出的模型适配记为支持线索。模型首发支持必须另有模型发布方或昇腾官方一手证据；未核实前不会标成已支持。", ["核验规则"]))
 
+    news_cards = []
+    for item in news[:12]:
+        kind_label = {"official": "官方源", "independent": "独立观察", "media": "媒体线索"}.get(item["source_kind"], "订阅源")
+        track_label = TRACKS[item["track"]][0].split(" ", 1)[-1]
+        news_cards.append(card(item["title"], item["url"], item["summary"][:620] or "打开原文查看详情。", [item["date"], track_label], f"{item['source_name']} · {kind_label}"))
+    if not news_cards:
+        news_cards.append(card("本周订阅源没有可用条目", "", "可能是本周没有更新，或 RSS/Atom 源暂时不可用；请查看来源状态。"))
+
     source_rows = "".join(f'<li><b>{e(item["source"])}</b>：{e(item["status"])}，{item["items"]} 条</li>' for item in statuses)
     failed = [item["source"] for item in statuses if item["status"].startswith("failed")]
     failure_note = "部分来源获取失败：" + "、".join(failed) if failed else "所有必需来源均成功获取。"
@@ -327,6 +385,7 @@ def report_html(week: str, start: date, end: date, trending: list[dict], arxiv: 
 <section><h2>📄 arXiv 本周新论文</h2><p class="desc">按首次提交日期检索本周 cs.AI、cs.CL、cs.LG、cs.DC、cs.SE 论文，再按主题匹配；预印本收录不代表同行评审通过。</p><div class="grid">{''.join(arxiv_cards)}</div></section>
 <section><h2>🔥 Hugging Face Papers 社区热度</h2><p class="desc">汇总本周每天的 Papers 热榜，展示最佳日榜位置、上榜天数和票数；这衡量社区注意力，不代表研究质量。</p><div class="grid">{''.join(hf_cards)}</div></section>
 <section><h2>🔴 昇腾 CANN：框架发布与模型支持</h2><p class="desc">跟踪框架 Release、Ascend 软件栈版本和逐模型教程。模型发布与框架新增支持分开记录。</p><div class="grid">{''.join(release_cards)}</div></section>
+<section><h2>📰 科技博客与产业动态</h2><p class="desc">汇总本周订阅源的官方公告、独立技术观察和中文媒体线索；媒体内容用于发现话题，重要结论回查一手来源。</p><div class="grid">{"".join(news_cards)}</div></section>
 <section><h2>📚 来源状态与统计口径</h2><ul>{source_rows}</ul>{source_note}<p class="small">GitHub Trending 是本次运行时的周榜快照；arXiv 以论文首次提交日期过滤；HF Papers 使用逐日历史榜单；项目发布以 GitHub Releases Atom Feed 为准。</p></section>
 <section><a class="back" href="archive.html">📋 查看往期归档 →</a></section></div><footer><div class="wrap">技术生态趋势周报 · {week} · 自动收集，人工可复核</div></footer></body></html>'''
 
@@ -388,6 +447,8 @@ def main() -> int:
     statuses.append(status)
     releases, release_statuses = collect_releases(start, end)
     statuses.extend(release_statuses)
+    news, news_statuses = collect_news_feeds(start, end)
+    statuses.extend(news_statuses)
 
     primary_statuses = statuses[:3]
     if sum(item["status"] == "ok" for item in primary_statuses) < 2:
@@ -403,10 +464,11 @@ def main() -> int:
         "arxiv_papers": arxiv,
         "hf_papers": hf,
         "github_releases": releases,
+        "technology_news": news,
     }
     (SNAPSHOTS / f"{week}.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     cann_releases = sum(item["track"] == "cann" for item in releases)
-    (TRENDS / f"{week}.html").write_text(report_html(week, start, end, trending, arxiv, hf, releases, statuses), encoding="utf-8")
+    (TRENDS / f"{week}.html").write_text(report_html(week, start, end, trending, arxiv, hf, releases, news, statuses), encoding="utf-8")
     update_home(week, start, end, len(arxiv), cann_releases)
     update_archive()
     print(f"Published {week}: GitHub {len(trending)}, arXiv {len(arxiv)}, HF {len(hf)}, CANN releases {cann_releases}")

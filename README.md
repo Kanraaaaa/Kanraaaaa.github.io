@@ -52,6 +52,7 @@ github-pages/
 - arXiv API：`cs.AI`、`cs.CL`、`cs.LG`、`cs.DC`、`cs.SE` 本周新稿
 - Hugging Face Papers：逐日热榜，单独记录最佳排名、上榜天数和票数
 - GitHub Releases Atom：vLLM Ascend、Triton-Ascend、Ascend for PyTorch、SGLang Ascend、vLLM 和 SGLang
+- 科技 RSS/Atom：OpenAI News、Google DeepMind、Hugging Face Blog、NVIDIA Developer、GitHub Blog、Simon Willison，以及机器之心（第三方转换源）；每周条目按发布时间过滤，媒体内容作为线索
 
 每期原始结构化快照保存在 `trends/data/`，HTML 报告保存在 `trends/`。如需手动补生成某周，可在 GitHub Actions 中运行 **Weekly ecosystem trends** 并输入 ISO 周，例如 `2026-W45`。
 
