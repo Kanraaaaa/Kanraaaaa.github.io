@@ -44,7 +44,9 @@ github-pages/
 
 ## 趋势周报自动更新
 
-`.github/workflows/weekly-trends.yml` 每周一北京时间 08:30 运行，采集刚结束的完整 ISO 周，并将周报 HTML、来源快照、首页最新入口和归档列表提交到 `main`。GitHub Pages 从该分支发布后，主页即可看到新一期。
+每周研究与写作由 Codex 自动化执行：每周一北京时间 08:30 回看上一完整 ISO 周，检索并交叉核对一手来源，形成带解读的 HTML 周报和结构化来源快照，更新首页、归档与优质文章页，然后提交并推送到 `main`。GitHub Pages 随仓库更新发布。
+
+旧的 GitHub Actions 周报工作流已移除，避免规则脚本和 Codex 研究版互相覆盖。GitHub Pages 仍会在 Codex 推送 `main` 后自动部署。
 
 采集来源：
 
@@ -55,7 +57,7 @@ github-pages/
 - 科技 RSS/Atom：OpenAI News、Google DeepMind、Hugging Face Blog、NVIDIA Developer、GitHub Blog、Simon Willison，以及机器之心（第三方转换源）；每周条目按发布时间过滤，媒体内容作为线索
 - 优质文章页：从 Simon Willison、Jeff Geerling、Mitchell Hashimoto、Paul Graham 的博客源整理每周最多 5 篇阅读候选，并保留来源背景和原文链接
 
-每期原始结构化快照保存在 `trends/data/`，HTML 报告保存在 `trends/`。如需手动补生成某周，可在 GitHub Actions 中运行 **Weekly ecosystem trends** 并输入 ISO 周，例如 `2026-W45`。
+每期结构化来源快照保存在 `trends/data/`，HTML 报告保存在 `trends/`。若 Codex 自动化提交失败，可在 Codex 自动化运行记录中查看具体原因并重试。
 
 主页的“优质文章”入口指向 `trends/reading.html`。该页从周报快照归档精选博客条目；只纳入小型作者清单，不导入完整的 92 源 OPML。
 

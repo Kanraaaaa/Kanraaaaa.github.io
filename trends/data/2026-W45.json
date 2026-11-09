@@ -1,0 +1,41 @@
+{
+  "week": "2026-W45",
+  "period": {"start": "2026-11-02", "end": "2026-11-08"},
+  "prepared_at": "2026-11-09",
+  "method": {
+    "interpretation": "Codex researched and wrote this report from primary sources, with external trend pages used only for discovery.",
+    "github_stars": "No synchronized week-start/week-end snapshots were retained; weekly star deltas are intentionally omitted.",
+    "arxiv": "Selected by first submission date in the reporting interval.",
+    "hugging_face_papers": "No archived daily leaderboard snapshots for this interval; no HF ranking claims are made.",
+    "cann": "Only dated releases and explicit model/framework support statements count as confirmed support."
+  },
+  "signals": [
+    {"topic":"Agent/Agentic","title":"DeepSeek dsh-superagent research prototype","url":"https://github.com/deepseek-ai/dsh-superagent-prototype","date":"2026-11-02/2026-11-08","source_type":"primary repository","summary":"Repository-scoped proactive coding agent with isolated work sessions, GitHub/optional Feishu intake, PR delivery, and a human review panel. README says research prototype only, not official product or production-ready."},
+    {"topic":"Agent/Developer tools","title":"Codex CLI 0.167.0","url":"https://github.com/openai/codex/releases","date":"2026-11-06","source_type":"primary release","summary":"Adds terminal agent command center and unread-result indicators in the session picker; supports connected backend switching while retaining drafts."},
+    {"topic":"Developer tools/Emerging ecosystem","title":"agent-desktop v1.2.0","url":"https://github.com/vercel-labs/agent-desktop/releases","date":"2026-11-05","source_type":"primary release","summary":"Adds MCP support and desktop interaction improvements; interface is based on operating-system accessibility trees rather than screenshot coordinates."},
+    {"topic":"Agent/Developer tools","title":"Datasette Agent 0.5a0 and Datasette Apps 0.3a0","url":"https://github.com/datasette/datasette-agent/releases/tag/0.5a0","date":"2026-11-03/2026-11-04","source_type":"primary release","summary":"Adds an agent-side panel for Datasette pages and apps; write-query access requires user approval."},
+    {"topic":"Agent paper","title":"Predictive Safety Guardrails Do Not Always Make LLM Agents Safer","url":"https://arxiv.org/abs/2611.02815","date":"2026-11-02","source_type":"arXiv preprint","summary":"Reports that stronger predictive-guardrail involvement did not monotonically improve safety, and could reduce task completion while raising inference cost across tested models/environments."},
+    {"topic":"Agent evaluation paper","title":"LUCA: A Synthetic World for Experimental Reasoning","url":"https://arxiv.org/abs/2611.03100","date":"2026-11-02","source_type":"arXiv preprint","summary":"Introduces controlled synthetic-world evaluation; reports that successful interventions may coexist with incorrect diagnosis and that more exploration is not reliably better."},
+    {"topic":"LLM inference paper","title":"Strategist: Evolving Reasoning with Agents","url":"https://arxiv.org/abs/2611.03618","date":"2026-11-02","source_type":"arXiv preprint","summary":"Uses a meta-agent to produce reusable inference-strategy blueprints; authors report results across 30 benchmarks and lower inference cost, subject to their evaluation protocol."},
+    {"topic":"LLM routing paper","title":"When Strong Reasoners Join the Pool: Small Union Premiums and Costly Runaway Generations in LLM Routing","url":"https://arxiv.org/abs/2611.04098","date":"2026-11-03","source_type":"arXiv preprint","summary":"Measures small empirical union premiums under a fixed protocol and highlights long generations' cost; the author cautions against direct comparison because pools and protocols differ."},
+    {"topic":"CANN ecosystem","title":"No verified W45 formal release or new-model first-support announcement found","url":"https://github.com/vllm-project/vllm-ascend/releases","date":"2026-11-02/2026-11-08","source_type":"release audit","summary":"vLLM Ascend v0.30.0 and Triton-Ascend 3.6.0.post2 were October 29 W44 releases; repository issue/PR activity alone is not treated as a release or deployable model support."}
+  ],
+  "reading": [
+    {"author":"Simon Willison","title":"Datasette Agent 0.5a0 and a panel for Datasette pages","date":"2026-11-03","url":"https://simonwillison.net/2026/nov/3/datasette-agent/","why":"Concrete agent product interaction: chat can create and edit a data app in a side panel; paired with write-query approval design."}
+  ],
+  "sources": [
+    "https://github.com/deepseek-ai/dsh-superagent-prototype",
+    "https://github.com/openai/codex/releases",
+    "https://github.com/vercel-labs/agent-desktop/releases",
+    "https://github.com/datasette/datasette-agent/releases/tag/0.5a0",
+    "https://github.com/datasette/datasette-apps/releases/tag/0.3a0",
+    "https://arxiv.org/abs/2611.02815",
+    "https://arxiv.org/abs/2611.03100",
+    "https://arxiv.org/abs/2611.03618",
+    "https://arxiv.org/abs/2611.04098",
+    "https://github.com/vllm-project/vllm-ascend/releases",
+    "https://github.com/Ascend/triton-ascend",
+    "https://repowatch.top/reports/weekly/2026-W45"
+  ]
+}
+
