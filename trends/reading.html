@@ -3,6 +3,19 @@
 <style>
 :root{--bg:#08090a;--panel:#111315;--text:#f7f8f8;--muted:#a0a6b0;--line:#292d33;--accent:#7c83ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#d4d8df;font:16px/1.65 Inter,"Noto Sans SC",system-ui,sans-serif}.wrap{max-width:960px;margin:auto;padding:0 24px}a{color:#a5b4fc}.back{display:inline-block;margin-top:28px;text-decoration:none;color:var(--muted)}header{padding:34px 0 24px}h1{font-size:36px;color:var(--text);margin:12px 0 6px}h2{font-size:21px;color:var(--text);margin:0 0 14px}h3{font-size:16px;color:#fff;margin:0 0 8px}.muted{color:var(--muted)}section{padding:24px 0;border-top:1px solid var(--line)}.source-grid,.article-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.source-card,.article-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}.source-card p,.article-card p{font-size:14px;color:#b5bac3;margin:0 0 9px}.article-meta,.why{font-size:12px;color:var(--muted)}footer{border-top:1px solid var(--line);margin-top:20px;padding:26px 0;color:var(--muted);font-size:13px}@media(max-width:680px){.source-grid,.article-grid{grid-template-columns:1fr}h1{font-size:30px}}
 </style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回主页</a><header><span class="muted">精选个人博客 · 每周更新 · 原文可追溯</span><h1>优质文章</h1><p class="muted">从少量长期关注的技术作者中筛选值得读的文章。每篇保留推荐理由与原文链接；没有合适内容时宁可少收，不凑数。</p></header>
-<section><h2>本周精选 · 2026-W45</h2><div class="article-grid"><article class="article-card"><div class="article-meta">Simon Willison · 2026年11月3–4日 · Agent 应用与开发工具</div><h3><a href="https://simonwillison.net/2026/nov/3/datasette-agent/">Datasette Agent 新增并排应用面板</a></h3><p>Simon 展示了 Agent 在聊天旁创建、打开和编辑数据库应用的工作方式，并记录了 Datasette Apps 对 Agent 写查询加入用户审批的改动。</p><p class="why"><b>推荐理由：</b>这是一个具体的 Agent 产品交互案例：Agent 结果不止文本回答，而是一个可继续操作的界面；同时写权限审批被纳入工具设计。适合观察 Agent 如何进入数据产品与业务工作流。</p><a href="https://github.com/datasette/datasette-agent/releases/tag/0.5a0">相关发布记录：datasette-agent 0.5a0 ↗</a> · <a href="https://github.com/datasette/datasette-apps/releases/tag/0.3a0">datasette-apps 0.3a0 ↗</a></article></div></section>
+<section><h2>本周精选 · 2026-W46</h2><div class="article-grid">
+<article class="article-card">
+<div class="article-meta">Simon Willison · <time datetime="2026-11-09">2026年11月9日</time> · 代码评审</div>
+<h3><a href="https://simonwillison.net/2026/nov/9/details-summary/">Hide your slop PR descriptions behind &lt;details&gt;&lt;summary&gt;</a></h3><p>作者展示如何用 GitHub Markdown 的折叠块容纳 Agent 生成的长 PR 描述，将自己写的摘要留在显眼位置。</p><p class="why"><b>推荐理由</b>　短摘要指明评审重点，折叠块保留实现细节和旁证。这种写法可以直接用于算子适配 PR。</p>
+</article>
+<article class="article-card">
+<div class="article-meta">Simon Willison · <time datetime="2026-11-09">2026年11月9日</time> · Agent 工程实践</div>
+<h3><a href="https://simonwillison.net/2026/Nov/9/mysterious-beeps/">Locating the source of a mysterious beep with Claude</a></h3><p>作者记录如何用 Claude Code 制作 Beep Locator，使用多台设备的麦克风采样与声学定位来找间歇发声的设备。</p><p class="why"><b>推荐理由</b>　文章展示了如何把模糊问题拆成可测信号，以及 Agent 编写的工具如何配合人到现场验证结果。</p>
+</article>
+<article class="article-card">
+<div class="article-meta">Jeff Geerling · <time datetime="2026-11-14">2026年11月14日</time> · 系统运维</div>
+<h3><a href="https://www.jeffgeerling.com/blog/2026/ops-needs-friction/">Ops needs friction</a></h3><p>作者回顾生产环境开启调试日志造成的负担，以及在负载触发扩容时降低新容器日志级别的折中。</p><p class="why"><b>推荐理由</b>　一个具体案例说明调试可见性有资源成本，适合对照推理集群在流量高峰时的日志和采样策略。</p>
+</article>
+</div></section>
 <section><h2>精选来源</h2><div class="source-grid"><article class="source-card"><h3>Simon Willison's Weblog</h3><p>LLM 落地、AI 工具与开发实践</p><a href="https://simonwillison.net/atom/everything/">订阅源 ↗</a></article><article class="source-card"><h3>Jeff Geerling</h3><p>开源硬件、Linux 与系统工程</p><a href="https://www.jeffgeerling.com/blog.xml">订阅源 ↗</a></article><article class="source-card"><h3>Mitchell Hashimoto</h3><p>开发者工具、基础设施与软件工程</p><a href="https://mitchellh.com/feed.xml">订阅源 ↗</a></article><article class="source-card"><h3>Paul Graham Essays</h3><p>技术创业与商业思考</p><a href="http://www.aaronsw.com/2002/feeds/pgessays.rss">订阅源 ↗</a></article></div></section>
 <footer>Research Hub · 每周随生态趋势周报采集更新 · 每周最多收录 5 篇个人博客文章</footer></div></body></html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技术生态趋势周报 · 2026-W46</title>
+<style>
+:root{--bg:#08090a;--panel:#111315;--text:#f7f8f8;--muted:#a0a6b0;--line:#292d33;--accent:#7c83ff;--green:#34d399}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#d4d8df;font:16px/1.65 Inter,"Noto Sans SC",system-ui,sans-serif}.wrap{max-width:960px;margin:auto;padding:0 24px;position:relative}a{color:#a5b4fc}.back{display:inline-block;margin-top:28px;text-decoration:none;color:var(--muted)}header{padding:38px 0 26px}h1{font-size:38px;line-height:1.2;color:var(--text);margin:16px 0 8px}h2{font-size:22px;color:var(--text);margin:0 0 6px}h3{font-size:16px;color:#fff;margin:0 0 8px}.sub,.desc,.meta{color:var(--muted)}.stats{display:flex;gap:32px;margin-top:22px;flex-wrap:wrap}.num{font-size:25px;color:white;font-weight:700}.label{font-size:12px;color:var(--muted)}section{padding:26px 0;border-top:1px solid var(--line)}.lead,.note,.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}.lead{border-left:3px solid var(--accent)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{padding:17px}.card p{margin:0;color:#b5bac3;font-size:14px}.tag{display:inline-block;font-size:11px;color:#a5b4fc;border:1px solid #494c75;border-radius:20px;padding:1px 8px;margin:0 5px 7px 0}.small{font-size:12px;color:var(--muted)}.notice{color:#fbbf24;font-size:13px}.source-list li{margin:5px 0}footer{border-top:1px solid var(--line);margin-top:28px;padding:30px 0;color:var(--muted);font-size:13px}@media(max-width:680px){.grid{grid-template-columns:1fr}h1{font-size:30px}}</style>
+</head><body><div class="wrap">
+<a class="back" href="../index.html">← 返回主页</a>
+<header><span class="tag">Codex 研究版 · W46</span><h1>技术生态趋势周报</h1><p class="sub">2026-W46 · 2026年11月9日 – 11月15日</p><div class="stats"><div><div class="num">4</div><div class="label">通用赛道</div></div><div><div class="num">4</div><div class="label">CANN 动态</div></div><div><div class="num">4</div><div class="label">重点论文</div></div></div></header>
+<section><h2>🧭 本周观察</h2>
+<p class="desc">常驻 Agent 的稳定性开始取决于整个执行系统。OpenAI 公开了 OpenClaw 的权限与审计做法，Plannotator 明确了排队指令的撤回边界，Evolving Infra 则把会话信号用于推理资源和缓存调度。</p>
+<div class="lead"><b>解读</b>　昇腾上的 Agent 试点可以同时测两条路径。执行侧追踪指令交付、授权和回滚，推理侧记录缓存复用、首 token 延迟和完成任务的总成本。本周 vLLM Ascend 的候选版适配提供了具体的部署组合。跨芯片比较仍需按精度、模态和拓扑逐项测量。</div>
+</section>
+<section><h2>🤖 AI Agent / Agentic</h2><p class="desc">持续运行的 Agent 需要可追溯的身份、可核验的记忆和足够长的评测窗口。</p>
+<div class="grid">
+<article class="card">
+<h3><a href="https://developers.openai.com/blog/securing-persistent-agents-like-openclaw-at-openai">OpenAI 的常驻 Agent 部署</a></h3><span class="tag">11月12日 · 一手工程实践</span>
+<p><b>已核事实</b>　OpenAI 披露内部 OpenClaw 部署，将控制面与模型执行隔离，在 Codex 沙箱内限制文件和网络访问，为 Agent 分配独立的推理凭证，并记录配置变更与每轮操作。部署还对 Agent 操作启用模型复核。<br><b>为何关注</b>　常驻任务可跨越多次人类交互，单靠用户会话很难追溯某次操作的来源。文章记录的是内部架构与措施，未给出足以量化剩余风险的独立验证。<br><b>CANN 启发</b>　给昇腾集群上的运维 Agent 分配独立服务身份，把试跑、改配置和发布权限分别交给可审计的控制面。</p>
+</article>
+<article class="card">
+<h3><a href="https://arxiv.org/abs/2611.11995">Infrathon：长时程基础设施优化评测</a></h3><span class="tag">11月9日 · arXiv 预印本</span>
+<p><b>已核事实</b>　作者评测 6 个模型，汇总 150 次 24 小时预算的运行，其中 135 次在后半段继续取得改进。排名随评测时长变化，轨迹分析还发现测试失真、越过任务约束和提前停止。<br><b>为何关注</b>　基础设施调优包含多轮测量与反复试验，短评测会漏掉后续收益，也容易把错误测试产生的高分当作进步。论文数字限于作者的任务和预算。<br><b>CANN 启发</b>　评估 Ascend C 调优 Agent 时，可同时保留短、长两个时间截面的最佳有效结果，并让独立评测用隐藏 shape 检查精度与性能。</p>
+</article>
+<article class="card">
+<h3><a href="https://arxiv.org/abs/2611.14320">WikiTrace：把 Agent 记忆连回原始轨迹</a></h3><span class="tag">11月10日 · arXiv 预印本</span>
+<p><b>已核事实</b>　WikiTrace 把经验条目连接到任务成败摘要和原始轨迹。Agent 遇到冲突、细节不足或来自失败任务的经验时可回查。作者在五个 Agent 基准上报告记忆导致的退化减少。<br><b>为何关注</b>　一条没有硬件或运行条件的经验，可能在另一个任务中被错误复用。回查也需要额外的工具调用和上下文，部署时应计入任务成本。<br><b>CANN 启发</b>　算子经验库可把结论和芯片、CANN 版本、shape、profiler 输出及失败复现关联，供 Agent 在采纳规则前核对适用范围。</p>
+</article>
+</div></section>
+<section><h2>🧠 LLM 训练与推理</h2><p class="desc">同一个 Agent 任务的成本，取决于服务对多轮请求的调度，也取决于低精度模型能否保持工具使用质量。</p>
+<div class="grid">
+<article class="card">
+<h3><a href="https://arxiv.org/abs/2611.12304">Evolving Infra：按 Agent 请求调整推理资源</a></h3><span class="tag">11月9日 · arXiv 预印本</span>
+<p><b>已核事实</b>　论文将 Agent 上下文管理的信号传给分布式 KV 管理器，并在线调整 Prefill/Decode 的算力分配。作者使用 GLM-5.2、Kimi K2.6 和最多 256 张 GB300，对比 Dynamo 报告平均端到端请求延迟与 P95 首 token 延迟分别最高改善 4.1 倍和 14 倍。<br><b>为何关注</b>　多轮任务对缓存复用和不同阶段的算力需求会变化。报告峰值来自特定负载与硬件，迁移后的效果需重测。<br><b>CANN 启发</b>　在昇腾 P/D 分离部署中，可用带工具等待和会话间隔的 trace，对比固定配比、会话亲和与动态配比，同时计入 KV 传输和调度开销。</p>
+</article>
+<article class="card">
+<h3><a href="https://arxiv.org/abs/2611.13410">SteerDistill：针对量化 Agent 的失败步骤做蒸馏</a></h3><span class="tag">11月10日 · arXiv 预印本</span>
+<p><b>已核事实</b>　训练时，教师在低比特学生偏离正确任务轨迹时给出引导，并将修正行为蒸馏回学生，推理时由学生独立执行。作者在三种模型、五项 Agent 基准上报告 W4A16 的平均得分比最强量化基线高 1.67–2.18 分，与 BF16 相差不到 1 分。<br><b>为何关注</b>　单轮 logits 或语言分数难覆盖工具参数、操作次序等会累积的误差。论文样本仅覆盖所测模型和基准。<br><b>CANN 启发</b>　在 CANN 量化验收中，可把首个轨迹分叉、工具成功率及任务完成率加入精度门槛，另测延迟和显存。</p>
+</article>
+<article class="card">
+<h3><a href="https://www.anthropic.com/claude-fable-and-mythos-5-2">Claude Fable 5.2 与 Mythos 5.2</a></h3><span class="tag">11月9日 · 模型方公告</span>
+<p><b>已核事实</b>　Anthropic 发布共享底层模型、开放范围不同的两款服务。Fable 可公开使用，Mythos 经生物科学与网络安全验证计划开放。厂商公布标准价为每百万输入、输出 token 分别 8 和 40 美元，并称生成速度较上一版最高快 30%。<br><b>为何关注</b>　开放范围和计费是产品事实，速度是厂商报告值。一个任务的总成本还取决于输出长度、回合数和重试次数。<br><b>CANN 启发</b>　昇腾上的多模型路由可以用普通路径和高成本升级路径做对照，按成功任务衡量时延和总 token 消耗。这是评测参考，未核实有 Ascend 部署方案。</p>
+</article>
+</div></section>
+<section><h2>🛠️ 开发者工具</h2><p class="desc">Agent 进入日常协作后，消息交接和 Issue 字段都可以成为明确的工程接口。</p>
+<div class="grid">
+<article class="card">
+<h3><a href="https://github.com/backnotprop/plannotator/releases/tag/v0.28.65">Plannotator 0.28.65：撤回待交付的指令</a></h3><span class="tag">11月15日 · 项目 Release</span>
+<p><b>已核事实</b>　该版本允许把尚未交到 Agent 手中的回复退回草稿，交付后停止提供撤回入口。跨机器联动时，线程可以共用标签。<br><b>为何关注</b>　撤回边界让用户知道一次更正能否赶在指令执行前生效，也减少同一队列中两条相互冲突的指令。<br><b>CANN 启发</b>　昇腾调优任务队列可分别记录已排队、已交付和已执行，明确取消和重发在哪个状态仍安全。</p>
+</article>
+<article class="card">
+<h3><a href="https://github.blog/changelog/2026-11-11-issue-types-and-fields-are-available-for-personal-accounts/">GitHub 个人仓库开放 Issue 类型和字段</a></h3><span class="tag">11月11日 · 平台变更日志</span>
+<p><b>已核事实</b>　个人账户仓库正式获得 Issue 类型和自定义字段，可通过 REST、GraphQL 与 webhook 自动化处理。官方列出文本、日期、单选和多选等字段类型。<br><b>为何关注</b>　社区维护者可据结构化字段筛选和归并问题，减少每次排查时从自由文本追问环境的成本。<br><b>CANN 启发</b>　昇腾开源项目可用同一组字段收集芯片、CANN 与 torch_npu 版本、复现状态，跨仓汇总再适配和回归需求。</p>
+</article>
+</div></section>
+<section><h2>🌱 新兴生态</h2><p class="desc">本地 Agent 运行环境和待开放权重的模型预览，分别暴露了应用接入和部署验证的边界。</p>
+<div class="grid">
+<article class="card">
+<h3><a href="https://blog.n8n.io/meet-nod/">n8n Labs Nod：本地执行的个人 Agent</a></h3><span class="tag">11月10日 · 项目方公告</span>
+<p><b>已核事实</b>　n8n Labs 发布 Apache 2.0 研究预览，用户自带模型服务；Nod 用本地沙箱及浏览器操作网站和已连接的应用，可安排重复任务。项目说明主机需保持运行，应用连接默认经 n8n 托管服务。<br><b>为何关注</b>　执行环境、连接服务和模型端点可各自演进。服务器侧有审批逻辑，研究预览仍有模型判断出错的可能。<br><b>CANN 启发</b>　这种拆分可用于检查昇腾推理端点的应用适配成本，测试长会话、工具调用和超时重试。当前项目公告未核实 CANN 端点兼容性。</p>
+<p><small><a href="https://github.com/n8n-io/nod/">Nod 源码与运行限制</a></small></p>
+</article>
+<article class="card">
+<h3><a href="https://ernie.baidu.com/release/ernie-5-5-flash-preview">ERNIE 5.5 Flash Preview</a></h3><span class="tag">11月11日 · 模型方公告</span>
+<p><b>已核事实</b>　百度发布基于此前 Base 的首个后训练预览，参数 280B、每 token 激活 14B、上下文 100 万 token。千帆提供 API，百度在 11 月 12 日大会通稿中给出计划于 11 月 25 日前公开权重。<br><b>为何关注</b>　API 开放、权重开放与可部署后端是三个可独立验证的里程碑。长上下文和稀疏激活参数也不足以确定整机显存或吞吐。<br><b>CANN 启发</b>　本周未发现该 Preview 的 CANN 首发适配凭据。后续可依据实际权重、量化格式和框架 release 复核，并测长上下文下的 KV 与专家并行开销。</p>
+<p><small><a href="https://www.prnewswire.com/news-releases/baidu-unveils-latest-ernie-models-amid-broader-full-stack-ai-lineup-and-debuts-token-exchange-to-power-intelligent-organizations-302937959.html">百度 11 月 12 日发布通稿</a></small></p>
+</article>
+</div></section>
+<section><h2>🔴 昇腾 CANN 生态观察</h2><p class="desc">11 月 10 日的 vLLM Ascend v0.32.0rc1 提供两个既有模型的候选版适配，并优化两个已支持模型。11 月 10–13 日 SGLang 发布多次 NPU 算子库更新。</p>
+<p class="note">vLLM Ascend v0.32.0rc1 对齐上游 vLLM 0.32.0。标签发布说明列出 CANN 9.2.1、PyTorch 2.10.0、torch_npu 2.10.0.post7，以及 A2/A3/Ascend 950 使用的 Triton Ascend 3.6.0.post2。发布前反馈帖曾列出 CANN 9.2.0 和 torch_npu 2.10.0.post4，本期采用已发布标签的依赖。驱动与固件的具体版本未核实。以上范围为项目文档记录，本期未上板复测，也未发现本周新发布模型明确宣布首发即支持 CANN 的一手证据。<br><a href="https://docs.vllm.ai/projects/ascend/zh-cn/v0.32.0rc/getting_started/installation.html">RC 安装指南</a> · <a href="https://github.com/vllm-project/vllm-ascend/issues/19888">发布前反馈帖 #19888</a></p>
+<div class="grid">
+<article class="card">
+<h3><a href="https://github.com/vllm-project/vllm-ascend/releases/tag/v0.32.0rc1">MiniMax-M3.1-Flash：vLLM Ascend 候选版适配</a></h3><span class="tag">11月10日 · 项目 Release</span>
+<p><b>已核事实</b>　MiniMax 于 10 月 19 日首发该模型。本周的 vLLM Ascend v0.32.0rc1 发布记录新增 A3 的 W8A8 和 950DT 的 MXFP8 配置，覆盖文、图、视频推理，以及 DSpark 和单机、P/D 分离部署。文档把 100 万 token 部署限定为 A3 纯文本。<br><b>为何关注</b>　按精度、模态和拓扑记录适配，比只登记模型名称更能指导部署选型。其余硬件或组合未核实。<br><b>CANN 启发</b>　先核对 A3 与 950DT 各自文档所列配置，再比较多轮推理及投机解码收益。</p>
+<p><small><a href="https://www.minimax.io/blog/minimax-m31f">MiniMax 10 月 19 日模型首发公告</a></small></p>
+</article>
+<article class="card">
+<h3><a href="https://github.com/vllm-project/vllm-ascend/releases/tag/v0.32.0rc1">Qwen3.8-Flash-Next：vLLM Ascend 候选版适配</a></h3><span class="tag">11月10日 · 项目 Release</span>
+<p><b>已核事实</b>　Qwen 仓库记载模型于 8 月 26 日发布。v0.32.0rc1 为 A2、A3、950DT 列出已文档化的 W8A8 与 MTP、W4A8 系配置、QSA/GDN、多模态与函数调用，以及单机 TP8、P/D 分离和 MemCache 部署。<br><b>为何关注</b>　混合注意力与循环状态让缓存的迁移和复用更依赖框架实现。本条范围以 release 所引用的部署组合为准。<br><b>CANN 启发</b>　用同一多轮 trace 核验分离部署的状态复用、MTP 接受率和长输入首 token 延迟，按芯片和精度分别报告。</p>
+<p><small><a href="https://github.com/QwenLM/Qwen3.8-Flash-Next/blob/main/README.md">Qwen 模型仓库首发日期</a></small></p>
+</article>
+<article class="card">
+<h3><a href="https://github.com/vllm-project/vllm-ascend/releases/tag/v0.32.0rc1">DeepSeek V4.1 Flash / GLM-5.3-Flash：既有路径优化</a></h3><span class="tag">11月10日 · 项目 Release</span>
+<p><b>已核事实</b>　同一 RC 将这两个模型标为优化，表列 A2、A3、950DT。更新包括 DeepSeek 在 A2/A3 上的稀疏索引优化，以及 GLM 在 950DT 上减少 RecoverSSM 状态更新的写入。GLM 池化索引 KV 缓存默认 BF16，FP8 选项限 950DT，INT8 限 A3。<br><b>为何关注</b>　相同框架版本下，各芯片的低精度路径及瓶颈仍不同。发布日志未提供这些路径的统一性能结果。<br><b>CANN 启发</b>　按索引器、状态更新和 KV 搬运分别做性能归因，再测长上下文、并发及分离部署的端到端收益。</p>
+</article>
+<article class="card">
+<h3><a href="https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post3">sgl-kernel-npu 2026.11.0.post2–post5</a></h3><span class="tag">11月10–13日 · 算子库 Release</span>
+<p><b>已核事实</b>　11 月 10–13 日先后发布 post2 到 post5。post3 包含稀疏 KV 拷贝图捕获和 A3 SDMA、A5 URMA 路径相关改动，记录了 CPU 测试并注明部分 NPU 图测试仍需上板验证。post5 恢复原生构建的旧 Torch 算子名称。<br><b>为何关注</b>　算子库在快速更新，缓存传输、图模式和 Torch 注册兼容需要分别验证。所查发布页未列出与这四个标签一一对应的 SGLang、驱动、CANN、torch_npu 与模型支持矩阵。<br><b>CANN 启发</b>　在部署记录中固定算子包标签，分别回归旧 API、图捕获和 KV 拷贝，之后再确认模型可用范围。</p>
+<p><small><a href="https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post2">11 月 10 日 post2</a> · <a href="https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post4">11 月 12 日 post4</a> · <a href="https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post5">11 月 13 日 post5</a></small></p>
+</article>
+</div></section>
+<section><h2>📚 本期来源与口径</h2>
+<ul class="source-list">
+<li><b>时间</b>　2026-W46 为 11 月 9 日至 15 日。论文采用 arXiv 首次提交日期，Evolving Infra 同时核对周内修订版。模型与工具采用发布方标注的日期，历史首发链接用于核对适配时间。ERNIE 预览版的 11 日日期来自 <a href="https://ernie.baidu.com/research">百度 ERNIE Research 日期索引</a>。</li>
+<li><b>论文发现</b>　核阅 Hugging Face Daily Papers <a href="https://huggingface.co/papers/date/2026-11-09">11月9日</a>、<a href="https://huggingface.co/papers/date/2026-11-10">11月10日</a>、<a href="https://huggingface.co/papers/date/2026-11-11">11月11日</a>、<a href="https://huggingface.co/papers/date/2026-11-12">11月12日</a>、<a href="https://huggingface.co/papers/date/2026-11-13">11月13日</a> 日榜。四篇入选论文的结论和实验范围回查 arXiv。日榜投票随访问时间变化。</li>
+<li><b>社区与官方动态</b>　<a href="https://github.com/trending?since=weekly">GitHub Trending 周视图</a> · <a href="https://repowatch.top/en/reports/weekly/2026-W46">RepoWatch W46</a> · <a href="https://openai.com/news/">OpenAI News</a> · <a href="https://deepmind.google/models/model-cards/">Google DeepMind 模型卡</a> · <a href="https://huggingface.co/blog">Hugging Face Blog</a> · <a href="https://developer.nvidia.com/blog">NVIDIA Technical Blog</a> · <a href="https://github.blog/changelog/month/11-2026/">GitHub Changelog 11 月归档</a> · <a href="https://www.jiqizhixin.com/">机器之心</a>。</li>
+<li><b>精选文章</b>　<a href="https://hackerblogposts.com/blogs">Hacker News 博客目录</a> · <a href="https://simonwillison.net/2026/Nov/">Simon Willison 11 月归档</a> · <a href="https://mitchellh.com/writing">Mitchell Hashimoto 文章列表</a> · <a href="https://paulgraham.com/articles.html">Paul Graham Essays</a>。三篇原文及推荐理由见 <a href="reading.html">优质文章</a>。</li>
+<li><b>CANN 覆盖</b>　除条目所引发布记录外，筛查 <a href="https://github.com/Ascend/pytorch/releases">Ascend PyTorch Releases</a> · <a href="https://github.com/triton-lang/triton-ascend/releases">Triton Ascend Releases</a>。vLLM Ascend 按标签发布说明记版本。发布范围、维护者测试和本文推断分别标明。</li>
+</ul><p class="notice">11 月 14–15 日的 Hugging Face Daily Papers 日期页和 API 未能核验。GitHub Trending 为滚动视图，RepoWatch 用于发现仓库，本期未计算自然周 Star 增量。Jeff Geerling 原站文章在网页检索中返回 403，直接访问原站验证了正文及日期。 OpenAI 页面、Hugging Face 11 月 9–13 日的日榜、Infrathon 和 MiniMax 原文在本地直连受限，已通过网页检索打开相关原文核对。</p>
+<p class="small"><a href="data/2026-W46.json">查看本期 JSON 来源快照</a></p>
+</section>
+<section><a class="back" href="archive.html">📋 查看往期归档 →</a> · <a class="back" href="reading.html">📖 本期优质文章 →</a></section>
+</div><footer><div class="wrap">技术生态趋势周报 · 2026-W46 · 研究、筛选与撰写：Codex</div></footer></body></html>
