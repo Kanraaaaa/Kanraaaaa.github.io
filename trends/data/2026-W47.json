@@ -1,0 +1,2422 @@
+{
+  "week": "2026-W47",
+  "period": {
+    "start": "2026-11-16",
+    "end": "2026-11-22"
+  },
+  "prepared_at": "2026-11-23T00:32:51.386689+00:00",
+  "method": {
+    "interpretation": "先发现，再核对原文；事实为来源陈述，关注点为编辑解读，CANN 启发均为推断或建议，未上板复测。",
+    "arxiv": "按首次提交日期；排除热榜中上周首发的 MMFlash（11月13日）与 AscendGYM（11月13日）。",
+    "github_stars": "滚动 Trending 仅用于发现，不宣称 ISO 周排名或增星。",
+    "cann": "分开记录训练证据、既有模型路径使能、算子补丁及未核实的推理适配。",
+    "hugging_face_papers": {
+      "checked": [
+        "https://huggingface.co/papers/date/2026-11-16",
+        "https://huggingface.co/papers/date/2026-11-17",
+        "https://huggingface.co/papers/date/2026-11-18",
+        "https://huggingface.co/papers/date/2026-11-19",
+        "https://huggingface.co/papers/date/2026-11-20"
+      ],
+      "policy": "保留访问时论文标题列表；日榜与论文首发日期分别核对，不固定投票或历史排名。",
+      "unverified": [
+        "2026-11-21",
+        "2026-11-22"
+      ]
+    },
+    "access_notes": "网页检索访问 Jeff Geerling 原文返回403，改为直接访问原站取得200并核对正文与11月17日日期。机器之心首页当前为数据服务入口，未据此取得本周文章；未采纳媒体线索作为事实。 HF 11月21、22日请求均重定向到11月20日，不作为独立周末日榜。External sandboxes 正文显示11月16日，元数据UTC发布时间为11月17日；本期采用可见署名日期，两者均在报告周内。"
+  },
+  "entries": [
+    {
+      "track": "AI Agent / Agentic",
+      "title": "External sandboxes：把执行环境从 Agent 中分离",
+      "date": "2026-11-16",
+      "url": "https://blog.primeradiant.com/external-sandboxes-for-coding-agents/",
+      "kind": "一手工程实践",
+      "fact": "Simon Willison 与 Prime Radiant 发布三种共享 localhost API 的沙箱原型：v86/WebAssembly、Apple Containers、Quicksand/QEMU。Agent 在外部发命令，沙箱限制挂载和网络；但 Claude Code 接入只隔离 Bash，原生 Read/Edit 仍在宿主机执行。",
+      "why": "接入了沙箱不等于所有工具都被隔离。文章逐项交代不同 Agent 的覆盖面，并提供协议及一致性测试，适合核对真实执行边界。",
+      "cann_implication": "可给昇腾调优 Agent 的编译与测试工具定义统一远程执行接口；设备节点、数据目录及凭证应单独授权。文中原型未核实可直接挂载 NPU。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "正文署名日期11月16日；article:published_time 为11月17日UTC"
+    },
+    {
+      "track": "AI Agent / Agentic",
+      "title": "Harness adapters：针对实际工具链做 RL",
+      "date": "2026-11-20",
+      "url": "https://huggingface.co/blog/harness-adapters-at-scale",
+      "kind": "官方研究博客",
+      "fact": "Hugging Face 为 Qwen3.8-27B 在 Pi、OpenCode、Hermes 中分别训练 LoRA，并公开任务、轨迹与合并适配器。文章在固定 harness 内报告成功率和工具调用改善，也明确不同 harness 的压缩策略不同，不能直接横比。",
+      "why": "Agent 能力由模型、工具与控制流程共同决定。合并权重在 Terminal-Bench 上选择，因此该基准结果略乐观；单 harness、关闭 thinking 时专用适配器通常更强。",
+      "cann_implication": "可围绕 Ascend C 编译、精度验证和 profiler 工具收集任务，再评估专用 LoRA；按成功任务统计调用数、token 和上板时间。这是迁移建议，原文未证明 Ascend 训练支持。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "AI Agent / Agentic",
+      "title": "Vanguard：用截图判断小模型草稿是否可用",
+      "date": "2026-11-18",
+      "url": "https://arxiv.org/abs/2611.23917",
+      "kind": "arXiv 预印本",
+      "fact": "作者提出无需修改草稿与目标模型的步骤级判别器：读取截图，为候选操作打分，超过阈值则采用，否则交给大模型。在网页、手机和具身任务上，2B 草稿配判别器至少达到所测 8B 目标的准确率。",
+      "why": "这是任务步骤级的选择机制，可以与 token 级投机解码组合；它会改变操作选择，不能等同于保持目标分布的无损解码。结果仍限于作者评测。",
+      "cann_implication": "昇腾 GUI/运维 Agent 可比较小模型草稿、视觉判别和大模型回退的总时延，额外测误接受率及阈值跨界面迁移。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "arXiv v1 首次提交日（UTC）"
+    },
+    {
+      "track": "LLM 训练与推理",
+      "title": "SWE-OPD：在学生实际访问的轨迹上蒸馏",
+      "date": "2026-11-16",
+      "url": "https://arxiv.org/abs/2611.21020",
+      "kind": "arXiv 预印本",
+      "fact": "学生在可执行仓库中行动，教师监督学生访问的前缀。作者报告 Qwen3.5-9B 的 SWE-bench Pro 解决率由 35.9% 升至 39.4%；缓存教师评分的离线变体减少 59.4%–72.6% GPU-hours，但准确率随基准变化。",
+      "why": "更低训练损失并不保证 Agent 更好：论文还观察到损失下降而重复输出加重。离线复用有成本价值，也必须单独验收长轨迹行为。",
+      "cann_implication": "可将昇腾小模型后训练中的教师打分与学生 rollout 分开计费；同时检查任务解决率、重复循环和轨迹新鲜度，不把 GPU-hours 降幅直接换算为 NPU 收益。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "arXiv v1 首次提交日（UTC）"
+    },
+    {
+      "track": "LLM 训练与推理",
+      "title": "QDA：量化配方搜索加入隐藏评估与长生成检查",
+      "date": "2026-11-17",
+      "url": "https://arxiv.org/abs/2611.23388",
+      "kind": "arXiv 预印本",
+      "fact": "Agent 组合兼容的 PTQ 方法，用其不可见的推理轨迹上输出 KL 快速筛选，再以长生成检查候选。作者在四种推理模型上报告 W4A16、W4A8、W3A16 平均准确率分别高于最强公开配方 0.9、1.4、2.2 个百分点，每次搜索耗用 64 GPU-hours。",
+      "why": "量化自动搜索既需要便宜的代理指标，也需要能捕获重复循环的真实生成验收。论文承诺开放库、评估器和 harness，不能将承诺写成已完整开源。",
+      "cann_implication": "先把 CANN 已有低比特 kernel 支持作为配方约束，再搜索校准策略。NVFP4 等论文配置不等于昇腾已支持，须逐芯片核对量化格式与执行路径。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "arXiv v1 首次提交日（UTC）"
+    },
+    {
+      "track": "LLM 训练与推理",
+      "title": "Dynamo：把 rollout、权重刷新与恢复一起优化",
+      "date": "2026-11-19",
+      "url": "https://developer.nvidia.com/blog/reducing-rollout-bottlenecks-in-reinforcement-learning-with-nvidia-dynamo/",
+      "kind": "官方技术博客",
+      "fact": "NVIDIA 说明 Dynamo 的 KV 感知路由在缓存复用和排队间取舍，ModelExpress 从集群已有副本加载权重并传输增量；RL 框架仍负责权重切换时机、缓存处理和样本接纳。恢复路径依赖具体支持配置。",
+      "why": "RL 的有效吞吐不能仅看生成 token/s。样本是否使用正确策略版本、故障后保留多少 rollout、权重更新时间都可能决定整轮训练速度。厂商案例并非统一基准。",
+      "cann_implication": "昇腾异步 RL 可分别记录有效样本/秒、权重版本滞后、刷新停顿和故障重做量，再比较路由与权重传输方案。文中 NIXL/GPU 路径不能直接当作 CANN 能力。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "LLM 训练与推理",
+      "title": "GPT-6.2 Astra / Sol：模型更新与后台完成窗口",
+      "date": "2026-11-17",
+      "url": "https://developers.openai.com/api/docs/changelog",
+      "kind": "官方变更日志",
+      "fact": "OpenAI API 变更日志列出 GPT-6.2 Astra 与 Sol，两者支持 Responses 与 Chat Completions，工具调用要求 Responses。同期公开测试的后台完成窗口提供两小时与八小时选项，相对 Standard 的模型 token 费率分别低 30% 和 40%。",
+      "why": "交互任务与宽松期限任务开始有不同的服务选择。折扣针对模型 token 费率，不能理解为整个 Agent 任务费用同比下降，也不能与即时完成混为一谈。",
+      "cann_implication": "周报、离线评测和算子搜索可按截止时间分队列，在昇腾服务中比较即时调度与批量调度的利用率、完成率和成本。未核实这些闭源模型的 CANN 部署支持。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "开发者工具",
+      "title": "GitHub CLI：用事件流等待 PR 变化",
+      "date": "2026-11-18",
+      "url": "https://github.blog/changelog/2026-11-18-wait-for-pull-request-events-with-github-cli/",
+      "kind": "官方变更日志",
+      "fact": "gh v2.105.0 新增 gh event listen，按行输出 PR 事件 JSON，默认首个事件后退出，支持 count、follow 和 timeout。命令与 Event Streams 均为预览，GitHub.com 用户需先获 Event Streams 访问资格。",
+      "why": "评审、head 变化与检查完成可成为 Agent 的明确唤醒条件。使用前仍需处理超时和预览资格，不能把它写成所有账户立即可用。",
+      "cann_implication": "昇腾适配 PR 的 CI 和评审跟踪可从固定轮询转为事件驱动，收到 head 变化后重置验收依据，并为漏事件设计状态核对。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "开发者工具",
+      "title": "Datasette Lite：用 URL 分享可复现的 Python 环境",
+      "date": "2026-11-17",
+      "url": "https://simonwillison.net/2026/Nov/17/datasette-lite/",
+      "kind": "一手工程实践",
+      "fact": "Simon 重写 Datasette Lite，用 Service Worker 拦截页面和资源请求，再转给 Web Worker 内的 Pyodide/ASGI 应用。URL 可指定 Datasette commit、SQLite 版本、插件和数据，文章展示同一问题在修复前后的演示。",
+      "why": "复现材料从安装说明变成可直接打开的环境。多标签通过会话前缀分流；数据 URL 仍需 CORS，浏览器执行也有运行时限制。",
+      "cann_implication": "可把算子测试元数据、性能 CSV 和版本比较做成浏览器演示，降低社区交流门槛；涉及 NPU 的 kernel 与运行时仍须在设备侧验证。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "新兴生态",
+      "title": "Inkling 2 Mini：权重复用不等于执行次数减少",
+      "date": "2026-11-20",
+      "url": "https://huggingface.co/blog/inkling2mini",
+      "kind": "集成方发布介绍",
+      "fact": "HF 介绍 Thinking Machines Lab 的多模态 MoE：约 26B 物理参数、每 token 激活约 3B，支持百万 token 上下文。24 个物理层中间 12 层循环三次，共 48 次层访问；每次访问保留各自 KV 与短卷积状态。",
+      "why": "循环结构节约权重存储，但计算、缓存和状态容量不能按物理层数直接估算。发布介绍列出 Transformers、llama.cpp、MLX 与 SGLang 接入，不等于其所有硬件后端均已支持。",
+      "cann_implication": "适配评审需分别预算物理权重、逻辑层状态和循环通信；对 NVFP4/MXFP8 与 DSpark 逐路径确认。本期未发现 Inkling 2 Mini 首发 CANN 支持证据。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "新兴生态",
+      "title": "Genie 4：本周模型卡公开的能力与限制",
+      "date": "2026-11-18",
+      "url": "https://deepmind.google/models/model-cards/genie-4/",
+      "kind": "官方模型卡",
+      "fact": "DeepMind 于 11 月 18 日发布的模型卡描述可同时生成音频与交互世界的 Genie 4，并明确长时间运行、复杂编辑或场景导航后细节及物体持久性可能漂移，物理、文字与空间准确性仍有限制。",
+      "why": "本条记录本周模型卡，不能把它当作该模型首次公布日期。世界模拟可提供 Agent 环境，但视听连贯不代表物理有效，训练数据价值还需独立验证。",
+      "cann_implication": "若将世界模型用于昇腾具身训练的数据管线，可先固定动作、场景和评测种子，测长时一致性与跨域迁移，再算生成成本。未核实 CANN 部署支持。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "模型卡 Published 18 November 2026，非模型首发日期"
+    },
+    {
+      "track": "新兴生态",
+      "title": "MoE 专家流式加载：32GB Mac 上的工程实验",
+      "date": "2026-11-18",
+      "url": "https://huggingface.co/blog/moe-expert-streaming",
+      "kind": "一手工程实践",
+      "fact": "Tarek Ziadé 将被路由选中的专家从 SSD 读入有界缓存，以槽位池复用 grouped_mm，并处理 Qwen3.8-Flash-Next 的 n-gram 表。其 M5 32GB 实验短 decode 为 13.9 token/s，Strata 为 14.8；通用实现仍以 Transformers PR #50717 提供反馈。",
+      "why": "文章保留了失败尝试和主机/GPU 等待分析。容量可运行不代表满足交互需求，作者也认为仍太慢；PR 实验不能写成已发布稳定功能，Mac 结果不能横推服务器。",
+      "cann_implication": "昇腾 MoE 分层内存实验应分别测专家命中率、传输字节、主机同步和预取收益，并保留批量大小与模型格式，避免仅报可容纳参数量。",
+      "extra_sources": [],
+      "environment": null,
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "昇腾 CANN 生态",
+      "title": "Xing4 技术报告：Ascend 原生训练证据",
+      "date": "2026-11-17",
+      "url": "https://arxiv.org/abs/2611.22115",
+      "kind": "arXiv 技术报告",
+      "fact": "中国电信 Xingchen AGI Lab 报告基于 MindSpore HyperParallel，在 8,192 张 Ascend 910C 上预训练 285B 模型；正文另称开放了 29B、激活 4B、原生 256K 上下文成员。TeleGym 连接 Agent 执行、评估、轨迹构造与异步策略优化。",
+      "why": "这是本周技术报告披露的模型与训练系统证据。285B 训练配置与 29B 开放成员是不同对象，论文日期也不自动等于权重首次公开日期；未核实通用推理框架新增适配日期。",
+      "cann_implication": "值得对照拓扑感知混合分片、选择性重算和 CPU 核隔离。本期只确认论文所述训练路径，不登记为 vLLM Ascend/SGLang 首发即用。",
+      "extra_sources": [
+        "https://arxiv.org/html/2611.22115v1"
+      ],
+      "environment": {
+        "hardware": "Ascend 910C ×8192（285B 预训练）",
+        "framework": "MindSpore HyperParallel；版本未核实",
+        "cann": "未核实；正文未列版本",
+        "driver": "未核实",
+        "torch_npu": "该训练路径基于 MindSpore；未核实 torch_npu 路径",
+        "inference_framework": "未核实",
+        "scope": "论文报告训练；非通用推理框架支持声明"
+      },
+      "date_basis": "arXiv v1 首次提交日（UTC）"
+    },
+    {
+      "track": "昇腾 CANN 生态",
+      "title": "RSIBench-Infra：把昇腾纳入端到端优化评测",
+      "date": "2026-11-18",
+      "url": "https://arxiv.org/abs/2611.24395",
+      "kind": "arXiv 预印本",
+      "fact": "论文提出 20 项训练与推理基础设施任务，覆盖 NVIDIA GPU 与 Ascend NPU，规模最多 32 个加速器。Agent 从可运行基线改动 engine、kernel 与指令层，用 OCI 镜像层提交，独立评估端到端性能与任务质量。",
+      "why": "作者称全部任务结果中 66.2% 超过 1.10 倍有效加速；这不是昇腾子集单独的成功率。优化局部 kernel 后是否改善整网，被纳入正式验收。",
+      "cann_implication": "可复用镜像差异提交与独立质量门槛，追踪优化在整网中的净收益。摘要未提供逐 case 的芯片、CANN、驱动或 torch_npu 版本，本期这些字段未核实。",
+      "extra_sources": [],
+      "environment": {
+        "hardware": "含 Ascend NPU；具体型号与逐任务卡数未核实",
+        "cann": "未核实",
+        "driver": "未核实",
+        "torch_npu": "未核实",
+        "inference_framework": "逐任务版本未核实",
+        "scope": "研究评测环境；非新增模型支持公告"
+      },
+      "date_basis": "arXiv v1 首次提交日（UTC）"
+    },
+    {
+      "track": "昇腾 CANN 生态",
+      "title": "sgl-kernel-npu post6：修复图捕获中的设备属性查询",
+      "date": "2026-11-16",
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post6",
+      "kind": "项目 Release",
+      "fact": "post6 发布记录将修复指向 triton_utils.py 中断图的问题，改用 TorchNPU 查询 NPU 核数，并整理 chunk index 准备工具及编译回归测试。",
+      "why": "设备属性查询发生的位置可能干扰编译或图路径。发布日志描述修复及测试改动，未提供跨模型统一性能数据，不应宣称吞吐提升。",
+      "cann_implication": "升级后可复查图编译成功率、首次捕获与 replay；固定算子包标签并保存回归日志。该发布未给出逐硬件验证及完整依赖组合。",
+      "extra_sources": [],
+      "environment": {
+        "package": "sgl-kernel-npu 2026.11.0.post6",
+        "hardware": "未核实",
+        "cann": "未核实",
+        "driver": "未核实",
+        "torch_npu": "未核实",
+        "inference_framework": "SGLang 对应版本未核实",
+        "scope": "算子与图相关修复，非新模型发布"
+      },
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "昇腾 CANN 生态",
+      "title": "post7 / post9：DSV4.1 算子接入与 arch3510 编译",
+      "date": "2026-11-17",
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post7",
+      "kind": "项目 Release",
+      "fact": "17 日 post7 为既有 DSV4.1 路径加入来自 ops_transformer 的 arch35 compressor_v2，以及 kv_compress_epilog_v2、hc_pre_v2；19 日 post9 按 tiling key 拆分 arch3510 的 Compressor/KDA 编译。",
+      "why": "模型相关算子合入与编译拆分是底层使能信号，不足以证明整个模型在某一硬件上已经通过端到端验收。发布页未列统一性能或精度结果。",
+      "cann_implication": "可跟进构建耗时与产物覆盖，再验证模型整网。这里保留发布记录中的架构标识；具体产品、CANN/驱动/torch_npu/SGLang 版本均未核实。",
+      "extra_sources": [
+        "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post9"
+      ],
+      "environment": {
+        "package": "2026.11.0.post7 / post9",
+        "hardware": "发布记录标 arch35 / arch3510；产品映射未核实",
+        "cann": "未核实",
+        "driver": "未核实",
+        "torch_npu": "未核实",
+        "inference_framework": "SGLang 对应版本未核实",
+        "scope": "既有模型路径算子接入与构建改进"
+      },
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    },
+    {
+      "track": "昇腾 CANN 生态",
+      "title": "post10–post13：CANN 库查找与 Markov 接口兼容",
+      "date": "2026-11-19",
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post10",
+      "kind": "项目 Release",
+      "fact": "19 日 post10 与 20 日 post11 的发布说明均为从 CANN devlib 查找 shm_allocator HAL；20 日 post12/post13 共享同一提交，处理上游 Markov 算子关键字兼容，忽略未使用参数。",
+      "why": "补丁标签数量不等于独立功能数量；post10/11 与 post12/13 分别共享提交。本期把同一改动合并记录，避免把连续打包误写成多次新支持。",
+      "cann_implication": "升级验收应覆盖动态库解析、算子 schema 及上游关键字变化，并同时记录源码提交与 wheel 标签。版本不完整时无法给出可复现部署命令。",
+      "extra_sources": [
+        "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post11",
+        "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post12",
+        "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post13"
+      ],
+      "environment": {
+        "package": "2026.11.0.post10–post13",
+        "hardware": "未核实",
+        "cann": "涉及 devlib 查找；具体版本未核实",
+        "driver": "未核实",
+        "torch_npu": "未核实",
+        "inference_framework": "SGLang 对应版本未核实",
+        "scope": "构建及 API 兼容补丁，不代表新增模型支持"
+      },
+      "date_basis": "来源正文发布/更新日期；不以搜索抓取日期代替"
+    }
+  ],
+  "blogs": [
+    {
+      "title": "External sandboxes for coding agents",
+      "author": "Simon Willison",
+      "date": "2026-11-16",
+      "url": "https://blog.primeradiant.com/external-sandboxes-for-coding-agents/",
+      "category": "Agent 执行边界",
+      "summary": "比较三种共享 API 的外部沙箱原型，并逐项说明 Claude Code、Codex、Pi 的工具覆盖范围。",
+      "why": "值得先读 Claude Code 原生 Read/Edit 仍在宿主机的限制；可用于审查调优 Agent 的执行接口与网络边界。",
+      "date_basis": "原文可见日期；External sandboxes 同时保留正文与元数据日期差异说明"
+    },
+    {
+      "title": "Running the full server-side Datasette Python app in the browser with service workers and Pyodide",
+      "author": "Simon Willison",
+      "date": "2026-11-17",
+      "url": "https://simonwillison.net/2026/Nov/17/datasette-lite/",
+      "category": "可复现开发环境",
+      "summary": "用 Service Worker、Pyodide 和会话路由将完整 Python Web 应用放进浏览器，URL 可固定代码与 SQLite 版本。",
+      "why": "把修复前后行为做成两条可打开的链接，适合借鉴为性能数据、测试元数据和社区问题的复现演示。",
+      "date_basis": "原文可见日期；External sandboxes 同时保留正文与元数据日期差异说明"
+    },
+    {
+      "title": "I joined the NTP Pool, but not with my Stratum 1 Pi",
+      "author": "Jeff Geerling",
+      "date": "2026-11-17",
+      "url": "https://www.jeffgeerling.com/blog/2026/i-joined-the-ntp-pool/",
+      "category": "系统可观测性",
+      "summary": "作者以本地 GNSS Stratum 1 和公开 VPS Stratum 2 分层提供时间服务，记录路由变化、时钟源配置和内核升级故障。",
+      "why": "适合对照多机训练日志的时间基准和长期测量：时间源、网络路径与主机配置要共同记录；这不是 NPU 性能提升的实验证据。",
+      "date_basis": "原文可见日期；External sandboxes 同时保留正文与元数据日期差异说明"
+    }
+  ],
+  "source_checks": [
+    {
+      "url": "https://blog.primeradiant.com/external-sandboxes-for-coding-agents/",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://blog.primeradiant.com/external-sandboxes-for-coding-agents/",
+      "title": "External sandboxes for coding agents",
+      "sha256": "721f7d4eef09fad10e42f837897c69c932d6e954fd3a5caac480c7d2b19ad175",
+      "timestamps_observed": [
+        "2026-11-17T00:36:53.000Z",
+        "2026-11-16",
+        "2026-11-17",
+        "2026-10-09",
+        "2026-10-02",
+        "2026-09-25"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/blog/harness-adapters-at-scale",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/blog/harness-adapters-at-scale",
+      "title": "Introducing harness adapters: adapt your favorite model to your harness to improve performance and cost",
+      "sha256": "3c7f1ccee9fafbfbfdad853af6c6ae57fbea87d796e8201095156bf50a8a0086",
+      "timestamps_observed": [
+        "2026-11-07T04:42:17",
+        "2026-11-18T12:15:43",
+        "2026-11-20T13:55:22",
+        "2026-11-15T04:43:18",
+        "2025-12-18T20:58:26",
+        "2025-12-18T21:00:02",
+        "2026-10-31T16:52:32",
+        "2026-09-14T12:27:20",
+        "2026-11-16T13:34:57",
+        "2026-09-18T15:59:17",
+        "2022-12-08T05:50:53",
+        "2023-06-02T17:31:32"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2611.23917",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/abs/2611.23917",
+      "title": "[2611.23917] Vanguard: Knowing When to Trust the Draft in Speculative Vision-Language Agents",
+      "sha256": "d9cff332bd4d5d00b19631d7d0055a84ede121a70f3322883c2e3416590546f8",
+      "submission_evidence": "[Submitted on 18 Nov 2026]",
+      "timestamps_observed": [
+        "2026/11/18",
+        "2026/11/18"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2611.21020",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/abs/2611.21020",
+      "title": "[2611.21020] SWE-OPD: On-Policy Distillation for Agentic Coding",
+      "sha256": "b7bc06ad104060f5a4043024b56b8faf2cf12f29958d576a6ebc5deafcddfcf5",
+      "submission_evidence": "[Submitted on 16 Nov 2026]",
+      "timestamps_observed": [
+        "2026/11/16",
+        "2026/11/16"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2611.23388",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/abs/2611.23388",
+      "title": "[2611.23388] QDA: Closed-Loop LLM Quantization Design with Agents",
+      "sha256": "c1adace127a1bb4f017cdddb3c12f048ceb4fef16ee008b5ad9a4d8039f360c1",
+      "submission_evidence": "[Submitted on 17 Nov 2026]",
+      "timestamps_observed": [
+        "2026/11/17",
+        "2026/11/17"
+      ]
+    },
+    {
+      "url": "https://developer.nvidia.com/blog/reducing-rollout-bottlenecks-in-reinforcement-learning-with-nvidia-dynamo/",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://developer.nvidia.com/blog/reducing-rollout-bottlenecks-in-reinforcement-learning-with-nvidia-dynamo/",
+      "title": "Reducing Rollout Bottlenecks in Reinforcement Learning with NVIDIA Dynamo | NVIDIA Technical Blog",
+      "sha256": "bc92000d61890ccda83469f93bdc32f4772f26a586392a1a63010a22b3abee2d",
+      "timestamps_observed": [
+        "2026-11-19T20:28:13+00:00"
+      ]
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/changelog",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://developers.openai.com/api/docs/changelog",
+      "title": "Changelog | OpenAI API",
+      "sha256": "d2cafb725417df0a7b88bed4c27c509497624540b98848c4038dcbdf437e5f37",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://github.blog/changelog/2026-11-18-wait-for-pull-request-events-with-github-cli/",
+      "checked_at": "2026-11-23T00:33:23.148638+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.blog/changelog/2026-11-18-wait-for-pull-request-events-with-github-cli/",
+      "title": "Wait for pull request events with GitHub CLI - GitHub Changelog",
+      "sha256": "6d8c42d7a04bbe9401b483deeebffd99d81159289a1868f8b3a36eeaffc9b699",
+      "timestamps_observed": [
+        "2026-11-18",
+        "2026-11-19",
+        "2026-11-17",
+        "2026-11-17",
+        "2026-11-17",
+        "2026-11-17",
+        "2026-11-16",
+        "2026-11-16",
+        "2026-11-06",
+        "2026-11-02"
+      ]
+    },
+    {
+      "url": "https://simonwillison.net/2026/Nov/17/datasette-lite/",
+      "checked_at": "2026-11-23T00:33:23.161152+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://simonwillison.net/2026/Nov/17/datasette-lite/",
+      "title": "Running the full server-side Datasette Python app in the browser with service workers and Pyodide",
+      "sha256": "5dfb805e70b60be1f0770b8f83d3f72e4b076125acd3582eb40e2f125d0cd2a4",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://huggingface.co/blog/inkling2mini",
+      "checked_at": "2026-11-23T00:33:23.161152+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/blog/inkling2mini",
+      "title": "Welcome Inkling 2 Mini, Cutting-edge Performance for your Local Setup",
+      "sha256": "bf5e4e0d142fd40a89e0a09eed8f3ec5491603362a31154db6aaed2ee21cbdd8",
+      "timestamps_observed": [
+        "2026-11-21T22:23:18",
+        "2026-11-21T00:09:51",
+        "2026-11-21T10:25:42",
+        "2026-11-21T15:57:25",
+        "2026-11-22T15:42:10",
+        "2026-11-22T15:42:11",
+        "2026-11-22T16:44:43",
+        "2026-11-22T19:13:06",
+        "2026-11-22T19:18:18",
+        "2026-11-21T22:23:18"
+      ]
+    },
+    {
+      "url": "https://deepmind.google/models/model-cards/genie-4/",
+      "checked_at": "2026-11-23T00:33:26.528027+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://deepmind.google/models/model-cards/genie-4/",
+      "title": "Genie 4 - Model Card — Google DeepMind",
+      "sha256": "fa911128650b3eddbaf2893675c83d88557a16f6556e14c29282488df7f2ae72",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://huggingface.co/blog/moe-expert-streaming",
+      "checked_at": "2026-11-23T00:33:26.528027+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/blog/moe-expert-streaming",
+      "title": "180B Parameters, 32GB of RAM: Pushing MoE Inference to the Limit with Transformers",
+      "sha256": "fbaf71d93fcd1b6323bd9225470dd2ddce0707e9d33185bf8b3d0ef028ff1b6a",
+      "timestamps_observed": [
+        "2026-09-29T10:28:23",
+        "2026-11-07T04:41:52",
+        "2026-11-07T04:42:17",
+        "2026-11-07T04:42:40",
+        "2024-10-19T04:24:22",
+        "2026-11-18T15:50:26",
+        "2026-11-18T17:41:55",
+        "2026-09-29T10:28:23",
+        "2026-11-07T04:41:52",
+        "2026-11-07T04:42:17",
+        "2026-11-07T04:42:40",
+        "2024-10-19T04:24:22"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2611.22115",
+      "checked_at": "2026-11-23T00:33:26.537451+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/abs/2611.22115",
+      "title": "[2611.22115] TeleChat to Xing4: Advancing Frontier Agentic Models on Domestic Chips and Frameworks",
+      "sha256": "80ad2c30d8a947bee107adfe45d16608011fe1499531b57b845b0a26f5e114d9",
+      "submission_evidence": "[Submitted on 17 Nov 2026]",
+      "timestamps_observed": [
+        "2026/11/17",
+        "2026/11/17"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/html/2611.22115v1",
+      "checked_at": "2026-11-23T00:33:26.625438+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/html/2611.22115v1",
+      "title": "TeleChat to Xing4: Advancing Frontier Agentic Models on Domestic Chips and Frameworks",
+      "sha256": "b4cfab7d3c188305fc9faf834eeb962405f388b07afab3a341dc91ee98cf55e8",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://arxiv.org/abs/2611.24395",
+      "checked_at": "2026-11-23T00:33:26.625940+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/abs/2611.24395",
+      "title": "[2611.24395] RSIBench-Infra: Can Agents Optimize Their Own Training and Inference Infrastructure at Production Scale?",
+      "sha256": "f5f54b3b02d04208a3a8004b1c115d80c10447fe88d875406d3243c23f0f8e90",
+      "submission_evidence": "[Submitted on 18 Nov 2026]",
+      "timestamps_observed": [
+        "2026/11/18",
+        "2026/11/18"
+      ]
+    },
+    {
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post6",
+      "checked_at": "2026-11-23T00:33:26.705416+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post6",
+      "title": "Release 2026.11.0.post6 · sgl-project/sgl-kernel-npu · GitHub",
+      "sha256": "ec4a44376c60b4b68e255fd748275a91d8f7ff6de1caeae6f58957c99917e003",
+      "timestamps_observed": [
+        "2026-11-16T10:57:43Z",
+        "2026-11-16 10:40:42 UTC"
+      ]
+    },
+    {
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post7",
+      "checked_at": "2026-11-23T00:33:26.866019+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post7",
+      "title": "Release 2026.11.0.post7 · sgl-project/sgl-kernel-npu · GitHub",
+      "sha256": "4e2af8c835694a5a3cb7a1d079ff5136e721b8486f63c0505362996a499e09d6",
+      "timestamps_observed": [
+        "2026-11-17T12:05:41Z",
+        "2026-11-17 11:24:12 UTC"
+      ]
+    },
+    {
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post9",
+      "checked_at": "2026-11-23T00:33:26.929679+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post9",
+      "title": "Release 2026.11.0.post9 · sgl-project/sgl-kernel-npu · GitHub",
+      "sha256": "acff33f613f894877cb322833a2f80e558deb5b9b731f0c5854c3f9108361541",
+      "timestamps_observed": [
+        "2026-11-19T11:50:39Z",
+        "2026-11-19 11:49:03 UTC"
+      ]
+    },
+    {
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post10",
+      "checked_at": "2026-11-23T00:33:26.951588+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post10",
+      "title": "Release 2026.11.0.post10 · sgl-project/sgl-kernel-npu · GitHub",
+      "sha256": "fdb6c8a97e00a0be5c9b96d6b665a82b7b5411d73ebf70de653c7b9c10862857",
+      "timestamps_observed": [
+        "2026-11-19T14:02:50Z",
+        "2026-11-19 13:50:27 UTC"
+      ]
+    },
+    {
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post11",
+      "checked_at": "2026-11-23T00:33:27.451982+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post11",
+      "title": "Release 2026.11.0.post11 · sgl-project/sgl-kernel-npu · GitHub",
+      "sha256": "cb28e0077defd810830686035f45259c42dcc1a081d2518a520aaaf9a03ba903",
+      "timestamps_observed": [
+        "2026-11-20T02:26:17Z",
+        "2026-11-19 13:50:27 UTC"
+      ]
+    },
+    {
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post12",
+      "checked_at": "2026-11-23T00:33:30.090169+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post12",
+      "title": "Release 2026.11.0.post12 · sgl-project/sgl-kernel-npu · GitHub",
+      "sha256": "f2311cd7be5121f403b13254d806d93fbe8727419a35d74cdd6e2b01b0f65558",
+      "timestamps_observed": [
+        "2026-11-20T03:53:46Z",
+        "2026-11-20 03:50:58 UTC"
+      ]
+    },
+    {
+      "url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post13",
+      "checked_at": "2026-11-23T00:33:30.103377+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post13",
+      "title": "Release 2026.11.0.post13 · sgl-project/sgl-kernel-npu · GitHub",
+      "sha256": "4dddbdfe2b193cda99c205ac7178ec9b32c5f6daf8ceca2e9237f77a38676cd2",
+      "timestamps_observed": [
+        "2026-11-20T09:04:23Z",
+        "2026-11-20 03:50:58 UTC"
+      ]
+    },
+    {
+      "url": "https://www.jeffgeerling.com/blog/2026/i-joined-the-ntp-pool/",
+      "checked_at": "2026-11-23T00:33:30.373345+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://www.jeffgeerling.com/blog/2026/i-joined-the-ntp-pool/",
+      "title": "I joined the NTP Pool, but not with my Stratum 1 Pi - Jeff Geerling",
+      "sha256": "3c7a86973f5b6dd417698f0fabc3aacf3f74bb612e497c2c10c5f03e5e23ecf1",
+      "timestamps_observed": [
+        "2026-11-17T09:00:00-06:00"
+      ]
+    },
+    {
+      "url": "https://github.com/trending?since=weekly",
+      "checked_at": "2026-11-23T00:33:30.524416+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/trending?since=weekly",
+      "title": "Trending  repositories on GitHub this week · GitHub",
+      "sha256": "37aaf72a82aa05defd338c7c69f2a4ef7636b9e7f3ae02c27eba7e55bdbc3096",
+      "repositories": [
+        "backnotprop / plannotator",
+        "google-labs-code / stitch-skills",
+        "GoogleChrome / modern-web-guidance-src",
+        "alibaba / open-code-review",
+        "mvanhorn / last30days-skill",
+        "ChromeDevTools / chrome-devtools-mcp",
+        "tradermonty / claude-trading-skills",
+        "ag-ui-protocol / ag-ui",
+        "meta / astryx",
+        "pookjw / HermesEnabler",
+        "we-promise / sure",
+        "dream-num / univer",
+        "kajisho5 / ffmpeg-skill"
+      ],
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://openai.com/news/",
+      "checked_at": "2026-11-23T00:33:30.600305+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://openai.com/news/",
+      "title": "OpenAI News | OpenAI",
+      "sha256": "c0e0c4f76cea185998c5b1c15a1f902c7fa299496b35dad2a4cf8f6acec09be6",
+      "timestamps_observed": [
+        "2026-11-22T00:00",
+        "2026-11-20",
+        "2026-11-19T08:00:00.000Z",
+        "2026-11-18T10:00",
+        "2026-11-18T08:00:00.000Z",
+        "2026-11-18T00:00:00-08:00",
+        "2026-11-18T00:00:00-06:00",
+        "2026-11-18",
+        "2026-11-18"
+      ]
+    },
+    {
+      "url": "https://deepmind.google/models/model-cards/",
+      "checked_at": "2026-11-23T00:33:30.867629+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://deepmind.google/models/model-cards/",
+      "title": "Model cards — Google DeepMind",
+      "sha256": "892e6b5e19968b5dd317373e0a8d38044e9d4b5a807bb0ec1e7e346f00b31e31",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://huggingface.co/blog?sort=desc",
+      "checked_at": "2026-11-23T00:33:30.887892+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/blog?sort=desc",
+      "title": "Hugging Face – Blog",
+      "sha256": "a35e73089936d970cd32296f69b39155f3cab5fec06246f314169280bd69b705",
+      "timestamps_observed": [
+        "2026-11-06T14:13:59",
+        "2026-11-19T09:41:37",
+        "2026-11-17T03:08:55",
+        "2026-11-21T05:56:26",
+        "2026-11-18T16:40:11",
+        "2026-11-18T13:37:27",
+        "2026-11-16T14:01:39",
+        "2026-10-20T15:04:26",
+        "2026-11-19T18:42:59",
+        "2026-11-15T21:09:42",
+        "2026-11-13T10:39:29",
+        "2026-11-20T10:34:20"
+      ]
+    },
+    {
+      "url": "https://developer.nvidia.com/blog/",
+      "checked_at": "2026-11-23T00:33:31.105496+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://developer.nvidia.com/blog/",
+      "title": "NVIDIA Technical Blog",
+      "sha256": "ade699326bbe15e913019c4c4b5ddc407245dd5faae6f2118d1a21c0b5e58600",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://github.blog/changelog/",
+      "checked_at": "2026-11-23T00:33:31.390425+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.blog/changelog/",
+      "title": "GitHub Changelog",
+      "sha256": "636e60f37490657c98792a7921fd783ce436b4fee619bae3775a72da99e547b7",
+      "timestamps_observed": [
+        "2026-11-20",
+        "2026-11-20",
+        "2026-11-20",
+        "2026-11-19",
+        "2026-11-19",
+        "2026-11-19",
+        "2026-11-19",
+        "2026-11-19",
+        "2026-11-18",
+        "2026-11-18",
+        "2026-11-18",
+        "2026-11-18"
+      ]
+    },
+    {
+      "url": "https://www.jiqizhixin.com/",
+      "checked_at": "2026-11-23T00:33:31.431960+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://www.jiqizhixin.com/",
+      "title": "机器之心·数据服务",
+      "sha256": "3581af28697d9f2e031fa08eac8b31aa4b7360c9087c5c2612795d47600d0a4e",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://hackerblogposts.com/blogs",
+      "checked_at": "2026-11-23T00:33:33.527271+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://hackerblogposts.com/blogs",
+      "title": "Blogs ranked by Hacker News popularity — Hacker Blog Posts",
+      "sha256": "4df3003fa98e0704aea84beb707c1d5032a9e88a5096458067523448d44dd4a6",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://simonwillison.net/2026/Nov/?page=2",
+      "checked_at": "2026-11-23T00:33:33.771723+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://simonwillison.net/2026/Nov/?page=2",
+      "title": "Archive for November 2026",
+      "sha256": "0e07f8f389a31d9c1b92c1fc03c931020ba6fe04cdc92d4d59608592ef86b2d6",
+      "timestamps_observed": [
+        "2026-11-17T23:20:57+00:00"
+      ]
+    },
+    {
+      "url": "https://mitchellh.com/writing",
+      "checked_at": "2026-11-23T00:33:33.771723+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://mitchellh.com/writing",
+      "title": "Writing – Mitchell Hashimoto",
+      "sha256": "d8c08a743513dc83d0ff3f330cbba41b0b1c51e8c45134d5e2e4f41b066a8df7",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://paulgraham.com/articles.html",
+      "checked_at": "2026-11-23T00:33:33.803626+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://paulgraham.com/articles.html",
+      "title": "Essays",
+      "sha256": "e2ee1fcf7b9b4829f70065ed8f669520645bae2cdc472906643f9dc9445b745d",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm-ascend/releases",
+      "checked_at": "2026-11-23T00:33:34.120259+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/vllm-project/vllm-ascend/releases",
+      "title": "Releases · vllm-project/vllm-ascend · GitHub",
+      "sha256": "01c0bef89297b19e5403ac3b5b17b1cfb35c49544ca4daefe24316504c2da89d",
+      "timestamps_observed": [
+        "2026-11-10T16:45:28Z",
+        "2026-11-10 14:07:35 UTC",
+        "2026-10-29T14:07:04Z",
+        "2026-10-29 14:03:20 UTC",
+        "2026-10-13T15:24:29Z",
+        "2026-10-13 11:46:01 UTC",
+        "2026-10-12T13:46:38Z",
+        "2026-10-12 02:50:03 UTC",
+        "2026-09-29T11:55:02Z",
+        "2026-09-24 16:10:20 UTC",
+        "2026-09-22T02:47:19Z",
+        "2026-09-22 02:13:33 UTC"
+      ]
+    },
+    {
+      "url": "https://github.com/triton-lang/triton-ascend/releases",
+      "checked_at": "2026-11-23T00:33:34.447510+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/triton-lang/triton-ascend/releases",
+      "title": "Releases · triton-lang/triton-ascend · GitHub",
+      "sha256": "bc24995d71beadd97437489f812b364641edd5e594885af5bd7c14e076a5cb4e",
+      "timestamps_observed": [
+        "2026-10-29T10:08:21Z",
+        "2026-10-29 09:12:26 UTC",
+        "2026-10-16T11:07:00Z",
+        "2026-10-16 05:12:22 UTC",
+        "2026-10-16T12:12:29Z",
+        "2026-10-15 14:10:51 UTC",
+        "2026-07-31T14:27:24Z",
+        "2026-07-31 10:13:48 UTC",
+        "2026-05-19T17:57:10Z"
+      ]
+    },
+    {
+      "url": "https://github.com/Ascend/pytorch/releases",
+      "checked_at": "2026-11-23T00:33:34.530542+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://github.com/Ascend/pytorch/releases",
+      "title": "Releases · Ascend/pytorch · GitHub",
+      "sha256": "36de1ee0e167688d8ce9795b3f709f4239f7836819db19ee2e62ec2970a82573",
+      "timestamps_observed": []
+    },
+    {
+      "url": "https://huggingface.co/papers/date/2026-11-16",
+      "checked_at": "2026-11-23T00:33:34.896030+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/papers/date/2026-11-16",
+      "title": "Daily Papers - Hugging Face",
+      "sha256": "d202c127bcaf81020b450d9bb5cd8b8336875d6d6560b008f0e60f38deb2c9ae",
+      "papers": [
+        {
+          "title": "Gamer: A Generalist Vision-Language-Action Foundation Model for Long-Horizon Real-Time Game Agent",
+          "url": "https://huggingface.co/papers/2611.18397"
+        },
+        {
+          "title": "Envisioning Agentic Robotics: A New Era of Robotic Systems",
+          "url": "https://huggingface.co/papers/2611.18359"
+        },
+        {
+          "title": "VibePrevisBench: Evaluating Agentic Coding for 4D Scene Generation in Blender",
+          "url": "https://huggingface.co/papers/2611.15789"
+        },
+        {
+          "title": "MIRIX-2.0: Multi-Agent Memory System",
+          "url": "https://huggingface.co/papers/2611.12068"
+        },
+        {
+          "title": "MMFlash: Faster Speculative Decoding for Vision-Language Models",
+          "url": "https://huggingface.co/papers/2611.18482"
+        },
+        {
+          "title": "V-JEPA-LM: Video-Language Models That Read Dynamics Beyond Static, Text-Aligned Representations",
+          "url": "https://huggingface.co/papers/2611.17831"
+        },
+        {
+          "title": "Loopback Transformer: Towards a Unified View of Residual Looped Transformers",
+          "url": "https://huggingface.co/papers/2611.07226"
+        },
+        {
+          "title": "G-CAST: Governed Continual Self-Training for E-Commerce Agents under Evolving Demands",
+          "url": "https://huggingface.co/papers/2611.17814"
+        },
+        {
+          "title": "MEM-SQL: Memory-Empowered Text-to-SQL",
+          "url": "https://huggingface.co/papers/2611.18338"
+        },
+        {
+          "title": "Mobile AI Factory: Building Specialized Language Models for Your Mobile Device",
+          "url": "https://huggingface.co/papers/2611.13509"
+        },
+        {
+          "title": "eDMD: Endpoint Distribution Matching for Few-Step Diffusion Distillation",
+          "url": "https://huggingface.co/papers/2611.17194"
+        },
+        {
+          "title": "DySENSE: Dynamic Spatiotemporal ENergy Synthesis and Emulation with Satellite Imagery",
+          "url": "https://huggingface.co/papers/2611.17878"
+        },
+        {
+          "title": "JVT: Just Video Transformer makes pixel-space video diffusion simple",
+          "url": "https://huggingface.co/papers/2611.18549"
+        },
+        {
+          "title": "Rethinking in Spikes: Mitigating Hallucinations in MDLMs with Step-Aware Decoding",
+          "url": "https://huggingface.co/papers/2611.12901"
+        },
+        {
+          "title": "WebArena-Pro: A Heterogeneous, Multimodal, Reproducible Benchmark for Web Agents",
+          "url": "https://huggingface.co/papers/2611.17955"
+        },
+        {
+          "title": "Re-Search: Dissecting LLM Ideation Through a Two-Player Questioning Game",
+          "url": "https://huggingface.co/papers/2611.14487"
+        },
+        {
+          "title": "Interpreting Coding Agents Through Their Behavioral Trajectories",
+          "url": "https://huggingface.co/papers/2611.17440"
+        },
+        {
+          "title": "Emergent Biological Capabilities in a Foundation Model for Molecular Interactions",
+          "url": "https://huggingface.co/papers/2611.14504"
+        },
+        {
+          "title": "HALO: Human-Aligned Data Collection for WhoLe-body MObile Manipulation",
+          "url": "https://huggingface.co/papers/2611.16439"
+        },
+        {
+          "title": "Restoring Diversity in Distilled Image and Video Generators by Probing Activations",
+          "url": "https://huggingface.co/papers/2611.18550"
+        },
+        {
+          "title": "Parsed, Plausible, Wrong: Output Format Controls Silent Errors in Small-Model Semantic Parsing",
+          "url": "https://huggingface.co/papers/2611.17169"
+        },
+        {
+          "title": "Evidence-Governed Adoption of Self-Generated Updates in Autonomous AI Agents",
+          "url": "https://huggingface.co/papers/2611.16378"
+        },
+        {
+          "title": "Aligning AI Teams",
+          "url": "https://huggingface.co/papers/2611.17820"
+        },
+        {
+          "title": "AI Reviews Are Biased Towards the Appendix",
+          "url": "https://huggingface.co/papers/2611.17811"
+        },
+        {
+          "title": "GH-AWTrace: A Large-Scale Dataset of GitHub Agentic Workflow Execution Logs",
+          "url": "https://huggingface.co/papers/2611.06866"
+        },
+        {
+          "title": "Disen-Forcing: Disentangling Semantic Anchoring from Motion for Autoregressive Video Diffusion",
+          "url": "https://huggingface.co/papers/2611.02822"
+        },
+        {
+          "title": "Dual Flow: Joint Image-Measurement Interpolation for Inverse Problems",
+          "url": "https://huggingface.co/papers/2611.05843"
+        },
+        {
+          "title": "Reducing Batch Makespan for LLM Agent Workloads through Inference-Environment Coordination",
+          "url": "https://huggingface.co/papers/2611.16661"
+        },
+        {
+          "title": "LuthorSQL: A One-Pass Text-to-SQL Model as System 1 for a Slower LLM Agent",
+          "url": "https://huggingface.co/papers/2611.17780"
+        },
+        {
+          "title": "MemInStream: Memorizing or Merely Recognizing? Rethinking Streaming Video Memory Evaluation",
+          "url": "https://huggingface.co/papers/2611.15640"
+        },
+        {
+          "title": "CANTraj: Recovering Vehicle Trajectories from CAN Signals in Naturalistic Driving",
+          "url": "https://huggingface.co/papers/2611.18442"
+        },
+        {
+          "title": "Iris-Z: Scaling One Generative Model Past Specialist Geometry Models",
+          "url": "https://huggingface.co/papers/2611.16010"
+        },
+        {
+          "title": "EvenVLM: A Text and Multimodal Dataset for the Even Language with Vision-Language Fine-Tuning",
+          "url": "https://huggingface.co/papers/2611.16500"
+        },
+        {
+          "title": "OneSteer: Unlocking Steerable General Humanoid Motion Tracking via One-Step Diffusion Whole-Body Control",
+          "url": "https://huggingface.co/papers/2610.41354"
+        },
+        {
+          "title": "Continual-ARC: Measuring Skill Acquisition over a Working Lifetime",
+          "url": "https://huggingface.co/papers/2611.14505"
+        },
+        {
+          "title": "JFinBench: A Continuously Refreshable Japanese Financial Benchmark from the Latest Certification Exams",
+          "url": "https://huggingface.co/papers/2611.18130"
+        },
+        {
+          "title": "eDIAR: Training-Free Open-Speaker Streaming Diarization for Long Meetings and Large Archives via e-means",
+          "url": "https://huggingface.co/papers/2611.18529"
+        },
+        {
+          "title": "BrickFlow: Connectivity-Guided Brick Reconstruction",
+          "url": "https://huggingface.co/papers/2611.17321"
+        },
+        {
+          "title": "Do Underwater Image Quality Metrics Agree with Human Perception? A Benchmark with Human Choices, Simple Edits and Generative Drift",
+          "url": "https://huggingface.co/papers/2611.18429"
+        },
+        {
+          "title": "Alloy: A Multi-Material Physics Engine for Robot Learning",
+          "url": "https://huggingface.co/papers/2611.16312"
+        }
+      ],
+      "valid_dated_list": true,
+      "timestamps_observed": [],
+      "note": "访问时列表；不是历史投票快照"
+    },
+    {
+      "url": "https://huggingface.co/papers/date/2026-11-17",
+      "checked_at": "2026-11-23T00:33:34.957706+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/papers/date/2026-11-17",
+      "title": "Daily Papers - Hugging Face",
+      "sha256": "545715ae57da1539e9d0915c4df2fe95fe5d8be8640a2266941efaccff584460",
+      "papers": [
+        {
+          "title": "InclusionMed: Benchmarking AI for Inclusive Healthcare",
+          "url": "https://huggingface.co/papers/2611.21218"
+        },
+        {
+          "title": "Sage S2.1 Flash Technical Report",
+          "url": "https://huggingface.co/papers/2611.21072"
+        },
+        {
+          "title": "K2-Horizon: A Frontier Fleet of Open Source Language Models",
+          "url": "https://huggingface.co/papers/2611.21003"
+        },
+        {
+          "title": "AllocFlow: End-to-End Portfolio Trading Action Generation from Raw Market Data",
+          "url": "https://huggingface.co/papers/2611.19937"
+        },
+        {
+          "title": "SWE-CoWork: Benchmarking Coding Agents as Digital Employees in Organizations",
+          "url": "https://huggingface.co/papers/2611.20218"
+        },
+        {
+          "title": "SPILLWAY: Separating Target Admission from Sanitization to Defend Tool-Using Agents against Prompt Injection",
+          "url": "https://huggingface.co/papers/2611.07222"
+        },
+        {
+          "title": "ScaleVLA: Scaling Vision-Language-Action Models to 552 Billion Parameters",
+          "url": "https://huggingface.co/papers/2611.21607"
+        },
+        {
+          "title": "PaperCritic: Training AI Reviewers to Assess the Soundness of Papers",
+          "url": "https://huggingface.co/papers/2611.17834"
+        },
+        {
+          "title": "LynnReal-Hand: Unlocking World Interaction with Hand Control",
+          "url": "https://huggingface.co/papers/2611.21479"
+        },
+        {
+          "title": "Accelerate Bench: Evaluating Agents for Application-Level Program Optimization",
+          "url": "https://huggingface.co/papers/2611.20882"
+        },
+        {
+          "title": "VoxMel TTS Technical Report",
+          "url": "https://huggingface.co/papers/2611.20254"
+        },
+        {
+          "title": "SALA: Semantically Aligned Latent Actions Enable Dual-Axis Scaling of Embodied Foundation Models",
+          "url": "https://huggingface.co/papers/2611.17110"
+        },
+        {
+          "title": "Calpha: Toward Native Biomolecular Intelligence in a General-Purpose Language Model",
+          "url": "https://huggingface.co/papers/2611.20986"
+        },
+        {
+          "title": "MovieRoll: A Systematic Framework for Rolling Out Long-Form Videos",
+          "url": "https://huggingface.co/papers/2611.21339"
+        },
+        {
+          "title": "Energy-Based Reasoners: Your Recurrent Reasoner Should Be an Energy-Based Model",
+          "url": "https://huggingface.co/papers/2611.08977"
+        },
+        {
+          "title": "Termination Lag: Coding Agents Solve Early but Stop Late",
+          "url": "https://huggingface.co/papers/2611.14960"
+        },
+        {
+          "title": "Abstention Direction in Large Language Models: Mechanistic Interpretability of Abstention Across Query Ambiguity, Knowledge Limits, and Safety Alignment",
+          "url": "https://huggingface.co/papers/2611.20441"
+        },
+        {
+          "title": "Correcting Persistent Failures in Point-Cloud Grasping Policies using Human Demonstrations in Virtual Reality",
+          "url": "https://huggingface.co/papers/2611.18919"
+        },
+        {
+          "title": "OutfitterBench: Evaluating LLM Agents on Long-Horizon Resource Allocation and Commitment Coordination",
+          "url": "https://huggingface.co/papers/2611.17933"
+        },
+        {
+          "title": "Latent Feedback Is a Compute and Data Amplifier",
+          "url": "https://huggingface.co/papers/2611.20404"
+        },
+        {
+          "title": "Correct Labels Are Not Enough: Reliable Metadata Can Silently Control Model Behavior",
+          "url": "https://huggingface.co/papers/2611.04395"
+        },
+        {
+          "title": "More Agents, More Samples, or More Thinking? Untangling Coordination, Ensembling, and Test-Time Compute in Multi-Agent LLMs",
+          "url": "https://huggingface.co/papers/2611.17610"
+        },
+        {
+          "title": "Marimba: A System One Model for Speech",
+          "url": "https://huggingface.co/papers/2611.18330"
+        },
+        {
+          "title": "DominoBench: Evaluating Multi-Step Physical Reasoning from Still Images",
+          "url": "https://huggingface.co/papers/2611.20385"
+        },
+        {
+          "title": "Invariant-Aware Harness Enforcement to Protect LLM Agents from Silent API Failures",
+          "url": "https://huggingface.co/papers/2611.20595"
+        },
+        {
+          "title": "BitDecoding-FP4: Native FP4 KV Cache Decoding via Algorithm-System Co-Design",
+          "url": "https://huggingface.co/papers/2611.09825"
+        },
+        {
+          "title": "JEPA4R: Embodied JEPA World Models with 4D Point Planning",
+          "url": "https://huggingface.co/papers/2611.19771"
+        },
+        {
+          "title": "Continuation-Guided LLM Evolution of Program Policies and Goal Compilers in Craftax",
+          "url": "https://huggingface.co/papers/2611.19537"
+        },
+        {
+          "title": "UMM-JEPA: Generative Pretraining via Masked Next-Scale Representation Prediction for Unified Multimodal Models",
+          "url": "https://huggingface.co/papers/2611.18668"
+        },
+        {
+          "title": "LoopFill: Pipelined Multi-Token Speculative Decoding for Looped Transformers",
+          "url": "https://huggingface.co/papers/2611.19649"
+        },
+        {
+          "title": "Ego Guidance: Enhancing Robot Policy Learning with Action-Free Human Egocentric Videos",
+          "url": "https://huggingface.co/papers/2611.13685"
+        },
+        {
+          "title": "Inside the Trading Loop: Markets, Models, and Moves with LLM Agents",
+          "url": "https://huggingface.co/papers/2611.11657"
+        },
+        {
+          "title": "When Expert Disagreement Hurts: Prestige and Selectivity in LLM Decision Revision",
+          "url": "https://huggingface.co/papers/2611.16694"
+        },
+        {
+          "title": "Dataset Distillation via Drifting",
+          "url": "https://huggingface.co/papers/2611.16642"
+        },
+        {
+          "title": "Centered Ablation: Why Last-Layer Directional Ablation Under-Fires or Collapses, and a Closed-Form Fix",
+          "url": "https://huggingface.co/papers/2611.20148"
+        },
+        {
+          "title": "ViRA: Toward Ultra-High-Resolution Visual Agents via Cross-Input Relative Policy Optimization",
+          "url": "https://huggingface.co/papers/2611.21605"
+        },
+        {
+          "title": "Flexible Multi-Stack Super-Resolution of Clinical Brain MRI Using Hetero-Orientation Variational Encoding: Expert Reader Evaluation in a Nigerian Cohort",
+          "url": "https://huggingface.co/papers/2611.21412"
+        },
+        {
+          "title": "A Reinforcement Learning Method to Navigate SMEFT Operator Space",
+          "url": "https://huggingface.co/papers/2611.21439"
+        },
+        {
+          "title": "Reflection Anchors for Propagation-Aware Visual Retention in Long-Chain Multimodal Reasoning",
+          "url": "https://huggingface.co/papers/2605.09614"
+        },
+        {
+          "title": "GlyphAtlas: Disentangling Stroke Detail from Layout for Scene Text Synthesis",
+          "url": "https://huggingface.co/papers/2611.20192"
+        },
+        {
+          "title": "GPBam: A Retrieval-Aware German Public Law Exam Benchmark",
+          "url": "https://huggingface.co/papers/2611.18981"
+        },
+        {
+          "title": "Zuse: A Decision Model for European Languages",
+          "url": "https://huggingface.co/papers/2611.06238"
+        }
+      ],
+      "valid_dated_list": true,
+      "timestamps_observed": [],
+      "note": "访问时列表；不是历史投票快照"
+    },
+    {
+      "url": "https://huggingface.co/papers/date/2026-11-18",
+      "checked_at": "2026-11-23T00:33:35.810411+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/papers/date/2026-11-18",
+      "title": "Daily Papers - Hugging Face",
+      "sha256": "923c7b29195ae879308b60ddff9f7a66c41f3f05ce5628b4f6ff51d277c704f2",
+      "papers": [
+        {
+          "title": "TeleChat to Xing4: Advancing Frontier Agentic Models on Domestic Chips and Frameworks",
+          "url": "https://huggingface.co/papers/2611.22115"
+        },
+        {
+          "title": "AscendGYM: A Cost-Aware Kernel Optimization Benchmark for Real-World Workloads on Ascend NPUs",
+          "url": "https://huggingface.co/papers/2611.17621"
+        },
+        {
+          "title": "Weight-Space Programming Doesn't Need Transformers",
+          "url": "https://huggingface.co/papers/2611.22055"
+        },
+        {
+          "title": "Multi-Branch Transformer",
+          "url": "https://huggingface.co/papers/2611.19800"
+        },
+        {
+          "title": "ForceHarness: Turning Force into Action and Physics for Frozen Frontier Models",
+          "url": "https://huggingface.co/papers/2611.21099"
+        },
+        {
+          "title": "Self-Improvement Memory Enables Continual Recursive Self-Improvement",
+          "url": "https://huggingface.co/papers/2611.18856"
+        },
+        {
+          "title": "FastFrames: Video Generation at Interactive Latency",
+          "url": "https://huggingface.co/papers/2611.23226"
+        },
+        {
+          "title": "Breath-Dx: A Time Series Classification Benchmark for Disease Screening with eNose",
+          "url": "https://huggingface.co/papers/2611.15348"
+        },
+        {
+          "title": "TCP4D: A Unified Tool-Center-Point Tracking and Generation Model for Robot Manipulation",
+          "url": "https://huggingface.co/papers/2611.23143"
+        },
+        {
+          "title": "Heave-Ho: Decentralized Long-Horizon Multi-Humanoid Collaboration",
+          "url": "https://huggingface.co/papers/2611.22275"
+        },
+        {
+          "title": "VideoNexus: Video Perception Beyond the Reasoning Context",
+          "url": "https://huggingface.co/papers/2611.21392"
+        },
+        {
+          "title": "π^4: A Foundation Model for 4D Scene Geometry and Motion",
+          "url": "https://huggingface.co/papers/2611.23144"
+        },
+        {
+          "title": "From Repositories to Training Environments: Scaling Long-Horizon Coding Agents with Environment Evolution Loop",
+          "url": "https://huggingface.co/papers/2611.21152"
+        },
+        {
+          "title": "Regularized Score Centering",
+          "url": "https://huggingface.co/papers/2611.21791"
+        },
+        {
+          "title": "Beyond Answering: Learning to Speak First and Act in Streaming Video",
+          "url": "https://huggingface.co/papers/2611.17048"
+        },
+        {
+          "title": "MedJev: A System One Vision-Language Decision Model for Fast and Effective Medical Image Understanding",
+          "url": "https://huggingface.co/papers/2611.20992"
+        },
+        {
+          "title": "CADMAGEDDON: High-Fidelity CAD Reconstruction with Local Inference",
+          "url": "https://huggingface.co/papers/2611.22563"
+        },
+        {
+          "title": "FMT: Lossless Image Compression in a Fixed Number of Parallel Steps",
+          "url": "https://huggingface.co/papers/2611.23108"
+        },
+        {
+          "title": "DNeo: Your Parallel Draft Model Needs Better Target Feature Encoding",
+          "url": "https://huggingface.co/papers/2611.21925"
+        },
+        {
+          "title": "VisualArtifactSpec 1.0: Evaluating Visual Artifacts under Task Specifications",
+          "url": "https://huggingface.co/papers/2611.21382"
+        },
+        {
+          "title": "Glyph: An Interpretability Engine for AI-Driven Scientific Discovery in Clinical Data",
+          "url": "https://huggingface.co/papers/2611.08922"
+        },
+        {
+          "title": "Agentic On-Policy Distillation Implicitly Reshapes LLMs' ReAct Patterns",
+          "url": "https://huggingface.co/papers/2611.19244"
+        },
+        {
+          "title": "MPEG-Diffusion: Mixed-Resolution Video Generation",
+          "url": "https://huggingface.co/papers/2611.12069"
+        },
+        {
+          "title": "Do LLM Agents Still Need to Be Told How to Self-Improve?",
+          "url": "https://huggingface.co/papers/2611.23219"
+        },
+        {
+          "title": "MInfoVisQA: A Multilingual Benchmark for Information-Rich Visual Question Answering",
+          "url": "https://huggingface.co/papers/2611.21644"
+        },
+        {
+          "title": "The novelty exposed: ablation, reproducibility and transparency in 40 technical reports of open-weight large language models (LLMs)",
+          "url": "https://huggingface.co/papers/2611.20003"
+        },
+        {
+          "title": "HubEgo-100K: In-the-Wild Egocentric Video of Skilled Work for Robot Learning",
+          "url": "https://huggingface.co/papers/2611.21938"
+        },
+        {
+          "title": "MillBill: A Machining Agent with Geometric Feedback",
+          "url": "https://huggingface.co/papers/2611.22565"
+        },
+        {
+          "title": "The Noise Floor of a Quantization Comparison: Engine, restart, batch and kernel drift, measured against 8-bit and 4-bit effects in two decision models",
+          "url": "https://huggingface.co/papers/2611.15671"
+        },
+        {
+          "title": "Attention at Absolute Zero",
+          "url": "https://huggingface.co/papers/2611.11937"
+        },
+        {
+          "title": "AuXSpec: Learning to Autoformalize Program Specifications via Executable Postconditions",
+          "url": "https://huggingface.co/papers/2611.21421"
+        },
+        {
+          "title": "ResWAM: Learning What Changes, Not What Stays, for World-Action Models",
+          "url": "https://huggingface.co/papers/2611.19559"
+        },
+        {
+          "title": "WeightBench: Evaluating Language Models as Weight-Space Programmers",
+          "url": "https://huggingface.co/papers/2611.18553"
+        },
+        {
+          "title": "M3OPD-Reasoner: An Open Recipe for Post-Training Multimodal Reasoning with Multi-Teacher On-Policy Distillation",
+          "url": "https://huggingface.co/papers/2611.23034"
+        },
+        {
+          "title": "TPHC: Improving Hyper-Connections with Tensor-Parallel Grouped Updates",
+          "url": "https://huggingface.co/papers/2611.23026"
+        },
+        {
+          "title": "Unreasonable Confidence from Simulator Misspecification: Directional Robustness on the SPEED+ Sim-to-Real Benchmark",
+          "url": "https://huggingface.co/papers/2611.20321"
+        },
+        {
+          "title": "GameRealm: Grounding Visual Learning in Interactive Games",
+          "url": "https://huggingface.co/papers/2611.23140"
+        },
+        {
+          "title": "PanDWM: Panoramic 4D Driving World Models",
+          "url": "https://huggingface.co/papers/2611.19857"
+        },
+        {
+          "title": "CONGA: Compiling Gaussian Fiber Geometry for Structured Bayesian Inference",
+          "url": "https://huggingface.co/papers/2611.20995"
+        }
+      ],
+      "valid_dated_list": true,
+      "timestamps_observed": [],
+      "note": "访问时列表；不是历史投票快照"
+    },
+    {
+      "url": "https://huggingface.co/papers/date/2026-11-19",
+      "checked_at": "2026-11-23T00:33:37.060622+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/papers/date/2026-11-19",
+      "title": "Daily Papers - Hugging Face",
+      "sha256": "d5cb76c866b9524513a72d66a816cf86fa46a76cbcae31e2e87ca1e4edc2433a",
+      "papers": [
+        {
+          "title": "Jeveration: System One Models Now Generate",
+          "url": "https://huggingface.co/papers/2611.24738"
+        },
+        {
+          "title": "Tideway: Phase-Aware Tiered Memory Management for MoE Inference on Consumer Devices",
+          "url": "https://huggingface.co/papers/2611.14848"
+        },
+        {
+          "title": "ALIVE: Making Streaming Video Models Interactive",
+          "url": "https://huggingface.co/papers/2611.21366"
+        },
+        {
+          "title": "The Resolution Hypothesis: Agent Evolution's Key Is Identifying Improvements",
+          "url": "https://huggingface.co/papers/2611.23068"
+        },
+        {
+          "title": "Game2Player: Scaling Gameplay Experience for Visual Agents through Environment-Player Co-Development",
+          "url": "https://huggingface.co/papers/2611.24154"
+        },
+        {
+          "title": "PROLA: Principal-Orthogonal Low-rank Adaptation for Predictive Spatiotemporal Weather Downscaling",
+          "url": "https://huggingface.co/papers/2611.11318"
+        },
+        {
+          "title": "CurvDelta: Low-Curvature Delta Modeling For Surgical Learning and Unlearning",
+          "url": "https://huggingface.co/papers/2611.24654"
+        },
+        {
+          "title": "LightTAR: Light and Fast Target-Aware Representations for Multimodal Tabular Learning",
+          "url": "https://huggingface.co/papers/2611.17600"
+        },
+        {
+          "title": "HINT-WAM: Hindsight-Informed Training for World Action Models",
+          "url": "https://huggingface.co/papers/2611.24789"
+        },
+        {
+          "title": "WorldRuler: Interactive World Modeling under Configurable Rules",
+          "url": "https://huggingface.co/papers/2611.24869"
+        },
+        {
+          "title": "Code World Model 2.0: Towards Infinite Controllable Video Generation",
+          "url": "https://huggingface.co/papers/2611.22925"
+        },
+        {
+          "title": "Thinking Fast, Anywhere: One System-1 for the Decision Points of Any Agent Workflow",
+          "url": "https://huggingface.co/papers/2611.23751"
+        },
+        {
+          "title": "StrideWorld: Benchmarking Scene Rigidity and Action Consistency in Interactive Video World Model",
+          "url": "https://huggingface.co/papers/2611.24408"
+        },
+        {
+          "title": "Piccolo: Co-Evolving Decision Models and Data through Recursive Self-Improvement",
+          "url": "https://huggingface.co/papers/2611.24651"
+        },
+        {
+          "title": "LogT: Logically Think with Images for Visual Search",
+          "url": "https://huggingface.co/papers/2611.19200"
+        },
+        {
+          "title": "TabBioMed: A Large-Scale Benchmark for Biomedical Tabular Learning",
+          "url": "https://huggingface.co/papers/2611.23779"
+        },
+        {
+          "title": "QDA: Closed-Loop LLM Quantization Design with Agents",
+          "url": "https://huggingface.co/papers/2611.23388"
+        },
+        {
+          "title": "Decoding Without a Decoder: Direct Pixel Prediction from Diffusion Transformers",
+          "url": "https://huggingface.co/papers/2611.22287"
+        },
+        {
+          "title": "BLIP-Live: Balancing Timeliness & Firing Precision in Proactive Streaming Video Agents",
+          "url": "https://huggingface.co/papers/2611.21553"
+        },
+        {
+          "title": "StatePortal: Agentic Checkpoint Synthesis for Testing Deep States in Interactive Software",
+          "url": "https://huggingface.co/papers/2611.23257"
+        },
+        {
+          "title": "Late Entry in Looped Language Models",
+          "url": "https://huggingface.co/papers/2611.24576"
+        },
+        {
+          "title": "RoughCut-Bench: A Benchmark for Automatic Video Rough-Cut with Large Vision-Language Models",
+          "url": "https://huggingface.co/papers/2611.24098"
+        },
+        {
+          "title": "Unfinished-Bench: Measuring Rule Violations by Persistent Agents in Realistic Work Environments",
+          "url": "https://huggingface.co/papers/2611.17460"
+        },
+        {
+          "title": "WaveView: The Novel View Is in the Noise",
+          "url": "https://huggingface.co/papers/2611.23994"
+        },
+        {
+          "title": "AVTR: Adaptive Multimodal Reasoning with Visual Imagination",
+          "url": "https://huggingface.co/papers/2611.24161"
+        },
+        {
+          "title": "PReMind: When Personal Memory Meets Visual Hazards",
+          "url": "https://huggingface.co/papers/2611.23808"
+        },
+        {
+          "title": "Mechanistic Critics for Sample-Efficient NPU Design-Space Exploration",
+          "url": "https://huggingface.co/papers/2611.24733"
+        },
+        {
+          "title": "PIPETTE: Prompt Injection Purple-Teaming for Robust LLM Agents",
+          "url": "https://huggingface.co/papers/2611.24362"
+        },
+        {
+          "title": "How Far Can Untrained Neural Networks Go in Anomaly Detection? From Tables to Pixels",
+          "url": "https://huggingface.co/papers/2611.08136"
+        },
+        {
+          "title": "Evidence-Based Credit Assignment for Search-Augmented Language Models",
+          "url": "https://huggingface.co/papers/2611.23824"
+        },
+        {
+          "title": "RICoT: Recurrent Interleaved Chain-of-Thought for Page Stream Segmentation",
+          "url": "https://huggingface.co/papers/2611.22382"
+        },
+        {
+          "title": "UltraTex: Aligning Physical Knowledge for High-Fidelity PBR Texture Generation",
+          "url": "https://huggingface.co/papers/2611.24941"
+        },
+        {
+          "title": "DrawScore: Evaluating Generated CAD Models against Engineering Drawings",
+          "url": "https://huggingface.co/papers/2611.24681"
+        },
+        {
+          "title": "VAE Rhythm: Temporal Decoding Traces for AI-Generated Video Detection",
+          "url": "https://huggingface.co/papers/2611.21114"
+        },
+        {
+          "title": "Thinking Harder Doesn't Lead to Better Choices: Reasoning Effort Increases the Confidence but Not the Correctness of LLM Shopping Agents",
+          "url": "https://huggingface.co/papers/2611.22033"
+        },
+        {
+          "title": "Replay, Don't Resample: Off-Policy Consolidation of Long-Horizon RL Experts",
+          "url": "https://huggingface.co/papers/2611.24059"
+        },
+        {
+          "title": "Kezek: Splitting Mono Two-Person Conversations into Per-Speaker Tracks for Full-Duplex Dialogue Data",
+          "url": "https://huggingface.co/papers/2611.16933"
+        },
+        {
+          "title": "Chorus: Shared N-gram Embeddings with Layer-wise Adaptation",
+          "url": "https://huggingface.co/papers/2611.23386"
+        },
+        {
+          "title": "NexSight: Verifiable Tasks for Fine-Grained Agentic Long-Video Understanding",
+          "url": "https://huggingface.co/papers/2611.22790"
+        },
+        {
+          "title": "IDEA: Intent-Dominance Evidence Audit for Inference-Time Backdoor Detection in GUI Agents",
+          "url": "https://huggingface.co/papers/2611.24102"
+        },
+        {
+          "title": "General progress substitutes for specific training data in language models",
+          "url": "https://huggingface.co/papers/2611.24844"
+        },
+        {
+          "title": "Unified Law for Visual Tasks (The Four Laws of Computer Vision)",
+          "url": "https://huggingface.co/papers/2611.24917"
+        },
+        {
+          "title": "BiCAT: Bimanual Coordination Action Tokenization",
+          "url": "https://huggingface.co/papers/2611.23499"
+        },
+        {
+          "title": "PGPO: Prototype-Guided Progressive Obfuscation for Privacy-Preserving LLM-Enhanced Recommendation",
+          "url": "https://huggingface.co/papers/2611.23236"
+        },
+        {
+          "title": "FVScore: Specification-Driven Neuro-Symbolic Video Evaluation",
+          "url": "https://huggingface.co/papers/2611.22673"
+        },
+        {
+          "title": "Out of Sight, Still in Mind: Token Compression for Omni-LLMs",
+          "url": "https://huggingface.co/papers/2607.21179"
+        },
+        {
+          "title": "A Foundation Model to Measure and Predict Human Behaviour",
+          "url": "https://huggingface.co/papers/2611.24830"
+        },
+        {
+          "title": "Learning Anisotropic Prediction Targets for Flow Models",
+          "url": "https://huggingface.co/papers/2611.17767"
+        },
+        {
+          "title": "Choosing Quantized Code LLMs by File Size and Energy per Solved Task",
+          "url": "https://huggingface.co/papers/2611.17605"
+        },
+        {
+          "title": "Movie2Game-Bench: Holistic Evaluation of Film-to-Game Adaptation Beyond Playability",
+          "url": "https://huggingface.co/papers/2611.24669"
+        },
+        {
+          "title": "Let Samples Sing in Chorus: Mitigating Spurious Correlations via Cross-view Consensus",
+          "url": "https://huggingface.co/papers/2611.22668"
+        },
+        {
+          "title": "Recurrent Domain Incremental Adaptation of Time-Series Foundation Models",
+          "url": "https://huggingface.co/papers/2611.24075"
+        }
+      ],
+      "valid_dated_list": true,
+      "timestamps_observed": [],
+      "note": "访问时列表；不是历史投票快照"
+    },
+    {
+      "url": "https://huggingface.co/papers/date/2026-11-20",
+      "checked_at": "2026-11-23T00:33:37.211560+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/papers/date/2026-11-20",
+      "title": "Daily Papers - Hugging Face",
+      "sha256": "5930f018126772f6a748555edf6cd72fc1fb8fd108d3c39ab57653a8fe8ba751",
+      "papers": [
+        {
+          "title": "WeVisForensics: Self-Evolving Agent for Omni AI-Generated Video Detection",
+          "url": "https://huggingface.co/papers/2611.21373"
+        },
+        {
+          "title": "Mind2Act World: A Diagnostic Benchmark for Embodied Mind, Physical Action, and Mind-Action Composition in Robotic Manipulation",
+          "url": "https://huggingface.co/papers/2611.26444"
+        },
+        {
+          "title": "WeMM-Video: Pushing the Frontiers of Open-Source Omni-Modal Video Understanding",
+          "url": "https://huggingface.co/papers/2611.26409"
+        },
+        {
+          "title": "Probing the \"Conscious\" Mind: Selective Access and Global Workspace in Vision-Language Models",
+          "url": "https://huggingface.co/papers/2611.26590"
+        },
+        {
+          "title": "Posterior Matching Distillation",
+          "url": "https://huggingface.co/papers/2611.26629"
+        },
+        {
+          "title": "Coda-DaVinci: Reimagining Video Generation with Code2Video",
+          "url": "https://huggingface.co/papers/2611.26595"
+        },
+        {
+          "title": "Depth Pro 2: Sharp and Temporally Consistent Metric Monocular Depth",
+          "url": "https://huggingface.co/papers/2611.26603"
+        },
+        {
+          "title": "The Mask Is Not the Object: Volumetric Supervision for 3D Gaussian Segmentation",
+          "url": "https://huggingface.co/papers/2611.21383"
+        },
+        {
+          "title": "EgoCaptioner: Towards Comprehensive and Fine-Grained Egocentric Video Captioning",
+          "url": "https://huggingface.co/papers/2611.26380"
+        },
+        {
+          "title": "AltRA-Test: An Alternative Annotator Test for LLM Judges Without Shared Annotators",
+          "url": "https://huggingface.co/papers/2611.26073"
+        },
+        {
+          "title": "HiUni: Harmonizing Understanding and Generation in Shared Visual Space",
+          "url": "https://huggingface.co/papers/2611.26107"
+        },
+        {
+          "title": "TuringSpace: Grounding Spatial Intelligence in Action with Interactive CAPTCHAs",
+          "url": "https://huggingface.co/papers/2611.25387"
+        },
+        {
+          "title": "ZeroVLN: Learning to Navigate without Supervised Fine-Tuning of the VLM Brain",
+          "url": "https://huggingface.co/papers/2611.26414"
+        },
+        {
+          "title": "RL Post-Training in Diffusion Transformers Is Activation Steering",
+          "url": "https://huggingface.co/papers/2611.26627"
+        },
+        {
+          "title": "Language Models Can Rewrite Their Own Weights",
+          "url": "https://huggingface.co/papers/2611.21885"
+        },
+        {
+          "title": "WAM-Policy: World Action Models with On-Policy Distillation for Quadrupedal Loco-Manipulation",
+          "url": "https://huggingface.co/papers/2611.24011"
+        },
+        {
+          "title": "Training Vision Models for LLM-Driven Weight-Space Programming",
+          "url": "https://huggingface.co/papers/2611.26408"
+        },
+        {
+          "title": "Learning What Actions Change: Action Effect Matching for Dynamics-Faithful World Models",
+          "url": "https://huggingface.co/papers/2611.25980"
+        },
+        {
+          "title": "WM^MLLM: Turning MLLMs into World Models",
+          "url": "https://huggingface.co/papers/2611.24193"
+        },
+        {
+          "title": "Accelerating Mixture of Block Attention via Dynamic Routing, KV-Centric Execution and Runtime Pipelining",
+          "url": "https://huggingface.co/papers/2611.26268"
+        },
+        {
+          "title": "AutoMaster: Autonomous Post-Training by Making the Same Model a Better Teacher",
+          "url": "https://huggingface.co/papers/2611.26510"
+        },
+        {
+          "title": "On-Policy Morphing into Hybrid Attention Models",
+          "url": "https://huggingface.co/papers/2611.24809"
+        },
+        {
+          "title": "Online Mistake Detection in Instruction-Conditioned Procedural Video",
+          "url": "https://huggingface.co/papers/2611.25567"
+        },
+        {
+          "title": "Twice-Told Critiques: Claim-Level Homogenization of Peer Review in the LLM Era",
+          "url": "https://huggingface.co/papers/2611.26286"
+        },
+        {
+          "title": "Teaching Vision-Language-Action Models to Stop Safely",
+          "url": "https://huggingface.co/papers/2611.26239"
+        },
+        {
+          "title": "CompoundingKernel: Self-Improving from Zero to First",
+          "url": "https://huggingface.co/papers/2611.19230"
+        },
+        {
+          "title": "Embeddings vs. Grep: Rethinking the Dense Advantage in Code Search",
+          "url": "https://huggingface.co/papers/2611.20455"
+        },
+        {
+          "title": "SpecWM: Turning Verification into Refinement for Streaming World Models",
+          "url": "https://huggingface.co/papers/2611.26211"
+        },
+        {
+          "title": "A CPU Inside an LLM: Zero-Gradient Compilation of Exact Circuits into Pretrained Weights",
+          "url": "https://huggingface.co/papers/2611.26450"
+        },
+        {
+          "title": "TwinLab-Bench: Evaluating AI Scientists in Agentic Twins of Real Labs",
+          "url": "https://huggingface.co/papers/2611.26248"
+        },
+        {
+          "title": "System 1 agents: a method for local, reliable and fast agentic AI",
+          "url": "https://huggingface.co/papers/2611.21053"
+        },
+        {
+          "title": "Direct3D-V3: Latent-Free Diffusion Transformers in the Native Voxel Domain",
+          "url": "https://huggingface.co/papers/2611.26511"
+        },
+        {
+          "title": "Accord: Universal Online Metric Localization and Dense Mapping from one Camera and an IMU",
+          "url": "https://huggingface.co/papers/2611.25279"
+        },
+        {
+          "title": "VSpark: Speculative Decoding for Autoregressive Vision-Language-Action Models",
+          "url": "https://huggingface.co/papers/2611.22666"
+        },
+        {
+          "title": "Do Probing and Steering Favor the Same Directions Within and Across Language Models?",
+          "url": "https://huggingface.co/papers/2611.19499"
+        },
+        {
+          "title": "NarrowSpec: Draft Hidden Width Need Not Match the Target in Speculative Decoding",
+          "url": "https://huggingface.co/papers/2611.23835"
+        },
+        {
+          "title": "Phantom Success, Silent Failure: Auditing the Success Checkers of Simulated Manipulation Benchmarks",
+          "url": "https://huggingface.co/papers/2611.25179"
+        },
+        {
+          "title": "One Prior, Two Dynamics: Repurposing Video Diffusion Transformers for Self-Supervised Latent Action Learning",
+          "url": "https://huggingface.co/papers/2611.26617"
+        },
+        {
+          "title": "S1CogBench: What System One Decision Models Can and Cannot Do on Cognitive Experiments",
+          "url": "https://huggingface.co/papers/2611.00911"
+        },
+        {
+          "title": "DailySafe: Benchmarking Dynamic Safety Awareness in Everyday Multi-Turn Multimodal Interactions",
+          "url": "https://huggingface.co/papers/2611.26298"
+        },
+        {
+          "title": "PAD: Policy-Aware Data Valuation for Autonomous Driving",
+          "url": "https://huggingface.co/papers/2611.25604"
+        },
+        {
+          "title": "Squoosh Bench: Evaluating UX-1 on 318 Historical Website A/B Tests",
+          "url": "https://huggingface.co/papers/2611.25200"
+        },
+        {
+          "title": "In Situ Training of Optical Neural Networks by Coding Agents",
+          "url": "https://huggingface.co/papers/2611.23875"
+        },
+        {
+          "title": "AURA: AUdio-dRiven streaming Avatar",
+          "url": "https://huggingface.co/papers/2611.26540"
+        },
+        {
+          "title": "Suppressing the Shortcut Hidden Behind the Gains of VideoLLM Fine-Tuning",
+          "url": "https://huggingface.co/papers/2611.25776"
+        },
+        {
+          "title": "PlayCraft: Designing Engaging Games from Agent Play Experience",
+          "url": "https://huggingface.co/papers/2611.26624"
+        },
+        {
+          "title": "Time Series Structure Learning with Local Causal Parent Discovery",
+          "url": "https://huggingface.co/papers/2611.26232"
+        },
+        {
+          "title": "Inhabitant: An Agent Framework for Long-Horizon Human-Scene Interaction with Spatial Control and Quantitative Feedback",
+          "url": "https://huggingface.co/papers/2611.25005"
+        },
+        {
+          "title": "Lang-SVG: Hierarchical Image Vectorization with Language Priors",
+          "url": "https://huggingface.co/papers/2611.15941"
+        },
+        {
+          "title": "TwinD: Generalizing Deepfake Detection from Blending to Entire Face Synthesis",
+          "url": "https://huggingface.co/papers/2611.25935"
+        }
+      ],
+      "valid_dated_list": true,
+      "timestamps_observed": [],
+      "note": "访问时列表；不是历史投票快照"
+    },
+    {
+      "url": "https://huggingface.co/papers/date/2026-11-21",
+      "checked_at": "2026-11-23T00:33:37.247450+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/papers/date/2026-11-20",
+      "title": "Daily Papers - Hugging Face",
+      "sha256": "cc1d96c45ddfc1856ce7928c048ec5a763aedd5ded3f70dd1401fd654062595d",
+      "papers": [
+        {
+          "title": "WeVisForensics: Self-Evolving Agent for Omni AI-Generated Video Detection",
+          "url": "https://huggingface.co/papers/2611.21373"
+        },
+        {
+          "title": "Mind2Act World: A Diagnostic Benchmark for Embodied Mind, Physical Action, and Mind-Action Composition in Robotic Manipulation",
+          "url": "https://huggingface.co/papers/2611.26444"
+        },
+        {
+          "title": "WeMM-Video: Pushing the Frontiers of Open-Source Omni-Modal Video Understanding",
+          "url": "https://huggingface.co/papers/2611.26409"
+        },
+        {
+          "title": "Probing the \"Conscious\" Mind: Selective Access and Global Workspace in Vision-Language Models",
+          "url": "https://huggingface.co/papers/2611.26590"
+        },
+        {
+          "title": "Posterior Matching Distillation",
+          "url": "https://huggingface.co/papers/2611.26629"
+        },
+        {
+          "title": "Coda-DaVinci: Reimagining Video Generation with Code2Video",
+          "url": "https://huggingface.co/papers/2611.26595"
+        },
+        {
+          "title": "Depth Pro 2: Sharp and Temporally Consistent Metric Monocular Depth",
+          "url": "https://huggingface.co/papers/2611.26603"
+        },
+        {
+          "title": "The Mask Is Not the Object: Volumetric Supervision for 3D Gaussian Segmentation",
+          "url": "https://huggingface.co/papers/2611.21383"
+        },
+        {
+          "title": "EgoCaptioner: Towards Comprehensive and Fine-Grained Egocentric Video Captioning",
+          "url": "https://huggingface.co/papers/2611.26380"
+        },
+        {
+          "title": "AltRA-Test: An Alternative Annotator Test for LLM Judges Without Shared Annotators",
+          "url": "https://huggingface.co/papers/2611.26073"
+        },
+        {
+          "title": "HiUni: Harmonizing Understanding and Generation in Shared Visual Space",
+          "url": "https://huggingface.co/papers/2611.26107"
+        },
+        {
+          "title": "TuringSpace: Grounding Spatial Intelligence in Action with Interactive CAPTCHAs",
+          "url": "https://huggingface.co/papers/2611.25387"
+        },
+        {
+          "title": "ZeroVLN: Learning to Navigate without Supervised Fine-Tuning of the VLM Brain",
+          "url": "https://huggingface.co/papers/2611.26414"
+        },
+        {
+          "title": "RL Post-Training in Diffusion Transformers Is Activation Steering",
+          "url": "https://huggingface.co/papers/2611.26627"
+        },
+        {
+          "title": "Language Models Can Rewrite Their Own Weights",
+          "url": "https://huggingface.co/papers/2611.21885"
+        },
+        {
+          "title": "WAM-Policy: World Action Models with On-Policy Distillation for Quadrupedal Loco-Manipulation",
+          "url": "https://huggingface.co/papers/2611.24011"
+        },
+        {
+          "title": "Training Vision Models for LLM-Driven Weight-Space Programming",
+          "url": "https://huggingface.co/papers/2611.26408"
+        },
+        {
+          "title": "Learning What Actions Change: Action Effect Matching for Dynamics-Faithful World Models",
+          "url": "https://huggingface.co/papers/2611.25980"
+        },
+        {
+          "title": "WM^MLLM: Turning MLLMs into World Models",
+          "url": "https://huggingface.co/papers/2611.24193"
+        },
+        {
+          "title": "Accelerating Mixture of Block Attention via Dynamic Routing, KV-Centric Execution and Runtime Pipelining",
+          "url": "https://huggingface.co/papers/2611.26268"
+        },
+        {
+          "title": "AutoMaster: Autonomous Post-Training by Making the Same Model a Better Teacher",
+          "url": "https://huggingface.co/papers/2611.26510"
+        },
+        {
+          "title": "On-Policy Morphing into Hybrid Attention Models",
+          "url": "https://huggingface.co/papers/2611.24809"
+        },
+        {
+          "title": "Online Mistake Detection in Instruction-Conditioned Procedural Video",
+          "url": "https://huggingface.co/papers/2611.25567"
+        },
+        {
+          "title": "Twice-Told Critiques: Claim-Level Homogenization of Peer Review in the LLM Era",
+          "url": "https://huggingface.co/papers/2611.26286"
+        },
+        {
+          "title": "Teaching Vision-Language-Action Models to Stop Safely",
+          "url": "https://huggingface.co/papers/2611.26239"
+        },
+        {
+          "title": "CompoundingKernel: Self-Improving from Zero to First",
+          "url": "https://huggingface.co/papers/2611.19230"
+        },
+        {
+          "title": "Embeddings vs. Grep: Rethinking the Dense Advantage in Code Search",
+          "url": "https://huggingface.co/papers/2611.20455"
+        },
+        {
+          "title": "SpecWM: Turning Verification into Refinement for Streaming World Models",
+          "url": "https://huggingface.co/papers/2611.26211"
+        },
+        {
+          "title": "A CPU Inside an LLM: Zero-Gradient Compilation of Exact Circuits into Pretrained Weights",
+          "url": "https://huggingface.co/papers/2611.26450"
+        },
+        {
+          "title": "TwinLab-Bench: Evaluating AI Scientists in Agentic Twins of Real Labs",
+          "url": "https://huggingface.co/papers/2611.26248"
+        },
+        {
+          "title": "System 1 agents: a method for local, reliable and fast agentic AI",
+          "url": "https://huggingface.co/papers/2611.21053"
+        },
+        {
+          "title": "Direct3D-V3: Latent-Free Diffusion Transformers in the Native Voxel Domain",
+          "url": "https://huggingface.co/papers/2611.26511"
+        },
+        {
+          "title": "Accord: Universal Online Metric Localization and Dense Mapping from one Camera and an IMU",
+          "url": "https://huggingface.co/papers/2611.25279"
+        },
+        {
+          "title": "VSpark: Speculative Decoding for Autoregressive Vision-Language-Action Models",
+          "url": "https://huggingface.co/papers/2611.22666"
+        },
+        {
+          "title": "Do Probing and Steering Favor the Same Directions Within and Across Language Models?",
+          "url": "https://huggingface.co/papers/2611.19499"
+        },
+        {
+          "title": "NarrowSpec: Draft Hidden Width Need Not Match the Target in Speculative Decoding",
+          "url": "https://huggingface.co/papers/2611.23835"
+        },
+        {
+          "title": "Phantom Success, Silent Failure: Auditing the Success Checkers of Simulated Manipulation Benchmarks",
+          "url": "https://huggingface.co/papers/2611.25179"
+        },
+        {
+          "title": "One Prior, Two Dynamics: Repurposing Video Diffusion Transformers for Self-Supervised Latent Action Learning",
+          "url": "https://huggingface.co/papers/2611.26617"
+        },
+        {
+          "title": "S1CogBench: What System One Decision Models Can and Cannot Do on Cognitive Experiments",
+          "url": "https://huggingface.co/papers/2611.00911"
+        },
+        {
+          "title": "DailySafe: Benchmarking Dynamic Safety Awareness in Everyday Multi-Turn Multimodal Interactions",
+          "url": "https://huggingface.co/papers/2611.26298"
+        },
+        {
+          "title": "PAD: Policy-Aware Data Valuation for Autonomous Driving",
+          "url": "https://huggingface.co/papers/2611.25604"
+        },
+        {
+          "title": "Squoosh Bench: Evaluating UX-1 on 318 Historical Website A/B Tests",
+          "url": "https://huggingface.co/papers/2611.25200"
+        },
+        {
+          "title": "In Situ Training of Optical Neural Networks by Coding Agents",
+          "url": "https://huggingface.co/papers/2611.23875"
+        },
+        {
+          "title": "AURA: AUdio-dRiven streaming Avatar",
+          "url": "https://huggingface.co/papers/2611.26540"
+        },
+        {
+          "title": "Suppressing the Shortcut Hidden Behind the Gains of VideoLLM Fine-Tuning",
+          "url": "https://huggingface.co/papers/2611.25776"
+        },
+        {
+          "title": "PlayCraft: Designing Engaging Games from Agent Play Experience",
+          "url": "https://huggingface.co/papers/2611.26624"
+        },
+        {
+          "title": "Time Series Structure Learning with Local Causal Parent Discovery",
+          "url": "https://huggingface.co/papers/2611.26232"
+        },
+        {
+          "title": "Inhabitant: An Agent Framework for Long-Horizon Human-Scene Interaction with Spatial Control and Quantitative Feedback",
+          "url": "https://huggingface.co/papers/2611.25005"
+        },
+        {
+          "title": "Lang-SVG: Hierarchical Image Vectorization with Language Priors",
+          "url": "https://huggingface.co/papers/2611.15941"
+        },
+        {
+          "title": "TwinD: Generalizing Deepfake Detection from Blending to Entire Face Synthesis",
+          "url": "https://huggingface.co/papers/2611.25935"
+        }
+      ],
+      "valid_dated_list": false,
+      "timestamps_observed": [],
+      "note": "重定向到11月20日，未核实独立周末日榜"
+    },
+    {
+      "url": "https://huggingface.co/papers/date/2026-11-22",
+      "checked_at": "2026-11-23T00:33:37.374210+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://huggingface.co/papers/date/2026-11-20",
+      "title": "Daily Papers - Hugging Face",
+      "sha256": "0d539658075ebf443b5a1c8a6330366c3794b36b83e1507899fa722b613863d9",
+      "papers": [
+        {
+          "title": "WeVisForensics: Self-Evolving Agent for Omni AI-Generated Video Detection",
+          "url": "https://huggingface.co/papers/2611.21373"
+        },
+        {
+          "title": "Mind2Act World: A Diagnostic Benchmark for Embodied Mind, Physical Action, and Mind-Action Composition in Robotic Manipulation",
+          "url": "https://huggingface.co/papers/2611.26444"
+        },
+        {
+          "title": "WeMM-Video: Pushing the Frontiers of Open-Source Omni-Modal Video Understanding",
+          "url": "https://huggingface.co/papers/2611.26409"
+        },
+        {
+          "title": "Probing the \"Conscious\" Mind: Selective Access and Global Workspace in Vision-Language Models",
+          "url": "https://huggingface.co/papers/2611.26590"
+        },
+        {
+          "title": "Posterior Matching Distillation",
+          "url": "https://huggingface.co/papers/2611.26629"
+        },
+        {
+          "title": "Coda-DaVinci: Reimagining Video Generation with Code2Video",
+          "url": "https://huggingface.co/papers/2611.26595"
+        },
+        {
+          "title": "Depth Pro 2: Sharp and Temporally Consistent Metric Monocular Depth",
+          "url": "https://huggingface.co/papers/2611.26603"
+        },
+        {
+          "title": "The Mask Is Not the Object: Volumetric Supervision for 3D Gaussian Segmentation",
+          "url": "https://huggingface.co/papers/2611.21383"
+        },
+        {
+          "title": "EgoCaptioner: Towards Comprehensive and Fine-Grained Egocentric Video Captioning",
+          "url": "https://huggingface.co/papers/2611.26380"
+        },
+        {
+          "title": "AltRA-Test: An Alternative Annotator Test for LLM Judges Without Shared Annotators",
+          "url": "https://huggingface.co/papers/2611.26073"
+        },
+        {
+          "title": "HiUni: Harmonizing Understanding and Generation in Shared Visual Space",
+          "url": "https://huggingface.co/papers/2611.26107"
+        },
+        {
+          "title": "TuringSpace: Grounding Spatial Intelligence in Action with Interactive CAPTCHAs",
+          "url": "https://huggingface.co/papers/2611.25387"
+        },
+        {
+          "title": "ZeroVLN: Learning to Navigate without Supervised Fine-Tuning of the VLM Brain",
+          "url": "https://huggingface.co/papers/2611.26414"
+        },
+        {
+          "title": "RL Post-Training in Diffusion Transformers Is Activation Steering",
+          "url": "https://huggingface.co/papers/2611.26627"
+        },
+        {
+          "title": "Language Models Can Rewrite Their Own Weights",
+          "url": "https://huggingface.co/papers/2611.21885"
+        },
+        {
+          "title": "WAM-Policy: World Action Models with On-Policy Distillation for Quadrupedal Loco-Manipulation",
+          "url": "https://huggingface.co/papers/2611.24011"
+        },
+        {
+          "title": "Training Vision Models for LLM-Driven Weight-Space Programming",
+          "url": "https://huggingface.co/papers/2611.26408"
+        },
+        {
+          "title": "Learning What Actions Change: Action Effect Matching for Dynamics-Faithful World Models",
+          "url": "https://huggingface.co/papers/2611.25980"
+        },
+        {
+          "title": "WM^MLLM: Turning MLLMs into World Models",
+          "url": "https://huggingface.co/papers/2611.24193"
+        },
+        {
+          "title": "Accelerating Mixture of Block Attention via Dynamic Routing, KV-Centric Execution and Runtime Pipelining",
+          "url": "https://huggingface.co/papers/2611.26268"
+        },
+        {
+          "title": "AutoMaster: Autonomous Post-Training by Making the Same Model a Better Teacher",
+          "url": "https://huggingface.co/papers/2611.26510"
+        },
+        {
+          "title": "On-Policy Morphing into Hybrid Attention Models",
+          "url": "https://huggingface.co/papers/2611.24809"
+        },
+        {
+          "title": "Online Mistake Detection in Instruction-Conditioned Procedural Video",
+          "url": "https://huggingface.co/papers/2611.25567"
+        },
+        {
+          "title": "Twice-Told Critiques: Claim-Level Homogenization of Peer Review in the LLM Era",
+          "url": "https://huggingface.co/papers/2611.26286"
+        },
+        {
+          "title": "Teaching Vision-Language-Action Models to Stop Safely",
+          "url": "https://huggingface.co/papers/2611.26239"
+        },
+        {
+          "title": "CompoundingKernel: Self-Improving from Zero to First",
+          "url": "https://huggingface.co/papers/2611.19230"
+        },
+        {
+          "title": "Embeddings vs. Grep: Rethinking the Dense Advantage in Code Search",
+          "url": "https://huggingface.co/papers/2611.20455"
+        },
+        {
+          "title": "SpecWM: Turning Verification into Refinement for Streaming World Models",
+          "url": "https://huggingface.co/papers/2611.26211"
+        },
+        {
+          "title": "A CPU Inside an LLM: Zero-Gradient Compilation of Exact Circuits into Pretrained Weights",
+          "url": "https://huggingface.co/papers/2611.26450"
+        },
+        {
+          "title": "TwinLab-Bench: Evaluating AI Scientists in Agentic Twins of Real Labs",
+          "url": "https://huggingface.co/papers/2611.26248"
+        },
+        {
+          "title": "System 1 agents: a method for local, reliable and fast agentic AI",
+          "url": "https://huggingface.co/papers/2611.21053"
+        },
+        {
+          "title": "Direct3D-V3: Latent-Free Diffusion Transformers in the Native Voxel Domain",
+          "url": "https://huggingface.co/papers/2611.26511"
+        },
+        {
+          "title": "Accord: Universal Online Metric Localization and Dense Mapping from one Camera and an IMU",
+          "url": "https://huggingface.co/papers/2611.25279"
+        },
+        {
+          "title": "VSpark: Speculative Decoding for Autoregressive Vision-Language-Action Models",
+          "url": "https://huggingface.co/papers/2611.22666"
+        },
+        {
+          "title": "Do Probing and Steering Favor the Same Directions Within and Across Language Models?",
+          "url": "https://huggingface.co/papers/2611.19499"
+        },
+        {
+          "title": "NarrowSpec: Draft Hidden Width Need Not Match the Target in Speculative Decoding",
+          "url": "https://huggingface.co/papers/2611.23835"
+        },
+        {
+          "title": "Phantom Success, Silent Failure: Auditing the Success Checkers of Simulated Manipulation Benchmarks",
+          "url": "https://huggingface.co/papers/2611.25179"
+        },
+        {
+          "title": "One Prior, Two Dynamics: Repurposing Video Diffusion Transformers for Self-Supervised Latent Action Learning",
+          "url": "https://huggingface.co/papers/2611.26617"
+        },
+        {
+          "title": "S1CogBench: What System One Decision Models Can and Cannot Do on Cognitive Experiments",
+          "url": "https://huggingface.co/papers/2611.00911"
+        },
+        {
+          "title": "DailySafe: Benchmarking Dynamic Safety Awareness in Everyday Multi-Turn Multimodal Interactions",
+          "url": "https://huggingface.co/papers/2611.26298"
+        },
+        {
+          "title": "PAD: Policy-Aware Data Valuation for Autonomous Driving",
+          "url": "https://huggingface.co/papers/2611.25604"
+        },
+        {
+          "title": "Squoosh Bench: Evaluating UX-1 on 318 Historical Website A/B Tests",
+          "url": "https://huggingface.co/papers/2611.25200"
+        },
+        {
+          "title": "In Situ Training of Optical Neural Networks by Coding Agents",
+          "url": "https://huggingface.co/papers/2611.23875"
+        },
+        {
+          "title": "AURA: AUdio-dRiven streaming Avatar",
+          "url": "https://huggingface.co/papers/2611.26540"
+        },
+        {
+          "title": "Suppressing the Shortcut Hidden Behind the Gains of VideoLLM Fine-Tuning",
+          "url": "https://huggingface.co/papers/2611.25776"
+        },
+        {
+          "title": "PlayCraft: Designing Engaging Games from Agent Play Experience",
+          "url": "https://huggingface.co/papers/2611.26624"
+        },
+        {
+          "title": "Time Series Structure Learning with Local Causal Parent Discovery",
+          "url": "https://huggingface.co/papers/2611.26232"
+        },
+        {
+          "title": "Inhabitant: An Agent Framework for Long-Horizon Human-Scene Interaction with Spatial Control and Quantitative Feedback",
+          "url": "https://huggingface.co/papers/2611.25005"
+        },
+        {
+          "title": "Lang-SVG: Hierarchical Image Vectorization with Language Priors",
+          "url": "https://huggingface.co/papers/2611.15941"
+        },
+        {
+          "title": "TwinD: Generalizing Deepfake Detection from Blending to Entire Face Synthesis",
+          "url": "https://huggingface.co/papers/2611.25935"
+        }
+      ],
+      "valid_dated_list": false,
+      "timestamps_observed": [],
+      "note": "重定向到11月20日，未核实独立周末日榜"
+    },
+    {
+      "url": "https://arxiv.org/abs/2611.18482",
+      "checked_at": "2026-11-23T00:33:38.164501+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/abs/2611.18482",
+      "title": "[2611.18482] MMFlash: Faster Speculative Decoding for Vision-Language Models",
+      "sha256": "70c89f5632747dd64a3dfafcf054b1413e7e6d2291a9cd08b763d29cf7316cea",
+      "submission_evidence": "[Submitted on 13 Nov 2026]",
+      "timestamps_observed": [
+        "2026/11/13",
+        "2026/11/13"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2611.17621",
+      "checked_at": "2026-11-23T00:33:38.497741+00:00",
+      "method": "direct HTTP GET",
+      "http_status": 200,
+      "final_url": "https://arxiv.org/abs/2611.17621",
+      "title": "[2611.17621] AscendGYM: A Cost-Aware Kernel Optimization Benchmark for Real-World Workloads on Ascend NPUs",
+      "sha256": "bac539889fe7fca65f27f6527ae1380fdc7e5b259ae81f8f34fde4b63fffa0fb",
+      "submission_evidence": "[Submitted on 13 Nov 2026]",
+      "timestamps_observed": [
+        "2026/11/13",
+        "2026/11/13"
+      ]
+    }
+  ],
+  "sources": [
+    "https://blog.primeradiant.com/external-sandboxes-for-coding-agents/",
+    "https://huggingface.co/blog/harness-adapters-at-scale",
+    "https://arxiv.org/abs/2611.23917",
+    "https://arxiv.org/abs/2611.21020",
+    "https://arxiv.org/abs/2611.23388",
+    "https://developer.nvidia.com/blog/reducing-rollout-bottlenecks-in-reinforcement-learning-with-nvidia-dynamo/",
+    "https://developers.openai.com/api/docs/changelog",
+    "https://github.blog/changelog/2026-11-18-wait-for-pull-request-events-with-github-cli/",
+    "https://simonwillison.net/2026/Nov/17/datasette-lite/",
+    "https://huggingface.co/blog/inkling2mini",
+    "https://deepmind.google/models/model-cards/genie-4/",
+    "https://huggingface.co/blog/moe-expert-streaming",
+    "https://arxiv.org/abs/2611.22115",
+    "https://arxiv.org/html/2611.22115v1",
+    "https://arxiv.org/abs/2611.24395",
+    "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post6",
+    "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post7",
+    "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post9",
+    "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post10",
+    "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post11",
+    "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post12",
+    "https://github.com/sgl-project/sgl-kernel-npu/releases/tag/2026.11.0.post13",
+    "https://www.jeffgeerling.com/blog/2026/i-joined-the-ntp-pool/",
+    "https://github.com/trending?since=weekly",
+    "https://openai.com/news/",
+    "https://deepmind.google/models/model-cards/",
+    "https://huggingface.co/blog?sort=desc",
+    "https://developer.nvidia.com/blog/",
+    "https://github.blog/changelog/",
+    "https://www.jiqizhixin.com/",
+    "https://hackerblogposts.com/blogs",
+    "https://simonwillison.net/2026/Nov/?page=2",
+    "https://mitchellh.com/writing",
+    "https://paulgraham.com/articles.html",
+    "https://github.com/vllm-project/vllm-ascend/releases",
+    "https://github.com/triton-lang/triton-ascend/releases",
+    "https://github.com/Ascend/pytorch/releases",
+    "https://huggingface.co/papers/date/2026-11-16",
+    "https://huggingface.co/papers/date/2026-11-17",
+    "https://huggingface.co/papers/date/2026-11-18",
+    "https://huggingface.co/papers/date/2026-11-19",
+    "https://huggingface.co/papers/date/2026-11-20",
+    "https://huggingface.co/papers/date/2026-11-21",
+    "https://huggingface.co/papers/date/2026-11-22",
+    "https://arxiv.org/abs/2611.18482",
+    "https://arxiv.org/abs/2611.17621"
+  ],
+  "screened_sources": [
+    {
+      "title": "GitHub Trending 周视图",
+      "url": "https://github.com/trending?since=weekly"
+    },
+    {
+      "title": "OpenAI News",
+      "url": "https://openai.com/news/"
+    },
+    {
+      "title": "DeepMind 模型卡",
+      "url": "https://deepmind.google/models/model-cards/"
+    },
+    {
+      "title": "Hugging Face Blog",
+      "url": "https://huggingface.co/blog?sort=desc"
+    },
+    {
+      "title": "NVIDIA Technical Blog",
+      "url": "https://developer.nvidia.com/blog/"
+    },
+    {
+      "title": "GitHub Changelog",
+      "url": "https://github.blog/changelog/"
+    },
+    {
+      "title": "机器之心",
+      "url": "https://www.jiqizhixin.com/"
+    },
+    {
+      "title": "HN 高人气博客目录",
+      "url": "https://hackerblogposts.com/blogs"
+    },
+    {
+      "title": "Simon 11月归档",
+      "url": "https://simonwillison.net/2026/Nov/?page=2"
+    },
+    {
+      "title": "Mitchell Hashimoto",
+      "url": "https://mitchellh.com/writing"
+    },
+    {
+      "title": "Paul Graham",
+      "url": "https://paulgraham.com/articles.html"
+    },
+    {
+      "title": "vLLM Ascend Releases",
+      "url": "https://github.com/vllm-project/vllm-ascend/releases"
+    },
+    {
+      "title": "Triton Ascend Releases",
+      "url": "https://github.com/triton-lang/triton-ascend/releases"
+    },
+    {
+      "title": "Ascend PyTorch Releases",
+      "url": "https://github.com/Ascend/pytorch/releases"
+    }
+  ],
+  "excluded_candidates": [
+    {
+      "title": "MMFlash",
+      "url": "https://arxiv.org/abs/2611.18482",
+      "reason": "11月13日首次提交；虽见11月16日日榜，但不计为W47新稿"
+    },
+    {
+      "title": "AscendGYM",
+      "url": "https://arxiv.org/abs/2611.17621",
+      "reason": "11月13日首次提交；虽见11月18日日榜，但不计为W47新稿"
+    }
+  ],
+  "validation": {
+    "checked_at": "2026-11-23T00:34:30.076233+00:00",
+    "selected_entries": 17,
+    "reading_selections": 3,
+    "primary_urls_all_http_200": true,
+    "unverified_support": "未发现本周新模型首发即支持 CANN 通用推理框架的完整一手矩阵；缺失版本不补推断。"
+  }
+}
